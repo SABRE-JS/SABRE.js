@@ -1,0 +1,11 @@
+#!/bin/sh
+export PROJECT_ROOT="$PWD"
+export PROJECT_SOURCE_DIR="$PROJECT_ROOT/src"
+export PROJECT_INCLUDE_DIR="$PROJECT_ROOT/include"
+export SCRIPT_BIN_DIR="$PROJECT_ROOT/sbin"
+export TOOL_BIN_DIR="$PROJECT_ROOT/tbin"
+export TOOL_DATA_DIR="$PROJECT_ROOT/tdata"
+export BUILD_DATA_DIR="$PROJECT_ROOT/build"
+export BIN_DIR="$PROJECT_ROOT/bin"
+export TEST_DIR="$PROJECT_ROOT/test"
+export TEMP_DIR="$PROJECT_ROOT/temp_files"

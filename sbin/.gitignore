@@ -1,0 +1,9 @@
+*
+*/
+
+!commands/
+!defines/
+!helpers/
+
+!*.sh
+!.gitignore

@@ -1,0 +1,36 @@
+.PHONY: help _pre-commit
+
+all: local
+
+_pre-commit:
+	@sh ./sbin/commands/pre-commit.sh
+
+help:
+	@echo "Valid Targets:"
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#._]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
+
+run: local
+	@echo "Launching..."
+	@sh ./sbin/commands/local-debug.sh
+	
+local:
+	@echo "Compiling locally."
+	@sh ./sbin/commands/local-compile.sh
+	
+remote:
+	@echo "Compiling remotely."
+	@sh ./sbin/commands/remote-compile.sh
+	
+clean:
+	@echo "Cleaning build directorys."
+	@sh ./sbin/commands/clean.sh
+	
+rebuild: clean local
+
+cleanup:
+	@echo "Cleaning up build tools."
+	@sh ./sbin/commands/cleanup.sh
+	
+buildfix: 
+	@echo "Fixing build tools."
+	@find ./sbin/ -name *.sh -print | xargs chmod +x
