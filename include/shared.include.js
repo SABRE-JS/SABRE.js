@@ -1,7 +1,3 @@
-/**
- * @typedef {!number}
- */
-var num;
 var global = window;
 
 var external = {};

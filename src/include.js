@@ -7,6 +7,12 @@
  |- include - synchronous inclusion of ecmascript, ecmascript is garunteed to be loaded as soon as control of the thread is returned to the browser.
 */
 var includelog = Object.create(Object,{});
+var scriptpath = null; 
+(function(){
+	var scripts = global.document.getElementsByTagName("script");
+	var curscript = new global.URL(scripts[scripts.length-1].src);
+	scriptpath = curscript.pathname.match(/^(.*\/).*?$/)[1];
+})();
 /**
  * includes a ecmascript file asynchronously.
  * @param {string} scriptUrl The URL or URI of the script. 
@@ -32,7 +38,7 @@ sabre["import"] = function (scriptUrl,callback)
 	var head = global.document.head;
 	var scriptImport = global.document.createElement("script");
 	scriptImport.setAttribute("type","application/ecmascript");
-	scriptImport.setAttribute("src",scriptUrl);
+	scriptImport.setAttribute("src",scriptpath+scriptUrl);
 	scriptImport.setAttribute("async","");
 	scriptImport.addEventListener("load",function(){
 		includelog[scriptUrl] = true;
@@ -66,7 +72,7 @@ sabre["include"] = function (scriptUrl,callback)
 	var head = global.document.head;
 	var scriptImport = global.document.createElement("script");
 	scriptImport.setAttribute("type","application/ecmascript");
-	scriptImport.setAttribute("src",scriptUrl);
+	scriptImport.setAttribute("src",scriptpath+scriptUrl);
 	scriptImport.addEventListener("load",function(){
 		includelog[scriptUrl] = true;
 		console.log("Finished Including: "+scriptUrl);

@@ -1,4 +1,5 @@
 //@include [color.js]
+sabre.import("color.min.js");
 
 sabre["SSAStyleDefinition"] = function(){
 	var obj = {
@@ -78,7 +79,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setFontSize":{
-			value: function(/** num */size){
+			value: function(/** number */size){
 				obj.fontSize = size;
 			},
 			writable: false
@@ -148,7 +149,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setBold":{
-			value: function(/** num */bold){
+			value: function(/** number */bold){
 				obj.bold = bold;
 			},
 			writable: false
@@ -204,7 +205,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setScale":{
-			value: function(/** num */scale){
+			value: function(/** number */scale){
 				obj.scaleX = scale;
 				obj.scaleY = scale;
 			},
@@ -212,14 +213,14 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setScaleX":{
-			value: function(/** num */scale){
+			value: function(/** number */scale){
 				obj.scaleX = scale;
 			},
 			writable: false
 		},
 
 		"setScaleY":{
-			value: function(/** num */scale){
+			value: function(/** number */scale){
 				obj.scaleY = scale;
 			},
 			writable: false
@@ -240,7 +241,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setSpacing":{
-			value: function(/** num */spacing){
+			value: function(/** number */spacing){
 				obj.spacing = spacing;
 			},
 			writable: false
@@ -254,7 +255,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setAngle":{
-			value: function(/** num */angle){
+			value: function(/** number */angle){
 				obj.angle = angle;
 			},
 			writable: false
@@ -268,7 +269,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setBorderStyle":{
-			value: function(/** num */style){
+			value: function(/** number */style){
 				obj.borderStyle = style;
 			},
 			writable: false
@@ -282,7 +283,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setOutline":{
-			value: function(/** num */outline){
+			value: function(/** number */outline){
 				obj.outlineX = outline;
 				obj.outlineY = outline;
 			},
@@ -290,14 +291,14 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setOutlineX":{
-			value: function(/** num */outline){
+			value: function(/** number */outline){
 				obj.outlineX = outline;
 			},
 			writable: false
 		},
 
 		"setOutlineY":{
-			value: function(/** num */outline){
+			value: function(/** number */outline){
 				obj.outlineY = outline;
 			},
 			writable: false
@@ -318,7 +319,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setShadow":{
-			value: function(/** num */shadow){
+			value: function(/** number */shadow){
 				obj.shadow = shadow;
 			},
 			writable: false
@@ -332,7 +333,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setAlignment":{
-			value: function(/** num */alignment){
+			value: function(/** number */alignment){
 				obj.alignment = alignment;
 			},
 			writable: false
@@ -346,28 +347,28 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setMargins":{
-			value: function(/** num */left,/** num */right,/** num */vertical){
+			value: function(/** number */left,/** number */right,/** number */vertical){
 				obj.margins = [left,right,vertical];
 			},
 			writable: false
 		},
 
 		"setMarginLeft":{
-			value: function(/** num */left){
+			value: function(/** number */left){
 				obj.margins[0] = left;
 			},
 			writable: false
 		},
 
 		"setMarginRight":{
-			value: function(/** num */right){
+			value: function(/** number */right){
 				obj.margins[1] = right;
 			},
 			writable: false
 		},
 
 		"setMarginVertical":{
-			value: function(/** num */vertical){
+			value: function(/** number */vertical){
 				obj.margins[2] = vertical;
 			},
 			writable: false
@@ -381,7 +382,7 @@ sabre["SSAStyleDefinition"] = function(){
 		},
 
 		"setEncoding":{
-			value: function(/** num */encoding){
+			value: function(/** number */encoding){
 				obj.encoding = encoding;
 			},
 			writable: false

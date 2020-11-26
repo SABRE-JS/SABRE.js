@@ -1,14 +1,7 @@
 /**
  * @typedef {!{
-    *              getStart:function():num,
-    *              getEnd:function():num,
-    *          }}
-    */
-   var SchedulableEvent;
-/**
- * @typedef {!{
- *              getVisibleAtTime:function(num):Array<SchedulableEvent>,
- *              setEvents:function(Array<SchedulableEvent>):void
+ *              getVisibleAtTime:function(number):!Array<SSASubtitleEvent>,
+ *              setEvents:function(!Array<SSASubtitleEvent>):void
  *          }}
  */
 var SubtitleScheduler;

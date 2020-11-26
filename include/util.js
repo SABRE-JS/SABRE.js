@@ -1,15 +1,15 @@
 /**
  * indexOf but regex.
  * @param {(string|RegExp)} searchValue value to search for.
- * @param {num=} fromIndex starting index.
- * @return {num} index.
+ * @param {number=} fromIndex starting index.
+ * @return {number} index.
  */
 global.String.prototype.regexIndexOf = function(searchValue,fromIndex){};
 /**
  * lastIndexOf but regex.
  * @param {(string|RegExp)} searchValue value to search for.
- * @param {num=} fromIndex starting index.
- * @return {num} index.
+ * @param {number=} fromIndex starting index.
+ * @return {number} index.
  */
 global.String.prototype.regexLastIndexOf = function(searchValue,fromIndex){};
 /**
@@ -21,7 +21,7 @@ global.String.prototype.allReplace = function(obj){}
 /**
  * Get an Element's position.
  * @param {Element} element the element to locate.
- * @return {Array<num>} the x and y of the element;
+ * @return {Array<number>} the x and y of the element;
  */
 sabre.getElementPos = function(element){};
 
@@ -32,10 +32,10 @@ sabre.getElementPos = function(element){};
  */
 sabre.cloneObject = function(obj){};
 /**
- * Round num n to p places.
- * @param {num} n Number to round.
- * @param {num} p Number of places.
- * @return {num} Rounded result.
+ * Round number n to p places.
+ * @param {number} n Number to round.
+ * @param {number} p Number of places.
+ * @return {number} Rounded result.
  */
 Math.roundTo = function(n,p){ return 0; };
 
@@ -58,13 +58,12 @@ sabre.Complaint.prototype.reset = function(){};
  */
 sabre.Complaint.resetAll = function(){};
 
-sabre.colors = {};
 sabre.kill = false;
 sabre.pixelRatio = 1.0;
 /**
  * Get Backing pixel ratio for a canvas context.
  * @param {CanvasRenderingContext2D} context the target context.
- * @return {num} Backing Pixel Ratio.
+ * @return {number} Backing Pixel Ratio.
  */
 sabre.getBackingRatio = function(context){return 1;};
 

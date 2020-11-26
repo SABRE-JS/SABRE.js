@@ -14,18 +14,18 @@
  *              fillColor:SSAColor,
  *              strokeColor:SSAColor,
  *              wipeColor:SSAColor,
- *              outline:num,
- *              boxBlur:num,
- *              spacing:num,
- *              fontSize:num,
- *              scaleX:num,
- *              scaleY:num,
+ *              outline:number,
+ *              boxBlur:number,
+ *              spacing:number,
+ *              fontSize:number,
+ *              scaleX:number,
+ *              scaleY:number,
  *              fontName:!string,
- *              bold:(boolean|num),
+ *              bold:(boolean|number),
  *              italic:boolean,
  *              strikeout:boolean,
  *              wipeEnabled:boolean,
- *              wipePercent:num,
+ *              wipePercent:number,
  *              stroke:boolean
  *          }}
  */
@@ -52,7 +52,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object,{
     _pixelsPerDpt: {
         /**
          * Pixel to Dpt Ratio
-         * @type {num}
+         * @type {number}
          */
         value: 1,
         writable: false,
@@ -88,7 +88,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object,{
     _offsetX: {
         /**
          * The offset in the x coordinate.
-         * @type {num}
+         * @type {number}
          */
         value: 0,
         writable: true
@@ -97,7 +97,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object,{
     _offsetY: {
         /**
          * The offset in the y coordinate.
-         * @type {num}
+         * @type {number}
          */
         value: 0,
         writable: true
@@ -106,7 +106,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object,{
     _width: {
         /**
          * The width of the canvas.
-         * @type {num}
+         * @type {number}
          */
         value: NaN,
         writable: true
@@ -115,7 +115,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object,{
     _height: {
         /**
          * The height of the canvas.
-         * @type {num}
+         * @type {number}
          */
         value: NaN,
         writable: true
@@ -148,7 +148,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object,{
     _getBlurMatrixUrl:{
         /**
          * Generates a box-blur URL.
-         * @param {num} blur_count Number of times to apply box-blur.
+         * @param {number} blur_count Number of times to apply box-blur.
          * @returns {string} the resulting URL.
          */
 		value: function (blur_count){
@@ -356,7 +356,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object,{
     "setDPI": {
         /**
          * Sets the DPI for Rendering text
-         * @param {num} dpi the DPI to use for rendering text.
+         * @param {number} dpi the DPI to use for rendering text.
          */
         value: function(dpi){
             this._pixelsPerDpt = dpi/72;
@@ -367,7 +367,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object,{
     "getOffset": {
         /**
          * Gets the offset of the resulting image.
-         * @returns {Array<num>} offset of the resulting image
+         * @returns {Array<number>} offset of the resulting image
          */
         value: function(){
             return [-this._offsetX,-this._offsetY];
@@ -378,7 +378,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object,{
     "getDimensions": {
         /**
          * Gets the dimensions of the resulting image.
-         * @returns {Array<num>} dimensions of the resulting image
+         * @returns {Array<number>} dimensions of the resulting image
          */
         value: function(){
             return [this._width,this._height];

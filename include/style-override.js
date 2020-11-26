@@ -2,7 +2,7 @@
  * @typedef {!{
  *      toJSON:function():string,
  *      clone:function():SSAStyleOverride,   
- *      getMargins:function():?Array<num>,
+ *      getMargins:function():?Array<number>,
  *      getEffect:function():?string,
  *      
  * }}

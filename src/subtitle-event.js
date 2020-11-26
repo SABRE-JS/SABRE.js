@@ -1,6 +1,9 @@
 //@include [color.js]
 //@include [style.js]
 //@include [style-override.js]
+sabre.import("color.min.js");
+sabre.import("style.min.js");
+sabre.import("style-override.min.js");
 sabre["SSASubtitleEvent"] = function(){
 	var obj = {
 		layer: 0,
@@ -24,7 +27,7 @@ sabre["SSASubtitleEvent"] = function(){
 		},
 
 		"setStart":{
-			value: function(/** num */start){
+			value: function(/** number */start){
 				obj.start = start;
 			},
 			writable:false
@@ -38,7 +41,7 @@ sabre["SSASubtitleEvent"] = function(){
 		},
 
 		"setEnd":{
-			value: function(/** num */end){
+			value: function(/** number */end){
 				obj.end = end;
 			},
 			writable:false
@@ -65,7 +68,7 @@ sabre["SSASubtitleEvent"] = function(){
 		},
 
 		"setLayer":{
-			value: function(/** num */layer){
+			value: function(/** number */layer){
 				obj.layer = layer;
 			},
 			writable:false

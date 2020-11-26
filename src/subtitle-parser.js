@@ -11,17 +11,28 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 //@include [renderer-main.js]
+sabre.import("util.min.js");
+sabre.import("color.min.js");
+sabre.import("style.min.js");
+sabre.import("style-override.min.js");
+sabre.import("subtitle-event.min.js");
 
 /**
  * @fileoverview subtitle parser code for Substation Alpha and Advanced Substation Alpha.
  */
-//GRUMBLE ASSERT
+/**
+ * Assert using grumbles.
+ * @param {sabre.Complaint} complaint 
+ * @param {boolean} test 
+ */
 const gassert = function(complaint,test){
 	if(!test)complaint.grumble();
 	return test;
 };
 //ONE TIME WARN DECLARATIONS
 const FOUND_DEPRICATED_COMMENT = new sabre.Complaint("Found a comment in the old depricated style.");
+const INVALID_T_FUNCTION_TAG = new sabre.Complaint("Encountered a parameterless \\t function tag, ignoring.")
+
 //Default style and dialogue formats
 const default_ssa_style_format = ["Name","Fontname","Fontsize","PrimaryColour","SecondaryColour","TertiaryColour","BackColour","Bold","Italic","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV","AlphaLevel","Encoding"];
 const default_ass_style_format = ["Name","Fontname","Fontsize","PrimaryColour","SecondaryColour","OutlineColour","BackColour","Bold","Italic","Underline","StrikeOut","ScaleX","ScaleY","Spacing","Angle","BorderStyle","Outline","Shadow","Alignment","MarginL","MarginR","MarginV","Encoding"];
@@ -243,7 +254,7 @@ const main_prototype = global.Object.create(global.Object,{
 					if(match !== null){
 						var new_event = this._cloneEventWithoutText(event);
 						event.setText(match[1]);
-						new_event.setOverrides(this._parseOverrides(function(new_style){new_event.setStyle(new_style);},event.getOverrides(),match[2]));
+						new_event.setOverrides(this._parseOverrides({start:event.getStart(),end:event.getEnd()},function(new_style){new_event.setStyle(new_style);},event.getOverrides(),match[2]));
 						new_event.setText(match[3]);
 						events = events.splice(++i,0,new_event);
 					}
@@ -287,7 +298,7 @@ const main_prototype = global.Object.create(global.Object,{
 				/^q([0-3])$/,
 				/^r(.+)?$/,
 				/^([xy])?shad(\-?[0-9]+(?:\.[0-9]+)?)$/,
-				/^u([0-9]+)$/
+				/^u([01])$/
 			]),
 			tag_handlers: Object.freeze([
 				/**
@@ -665,7 +676,7 @@ const main_prototype = global.Object.create(global.Object,{
 					overrides.setFontSize(font_size);
 				},
 				/**
-				 * Sets font scaling.
+				 * Handles font scaling.
 				 * @param {function(SSAStyleDefinition):void} setStyle
 				 * @param {SSAStyleOverride} overrides
 				 * @param {Array<?string>} parameters
@@ -679,7 +690,7 @@ const main_prototype = global.Object.create(global.Object,{
 						overrides.setScaleY(value);
 				},
 				/**
-				 * Sets font spacing.
+				 * Handles font spacing.
 				 * @param {function(SSAStyleDefinition):void} setStyle
 				 * @param {SSAStyleOverride} overrides
 				 * @param {Array<?string>} parameters
@@ -689,7 +700,7 @@ const main_prototype = global.Object.create(global.Object,{
 					overrides.setSpacing(value);
 				},
 				/**
-				 * Sets italicization.
+				 * Handles italicization.
 				 * @param {function(SSAStyleDefinition):void} setStyle
 				 * @param {SSAStyleOverride} overrides
 				 * @param {Array<?string>} parameters
@@ -743,7 +754,7 @@ const main_prototype = global.Object.create(global.Object,{
 					}
 				},
 				/**
-				 * Set Baseline offset.
+				 * Handles Baseline offset.
 				 * @param {function(SSAStyleDefinition):void} setStyle
 				 * @param {SSAStyleOverride} overrides
 				 * @param {Array<?string>} parameters
@@ -753,7 +764,7 @@ const main_prototype = global.Object.create(global.Object,{
 					overrides.setBaselineOffset(baselineOffset);
 				},
 				/**
-				 * Set wrapping style.
+				 * Handles wrapping style.
 				 * @param {function(SSAStyleDefinition):void} setStyle
 				 * @param {SSAStyleOverride} overrides
 				 * @param {Array<?string>} parameters
@@ -774,6 +785,36 @@ const main_prototype = global.Object.create(global.Object,{
 					if(styleName != null)
 						setStyle(this._getStyle(styleName));
 				},
+				/**
+				 * Handles drop shadow.
+				 * @param {function(SSAStyleDefinition):void} setStyle
+				 * @param {SSAStyleOverride} overrides
+				 * @param {Array<?string>} parameters
+				 */
+				function(setStyle,overrides,parameters){
+					var setting = parameters[1];
+					var value = parseFloat(parameters[2]);
+					switch(setting){
+						case "x":
+							overrides.setShadowX(value);
+							break;
+						case "y":
+							overrides.setShadowY(value);
+						default:
+						case null:
+							overrides.setShadow(value);
+					}
+				},
+				/**
+				 * Handles underline.
+				 * @param {function(SSAStyleDefinition):void} setStyle
+				 * @param {SSAStyleOverride} overrides
+				 * @param {Array<?string>} parameters
+				 */
+				function(setStyle,overrides,parameters){
+					var value = (parameters[1] == "1");
+					overrides.setUnderline(value);
+				}
 			])
 		}),
 		writable: false
@@ -783,16 +824,46 @@ const main_prototype = global.Object.create(global.Object,{
 		/**
 		 * Contains parsing methods for override functions.
 		 * @dict
-		 * @type {Object<string,function(SSAStyleDefinition,SSAStyleOverride,Array<string>)>}
+		 * @type {Object<string,function({start:number,end:number},SSAStyleOverride,Array<string>)>}
 		 */
 		value: Object.freeze({
-			
+			"t": function(timeInfo,overrides,parameters){
+				var idx = parameters.length;
+				var lparameters = parameters;
+				if (idx>4){
+					var final_param = lparameters.slice(4).join(",");
+					lparameters = lparameters.slice(0,4);
+					lparameters.push(final_param);
+					idx = 4;
+				}
+				gassert(INVALID_T_FUNCTION_TAG,idx>0);
+				var transitionStart = 0;
+				var transitionEnd = timeInfo.end-timeInfo.start;
+				var acceleration = 1;
+
+				switch(idx){
+					case 4:
+						acceleration = parseFloat(lparameters[3]);
+					case 3:
+						transitionStart = parseFloat(lparameters[1]);
+						transitionEnd = parseFloat(lparameters[2]);
+						break;
+					case 2:
+						acceleration = parseFloat(lparameters[1]);
+						break;
+					default:
+						break;
+				}
+
+				overrides.setTransition([transitionStart,transitionEnd,acceleration,]);
+			},
+
 		}),
 		writable: false
 	},
 
 	_parseOverrides:{
-		value: function(setStyle,old_overrides,tags){
+		value: function(timeInfo,setStyle,old_overrides,tags){
 			const override_regex = /\\([^\}\{\\\(\)]+)(?:\((.*?)\))?/g;
 			var overrides = old_overrides.clone();
 			var code = null;
@@ -823,7 +894,7 @@ const main_prototype = global.Object.create(global.Object,{
 				}else{
 					var func = this._overrideFunctions[code];
 					if(typeof(func) !== "undefined"){
-						var result = func.call(this,setStyle,overrides,params.split(","));
+						var result = func.call(this,timeInfo,overrides,params.split(","));
 						if(typeof(result) !== "undefined")
 							overrides = result;
 					}else console.error("Unrecognized Override Function: "+ code +"("+params+")");
@@ -841,6 +912,7 @@ const main_prototype = global.Object.create(global.Object,{
 			event.setStyle(style);
 			var text = "";
 			var event_overrides = new sabre.SSAStyleOverride();
+			var tmp;
 			for(var i = 0; i < values.length; i++){
 				var key = config.parser.event_format[i];
 				var value = values[i];
@@ -853,7 +925,10 @@ const main_prototype = global.Object.create(global.Object,{
 						event.setLayer(parseInt(value,10));
 						break;
 					case "Start":
-						event.setStart(this._parseTime(value));
+						tmp = this._parseTime(value);
+						event.setStart(tmp);
+						event_overrides.setKaraokeStart(tmp);
+						event_overrides.setKaraokeEnd(tmp);
 						break;
 					case "End":
 						event.setEnd(this._parseTime(value));

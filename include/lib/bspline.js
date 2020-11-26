@@ -2,4 +2,4 @@
  * @constructor
  */
 sabre.BSpline = function(){};
-sabre.BSpline.prototype.calcAt = /** @returns {Array<num>} */ function(/** num */t){ return [0,0]};
+sabre.BSpline.prototype.calcAt = /** @returns {Array<number>} */ function(/** number */t){ return [0,0]};

@@ -13,6 +13,15 @@
 //@include [subtitle-parser.js]
 //@include [scheduler.js]
 //@include [canvas-2d-text-renderer.js]
+sabre.import("util.min.js");
+sabre.import("color.min.js");
+sabre.import("style.min.js");
+sabre.import("style-override.min.js");
+sabre.import("subtitle-event.min.js");
+sabre.import("subtitle-parser.min.js");
+sabre.import("scheduler.min.js");
+sabre.import("canvas-2d-text-renderer.min.js");
+
 /**
  * @fileoverview canvas/webgl subtitle renderer code.
  */
@@ -43,7 +52,7 @@ const renderer_prototype = global.Object.create(Object,{
 
 	_lastTime: {
 		/**
-		 * @type {num}
+		 * @type {number}
 		 */
 		value: -1,
 		writable: true
@@ -51,7 +60,7 @@ const renderer_prototype = global.Object.create(Object,{
 
 	_lastHash: {
 		/**
-		 * @type {num}
+		 * @type {number}
 		 */
 		value: 0,
 		writable: true
@@ -64,7 +73,7 @@ const renderer_prototype = global.Object.create(Object,{
 		/**
 		 * Hashes a list of subtitle events.
 		 * @param {Array<SSASubtitleEvent>} events list of subtitle events to hash.
-		 * @returns {num} The Hash of the events.
+		 * @returns {number} The Hash of the events.
 		 */
 		value: function(events){
 			var str_rep = JSON.stringify(events);
@@ -103,7 +112,7 @@ const renderer_prototype = global.Object.create(Object,{
 		 */
 		value: function(config){
 			this._config = config;
-			this._scheduler.setEvents(/** @type {Array<SchedulableEvent>} */ (config.events));
+			this._scheduler.setEvents(/** @type {Array<SSASubtitleEvent>} */ (config.events));
 			
 		},
 		writable: false
@@ -112,7 +121,7 @@ const renderer_prototype = global.Object.create(Object,{
 	'frame': {
 		/**
 		 * Render one frame.
-		 * @param {num} time the current frame time.
+		 * @param {number} time the current frame time.
 		 * @returns {void}
 		 */
 		value: function(time){
