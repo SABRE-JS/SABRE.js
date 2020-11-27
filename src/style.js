@@ -108,42 +108,42 @@ sabre["SSAStyleDefinition"] = function(){
 
 		"setSecondaryColor":{
 			value: function(/** SSAColor */color){
-				obj.primaryColor = color;
+				obj.secondaryColor = color;
 			},
 			writable: false
 		},
 
 		"getSecondaryColor":{
 			value: function(){
-				return obj.primaryColor;
+				return obj.secondaryColor;
 			},
 			writable: false
 		},
 
 		"setTertiaryColor":{
 			value: function(/** SSAColor */color){
-				obj.primaryColor = color;
+				obj.tertiaryColor = color;
 			},
 			writable: false
 		},
 
 		"getTertiaryColor":{
 			value: function(){
-				return obj.primaryColor;
+				return obj.tertiaryColor;
 			},
 			writable: false
 		},
 
 		"setQuaternaryColor":{
 			value: function(/** SSAColor */color){
-				obj.primaryColor = color;
+				obj.quaternaryColor = color;
 			},
 			writable: false
 		},
 
 		"getQuaternaryColor":{
 			value: function(){
-				return obj.primaryColor;
+				return obj.quaternaryColor;
 			},
 			writable: false
 		},
