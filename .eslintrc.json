@@ -1,6 +1,6 @@
 {
     "parserOptions": {
-        "ecmaVersion": 6,
+        "ecmaVersion": 6
     },
     "env": {
         "browser": true,
@@ -9,7 +9,7 @@
     "globals": {
         "sabre": "readonly",
         "global": "readonly",
-        "external": "readonly",
+        "external": "readonly"
     },
     "extends": [
         "eslint:recommended",
