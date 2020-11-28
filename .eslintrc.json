@@ -1,0 +1,19 @@
+{
+    "parserOptions": {
+        "ecmaVersion": 6,
+    },
+    "env": {
+        "browser": true,
+        "es6": true
+    },
+    "globals": {
+        "sabre": "readonly",
+        "global": "readonly",
+        "external": "readonly",
+    },
+    "extends": [
+        "eslint:recommended",
+        "prettier"
+    ],
+    "root": true
+}

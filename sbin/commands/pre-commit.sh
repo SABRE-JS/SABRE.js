@@ -7,7 +7,7 @@ rm -f $LOG_FILE
 echo "Running pre-commit hook..." | tee -a $LOG_FILE
 echo "Running pretty-quick..." | tee -a $LOG_FILE
 $SCRIPT_BIN_DIR/helpers/execute-node.sh pretty-quick --staged | tee -a $LOG_FILE
-echo "Running goodparts..." | tee -a $LOG_FILE
-$SCRIPT_BIN_DIR/helpers/execute-node.sh goodparts ./src | tee -a $LOG_FILE
+echo "Running eslint..." | tee -a $LOG_FILE
+$SCRIPT_BIN_DIR/helpers/execute-node.sh lint-staged | tee -a $LOG_FILE
 echo "Finished pre-commit hook..." | tee -a $LOG_FILE
 

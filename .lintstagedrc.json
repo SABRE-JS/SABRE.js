@@ -1,0 +1,3 @@
+{
+    "*.js": ["sh ./sbin/helpers/execute-node.sh eslint --fix", "git add"]
+}
