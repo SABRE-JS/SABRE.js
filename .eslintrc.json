@@ -6,6 +6,10 @@
         "browser": true,
         "es6": true
     },
+    "rules":{
+        "no-unused-vars": "warn",
+        "no-fallthrough": "off"
+    },
     "globals": {
         "sabre": "readonly",
         "global": "readonly",

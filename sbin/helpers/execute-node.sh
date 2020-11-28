@@ -9,6 +9,7 @@ fi
 
 NODE_TOOLS_BINDIR="$TOOL_BIN_DIR/node_tools/node_modules/.bin"
 
+export NODE_PATH="$NODE_PATH:$TOOL_BIN_DIR/node_tools/node_modules"
 eval "$NODE_TOOLS_BINDIR/$@"
 
 RESULT_CODE=$?

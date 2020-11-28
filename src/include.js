@@ -20,7 +20,7 @@ var scriptpath = null;
  */
 sabre["import"] = function (scriptUrl,callback)
 {
-	if(typeof(callback)==='undefined'||callback==null)callback = function(a){};
+	if(typeof(callback)==='undefined'||callback==null)callback = function(){};
 	if(!(typeof(includelog[scriptUrl]) === "undefined")&& includelog[scriptUrl] === true) return;
 	if(typeof(global["importScripts"]) === "function"&&typeof(global["document"]) === "undefined"){
 		try{

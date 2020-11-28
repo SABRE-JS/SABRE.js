@@ -250,7 +250,7 @@ const main_prototype = global.Object.create(global.Object,{
 			if(this._config.info.is_ass){
 				for(var i = 0; i < events.length;i++){
 					event = events[i];
-					match = /^([^\{\}]*?)\{(.*?)\}(.*)$/.exec(event.getText());	
+					match = /^([^{}]*?)\{(.*?)\}(.*)$/.exec(event.getText());	
 					if(match !== null){
 						var new_event = this._cloneEventWithoutText(event);
 						event.setText(match[1]);
@@ -286,18 +286,18 @@ const main_prototype = global.Object.create(global.Object,{
 				/^fa([xy])([0-9]+(?:\.[0-9]+)?)$/,
 				/^fe([0-9]+)$/,
 				/^fn(.+)$/,
-				/^fr([xyz])?(\-?[0-9]+(?:\.[0-9]+)?)$/,
-				/^fs([\+\-])([0-9]+(?:\.[0-9]+)?)$/,
+				/^fr([xyz])?(-?[0-9]+(?:\.[0-9]+)?)$/,
+				/^fs([+-])([0-9]+(?:\.[0-9]+)?)$/,
 				/^fs([0-9]+(?:\.[0-9]+)?)$/,
 				/^fsc([xy])([0-9]+(?:\.[0-9]+)?)$/,
-				/^fsp(\-?[0-9]+(?:\.[0-9]+)?)$/,
+				/^fsp(-?[0-9]+(?:\.[0-9]+)?)$/,
 				/^i([01])$/,
 				/^([kK][fo]?)([0-9]+(?:\.[0-9]+)?)$/,
 				/^p([0-9]+(?:\.[0-9]+)?)$/,
-				/^pbo(\-?[0-9]+(?:\.[0-9]+)?)$/,
+				/^pbo(-?[0-9]+(?:\.[0-9]+)?)$/,
 				/^q([0-3])$/,
 				/^r(.+)?$/,
-				/^([xy])?shad(\-?[0-9]+(?:\.[0-9]+)?)$/,
+				/^([xy])?shad(-?[0-9]+(?:\.[0-9]+)?)$/,
 				/^u([01])$/
 			]),
 			tag_handlers: Object.freeze([
@@ -864,7 +864,7 @@ const main_prototype = global.Object.create(global.Object,{
 
 	_parseOverrides:{
 		value: function(timeInfo,setStyle,old_overrides,tags){
-			const override_regex = /\\([^\}\{\\\(\)]+)(?:\((.*?)\))?/g;
+			const override_regex = /\\([^}{\\()]+)(?:\((.*?)\))?/g;
 			var overrides = old_overrides.clone();
 			var code = null;
 			var params;
