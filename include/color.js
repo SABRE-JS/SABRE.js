@@ -18,7 +18,7 @@ var SSAColor;
 /**
  * @type {function(new:SSAColor,number=,number=,number=,number=)}
  */
-sabre.SSAColor = function(r,g,b,a){};
+sabre.SSAColor = function (r, g, b, a) {};
 
 /**
  * @typedef {!{
@@ -40,4 +40,4 @@ var SSAOverrideColor;
 /**
  * @type {function(new:SSAOverrideColor,?number=,?number=,?number=,?number=)}
  */
-sabre.SSAOverrideColor = function(r,g,b,a){};
+sabre.SSAOverrideColor = function (r, g, b, a) {};

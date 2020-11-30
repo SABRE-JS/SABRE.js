@@ -57,4 +57,4 @@ var SSAStyleDefinition;
 /**
  * @type {function(new:SSAStyleDefinition)}
  */
-sabre.SSAStyleDefinition = function(){};
+sabre.SSAStyleDefinition = function () {};

@@ -10,4 +10,4 @@ var SSARenderer;
 /**
  * @type {function(new:SSARenderer)}
  */
-sabre.Renderer = function(){}
+sabre.Renderer = function () {};

@@ -9,4 +9,4 @@ var SubtitleScheduler;
 /**
  * @type {function(new:SubtitleScheduler)}
  */
-sabre.SubtitleScheduler = function(){};
+sabre.SubtitleScheduler = function () {};

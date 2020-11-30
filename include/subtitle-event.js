@@ -20,4 +20,4 @@ var SSASubtitleEvent;
 /**
  * @type {function(new:SSASubtitleEvent)}
  */
-sabre.SSASubtitleEvent = function(){};
+sabre.SSASubtitleEvent = function () {};
