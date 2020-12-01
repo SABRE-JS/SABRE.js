@@ -84,7 +84,7 @@ const lehex = function (value) {
 };
 
 //implement toBlob on systems that don't support it in a manner that avoids using costly dataurls
-const canvas2blob = function (callback, type, quality) {
+const canvas2blob = function (callback /*, type, quality*/) {
     //put this in a webworker and get it working using 32bit Alpha bitmaps
     var ctx = this.getContext("2d");
     var imgdata = ctx.getImageData(0, 0, this.width, this.height);
@@ -112,7 +112,8 @@ const canvas2blob = function (callback, type, quality) {
         "\xFF\x00\x00\x00" +
         "\x00\x00\x00\xFF" +
         "\x42\x47\x52\x73";
-    for (var i = 0; i < 0x24; i++) header += "\x00";
+    var i;
+    for (i = 0; i < 0x24; i++) header += "\x00";
     header += "\x00\x00\x00\x00" + "\x00\x00\x00\x00" + "\x00\x00\x00\x00";
     var arr = new ArrayBuffer(
         (imgdata.data.length || 4 * this.width * this.height) +
@@ -122,13 +123,13 @@ const canvas2blob = function (callback, type, quality) {
     );
     var bytes = new Uint8Array(arr);
     var longs = new Uint32Array(arr);
-    for (var i = 0; i < header.length; i++) {
+    for (i = 0; i < header.length; i++) {
         bytes[i] = header.charCodeAt(i);
     }
     var k = Math.ceil(header.length / 4);
     for (var j = 0; j < (imgdata.width || this.width); j++) {
         for (var l = 0; l < (imgdata.height || this.height); l++) {
-            var i = (imgdata.width || this.width) * l + j;
+            i = (imgdata.width || this.width) * l + j;
             var n =
                 (imgdata.width || this.width) *
                     ((imgdata.height || this.height) - l) -

@@ -9,5 +9,6 @@ echo "Running pretty-quick..." | tee -a $LOG_FILE
 $SCRIPT_BIN_DIR/helpers/execute-node.sh pretty-quick --staged | tee -a $LOG_FILE
 echo "Running eslint..." | tee -a $LOG_FILE
 $SCRIPT_BIN_DIR/helpers/execute-node.sh lint-staged | tee -a $LOG_FILE
+RESULT_CODE=$?
 echo "Finished pre-commit hook..." | tee -a $LOG_FILE
-
+exit $RESULT_CODE

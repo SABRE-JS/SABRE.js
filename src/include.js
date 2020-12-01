@@ -31,7 +31,7 @@ sabre["import"] = function (scriptUrl, callback) {
         typeof global["document"] === "undefined"
     ) {
         try {
-            importScripts(scriptUrl);
+            global.importScripts(scriptUrl); //eslint-disable-line no-undef
         } catch (e) {
             //if(e instanceof NetworkError){
             callback(false);
@@ -61,7 +61,7 @@ sabre["import"] = function (scriptUrl, callback) {
  */
 sabre["include"] = function (scriptUrl, callback) {
     if (typeof callback === "undefined" || callback == null)
-        callback = function (a) {};
+        callback = function () {};
     if (
         !(typeof includelog[scriptUrl] === "undefined") &&
         includelog[scriptUrl] === true
@@ -72,7 +72,7 @@ sabre["include"] = function (scriptUrl, callback) {
         typeof global["document"] === "undefined"
     ) {
         try {
-            importScripts(scriptUrl);
+            global.importScripts(scriptUrl); //eslint-disable-line no-undef
         } catch (e) {
             //if(e instanceof NetworkError){
             callback(false);

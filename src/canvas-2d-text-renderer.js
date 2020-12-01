@@ -29,7 +29,7 @@
  *              stroke:boolean
  *          }}
  */
-var TextRenderingProperties;
+var TextRenderingProperties; // eslint-disable-line no-unused-vars
 
 const lineSpacing = 1.2;
 
@@ -325,6 +325,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
         value: function (text, properties) {
             if (!this._initialized) this._init();
             this._offsetX = this._offsetY = 0;
+            var i, letter_offset;
             this._handleProperties(properties);
 
             //calculate size of text
@@ -333,7 +334,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
                 this._width =
                     this._ctx.measureText(text).width * properties.scaleX;
             } else {
-                for (var i = 0; i < text.length; i++)
+                for (i = 0; i < text.length; i++)
                     this._width += this._ctx.measureText(text[i]).width;
                 this._width += properties.spacing * (text.length - 1);
             }
@@ -370,57 +371,45 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
             var offsetYtemp = this._offsetY / properties.scaleY;
             if (properties.stroke) {
                 if (global.isNaN(properties.spacing)) {
-                    this._ctx.strokeText(
-                        text,
-                        this._offsetXtemp,
-                        this._offsetYtemp
-                    );
+                    this._ctx.strokeText(text, offsetXtemp, offsetYtemp);
                     this._ctx.globalCompositeOperation = "destination-out";
                     this._ctx.filter = "none";
-                    this._ctx.fillText(
-                        text,
-                        this._offsetXtemp,
-                        this._offsetYtemp
-                    );
+                    this._ctx.fillText(text, offsetXtemp, offsetYtemp);
                 } else {
-                    var letter_offset = 0;
-                    for (var i = 0; i < text.length; i++) {
+                    letter_offset = 0;
+                    for (i = 0; i < text.length; i++) {
                         this._ctx.strokeText(
                             text[i],
-                            this._offsetXtemp +
+                            offsetXtemp +
                                 (properties.spacing * i + letter_offset),
-                            this._offsetYtemp
+                            offsetYtemp
                         );
                         letter_offset += this._ctx.measureText(text[i]).width;
                     }
                     this._ctx.globalCompositeOperation = "destination-out";
                     this._ctx.filter = "none";
                     letter_offset = 0;
-                    for (var i = 0; i < text.length; i++) {
+                    for (i = 0; i < text.length; i++) {
                         this._ctx.fillText(
                             text[i],
-                            this._offsetXtemp +
+                            offsetXtemp +
                                 (properties.spacing * i + letter_offset),
-                            this._offsetYtemp
+                            offsetYtemp
                         );
                         letter_offset += this._ctx.measureText(text[i]).width;
                     }
                 }
             } else {
                 if (global.isNaN(properties.spacing))
-                    this._ctx.fillText(
-                        text,
-                        this._offsetXtemp,
-                        this._offsetYtemp
-                    );
+                    this._ctx.fillText(text, offsetXtemp, this._offsetYtemp);
                 else {
-                    var letter_offset = 0;
-                    for (var i = 0; i < text.length; i++) {
+                    letter_offset = 0;
+                    for (i = 0; i < text.length; i++) {
                         this._ctx.fillText(
                             text[i],
-                            this._offsetXtemp +
+                            offsetXtemp +
                                 (properties.spacing * i + letter_offset),
-                            this._offsetYtemp
+                            offsetYtemp
                         );
                         letter_offset += this._ctx.measureText(text[i]).width;
                     }

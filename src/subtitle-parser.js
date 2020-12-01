@@ -354,11 +354,10 @@ const main_prototype = global.Object.create(global.Object, {
             var style = new sabre.SSAStyleDefinition();
             for (
                 var i = 0;
-                i < values.length &&
-                i < this._config.parser.style_format.length;
+                i < values.length && i < config.parser.style_format.length;
                 i++
             ) {
-                var key = this._config.parser.style_format.length[i];
+                var key = config.parser.style_format.length[i];
                 var value = values[i];
             }
         },
@@ -370,11 +369,10 @@ const main_prototype = global.Object.create(global.Object, {
             var style = new sabre.SSAStyleDefinition();
             for (
                 var i = 0;
-                i < values.length &&
-                i < this._config.parser.style_format.length;
+                i < values.length && i < config.parser.style_format.length;
                 i++
             ) {
-                var key = this._config.parser.style_format.length[i];
+                var key = config.parser.style_format.length[i];
                 var value = values[i];
             }
         },
@@ -490,7 +488,7 @@ const main_prototype = global.Object.create(global.Object, {
                  */
                 function (setStyle, overrides, parameters) {
                     var alignment_value = parseInt(parameters[1], 10);
-                    overrides.setAlignment(parameters[1]);
+                    overrides.setAlignment(alignment_value);
                 },
                 /**
                  * Resets the alignment of the event.
@@ -1064,6 +1062,7 @@ const main_prototype = global.Object.create(global.Object, {
                 code = code[1];
                 if (typeof params == "undefined") {
                     var found = false;
+                    var result;
                     for (
                         var i = 0;
                         i < this._overrideTags.regular_expressions.length;
@@ -1079,9 +1078,12 @@ const main_prototype = global.Object.create(global.Object, {
                                     rarray[j] = match[j];
                                 else rarray[j] = null;
                             }
-                            var result = this._overrideTags.tag_handlers[
-                                i
-                            ].call(this, setStyle, overrides, rarray);
+                            result = this._overrideTags.tag_handlers[i].call(
+                                this,
+                                setStyle,
+                                overrides,
+                                rarray
+                            );
                             if (typeof result !== "undefined")
                                 overrides = result;
                             break;
@@ -1092,7 +1094,7 @@ const main_prototype = global.Object.create(global.Object, {
                 } else {
                     var func = this._overrideFunctions[code];
                     if (typeof func !== "undefined") {
-                        var result = func.call(
+                        result = func.call(
                             this,
                             timeInfo,
                             overrides,
@@ -1119,7 +1121,6 @@ const main_prototype = global.Object.create(global.Object, {
             var event = new sabre.SSASubtitleEvent();
             var style = this._getStyle("Default");
             event.setStyle(style);
-            var text = "";
             var event_overrides = new sabre.SSAStyleOverride();
             var tmp;
             for (var i = 0; i < values.length; i++) {

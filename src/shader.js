@@ -46,13 +46,14 @@ sabre["ShaderPrototype"] = Object.create(Object, {
 
     "load": {
         value: function (vertexUrl, fragmentUrl, expire) {
+            var xmlhttp = null;
             if (
                 typeof global.localStorage === "undefined" ||
                 typeof expire === "undefined" ||
                 expire <= 0
             ) {
                 if (typeof shaderlog[vertexUrl] === "undefined") {
-                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp = new XMLHttpRequest();
                     xmlhttp.open("GET", vertexUrl, false);
                     xmlhttp.overrideMimeType("text/plain");
                     xmlhttp.send();
@@ -64,7 +65,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
                     this.vertSrc = shaderlog[vertexUrl];
                 }
                 if (typeof shaderlog[fragmentUrl] === "undefined") {
-                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp = new XMLHttpRequest();
                     xmlhttp.open("GET", fragmentUrl, false);
                     xmlhttp.overrideMimeType("text/plain");
                     xmlhttp.send();
@@ -88,7 +89,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
                     16
                 ) < window.Date.now()
             ) {
-                var xmlhttp = new XMLHttpRequest();
+                xmlhttp = new XMLHttpRequest();
                 xmlhttp.open("GET", vertexUrl, false);
                 xmlhttp.overrideMimeType("text/plain");
                 xmlhttp.send();
@@ -116,7 +117,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
                     16
                 ) < window.Date.now()
             ) {
-                var xmlhttp = new XMLHttpRequest();
+                xmlhttp = new XMLHttpRequest();
                 xmlhttp.open("GET", fragmentUrl, false);
                 xmlhttp.overrideMimeType("text/plain");
                 xmlhttp.send();

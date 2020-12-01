@@ -13,7 +13,7 @@
  * 				end:number
  * 			}}
  */
-var TreeNode;
+var TreeNode; // eslint-disable-line no-unused-vars
 /**
  * @fileoverview generic subtitle scheduler.
  */
