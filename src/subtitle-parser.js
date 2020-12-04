@@ -132,6 +132,21 @@ const main_prototype = global.Object.create(global.Object, {
         writable: false
     },
 
+    _cleanRawColor: {
+        /**
+         * Cleanup a raw color string.
+         * @param {string} raw the raw string.
+         * @returns {string} the cleaned string.
+         */
+        value: function (raw) {
+            return raw.replace(
+                /^[&H]*(?:0x)?((?:[0-9a-fA-F][0-9a-fA-F])+)[&H]*/,
+                "$1"
+            );
+        },
+        writable: false
+    },
+
     _cloneEventWithoutText: {
         /**
          * Clone a SSASubtitleEvent, but leave the text uncloned.
@@ -418,45 +433,25 @@ const main_prototype = global.Object.create(global.Object, {
          * Contains parsing methods for override tags.
          * @struct
          */
-        value: Object.freeze({
-            regular_expressions: Object.freeze([
-                /^a([1-9][01]?)$/,
-                /^an([1-9])$/,
-                /^an?0?$/,
-                /^([1-4])?a(?:lpha)?&H([0-9a-fA-F][0-9a-fA-F])&?$/,
-                /^([1-4])?a(?:lpha)?$/,
-                /^b([0-9]+)$/,
-                /^be([0-9]+)$/,
-                /^blur([0-9]+(?:\.[0-9]+)?)$/,
-                /^([xy])?bord([0-9]+(?:\.[0-9]+)?)$/,
-                /^([1-4])?c&H((?:[0-9a-fA-F][0-9a-fA-F])+)&?$/,
-                /^([1-4])?c$/,
-                /^fa([xy])([0-9]+(?:\.[0-9]+)?)$/,
-                /^fe([0-9]+)$/,
-                /^fn(.+)$/,
-                /^fr([xyz])?(-?[0-9]+(?:\.[0-9]+)?)$/,
-                /^fs([+-])([0-9]+(?:\.[0-9]+)?)$/,
-                /^fs([0-9]+(?:\.[0-9]+)?)$/,
-                /^fsc([xy])([0-9]+(?:\.[0-9]+)?)$/,
-                /^fsp(-?[0-9]+(?:\.[0-9]+)?)$/,
-                /^i([01])$/,
-                /^([kK][fo]?)([0-9]+(?:\.[0-9]+)?)$/,
-                /^p([0-9]+(?:\.[0-9]+)?)$/,
-                /^pbo(-?[0-9]+(?:\.[0-9]+)?)$/,
-                /^q([0-3])$/,
-                /^r(.+)?$/,
-                /^([xy])?shad(-?[0-9]+(?:\.[0-9]+)?)$/,
-                /^u([01])$/
-            ]),
-            tag_handlers: Object.freeze([
+        value: Object.freeze([
+            {
+                ignore_exterior: false,
+                regular_expression: /^a/,
                 /**
                  * Sets the alignment of the event using the old style.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var depricated_align = parseInt(parameters[1], 10);
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var depricated_align = parseInt(parameters[0], 10);
+                    if (isNaN(depricated_align)) return;
                     if (depricated_align > 11) {
                         console.error("Invalid Alignment in legacy \\a tag.");
                         return;
@@ -479,42 +474,72 @@ const main_prototype = global.Object.create(global.Object, {
                             );
                             break;
                     }
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^an/,
                 /**
                  * Sets the alignment of the event using the new style.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var alignment_value = parseInt(parameters[1], 10);
-                    overrides.setAlignment(alignment_value);
-                },
-                /**
-                 * Resets the alignment of the event.
-                 * @param {function(SSAStyleDefinition):void} setStyle
-                 * @param {SSAStyleOverride} overrides
-                 * @param {Array<?string>} parameters
-                 */
-                function (setStyle, overrides, parameters) {
-                    overrides.setAlignment(null);
-                },
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    if (
+                        typeof parameters[0] == "undefined" ||
+                        parameters[0] == ""
+                    ) {
+                        overrides.setAlignment(null);
+                    } else {
+                        var alignment_value = parseInt(parameters[0], 10);
+                        if (isNaN(alignment_value)) return;
+                        overrides.setAlignment(alignment_value);
+                    }
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^([1-4])?a(?:lpha)?/,
                 /**
                  * Sets the alpha component of the specified color.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
                     var color_index = 1;
-                    if (parameters[1] == null)
-                        color_index = parseInt(parameters[1], 10);
-                    var a = (parseInt(parameters[2], 16) & 0xff) / 255;
+                    if (
+                        typeof parameters[0] != "undefined" &&
+                        parameters[0] != ""
+                    )
+                        color_index = parseInt(parameters[0], 10);
+                    var a = null;
+                    if (
+                        typeof parameters[1] != "undefined" &&
+                        parameters[1] != ""
+                    ) {
+                        a = parseInt(this._cleanRawColor(parameters[1]), 16);
+                        if (isNaN(a)) return;
+                        a = (a & 0xff) / 255;
+                    }
                     var color;
                     switch (color_index) {
                         case 1:
                             color = overrides.getPrimaryColor();
-                            if (color == null)
+                            if (color == null && a != null)
                                 overrides.setPrimaryColor(
                                     new sabre.SSAOverrideColor(
                                         null,
@@ -523,13 +548,13 @@ const main_prototype = global.Object.create(global.Object, {
                                         a
                                     )
                                 );
-                            else {
+                            else if (color != null) {
                                 color.setA(a);
                             }
                             break;
                         case 2:
                             color = overrides.getSecondaryColor();
-                            if (color == null)
+                            if (color == null && a != null)
                                 overrides.setSecondaryColor(
                                     new sabre.SSAOverrideColor(
                                         null,
@@ -538,13 +563,13 @@ const main_prototype = global.Object.create(global.Object, {
                                         a
                                     )
                                 );
-                            else {
+                            else if (color != null) {
                                 color.setA(a);
                             }
                             break;
                         case 3:
                             color = overrides.getTertiaryColor();
-                            if (color == null)
+                            if (color == null && a != null)
                                 overrides.setTertiaryColor(
                                     new sabre.SSAOverrideColor(
                                         null,
@@ -553,7 +578,7 @@ const main_prototype = global.Object.create(global.Object, {
                                         a
                                     )
                                 );
-                            else {
+                            else if (color != null) {
                                 color.setA(a);
                             }
                             break;
@@ -568,58 +593,31 @@ const main_prototype = global.Object.create(global.Object, {
                                         a
                                     )
                                 );
-                            else {
+                            else if (color != null) {
                                 color.setA(a);
                             }
                             break;
                     }
-                },
-                /**
-                 * Resets the alpha component of the specified color.
-                 * @param {function(SSAStyleDefinition):void} setStyle
-                 * @param {SSAStyleOverride} overrides
-                 * @param {Array<?string>} parameters
-                 */
-                function (setStyle, overrides, parameters) {
-                    var color_index = 1;
-                    if (parameters[1] != null)
-                        color_index = parseInt(parameters[1], 10);
-                    var color;
-                    switch (color_index) {
-                        case 1:
-                            color = overrides.getPrimaryColor();
-                            if (color != null) {
-                                color.setA(null);
-                            }
-                            break;
-                        case 2:
-                            color = overrides.getSecondaryColor();
-                            if (color != null) {
-                                color.setA(null);
-                            }
-                            break;
-                        case 3:
-                            color = overrides.getTertiaryColor();
-                            if (color != null) {
-                                color.setA(null);
-                            }
-                            break;
-                        case 4:
-                            color = overrides.getQuaternaryColor();
-                            if (color != null) {
-                                color.setA(null);
-                            }
-                            break;
-                    }
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^b/,
                 /**
                  * Handles boldface for text.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
                     var weight = parseInt(parameters[1], 10);
+                    if (isNaN(weight)) return;
                     if (weight == 0) {
                         overrides.setBold(400);
                     } else if (weight == 1) {
@@ -627,207 +625,319 @@ const main_prototype = global.Object.create(global.Object, {
                     } else {
                         overrides.setBold(weight);
                     }
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^be/,
                 /**
                  * Handles edge blur for text and shapes.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var blur_iterations = parseInt(parameters[1], 10);
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var blur_iterations = parseInt(parameters[0], 10);
+                    if (isNaN(blur_iterations)) return;
                     overrides.setEdgeBlur(blur_iterations);
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^blur/,
                 /**
                  * Handles gaussian edge blur for text and shapes.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var blur_iterations = parseFloat(parameters[1]);
-                    overrides.setGaussianEdgeBlur(blur_iterations);
-                },
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var blur_value = parseFloat(parameters[0]);
+                    if (isNaN(blur_value)) return;
+                    overrides.setGaussianEdgeBlur(blur_value);
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^([xy])?bord/,
                 /**
                  * Handles outline widths.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var outline_width = parseFloat(parameters[2]);
-                    if (parameters[1] == null) {
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var outline_width = parseFloat(parameters[1]);
+                    if (isNaN(outline_width)) return;
+                    if (
+                        typeof parameters[0] == "undefined" ||
+                        parameters[0] == ""
+                    ) {
                         // x and y outline width
                         overrides.setOutline(outline_width);
-                    } else if (parameters[1] == "x") {
+                    } else if (parameters[0] == "x") {
                         // x outline width
                         overrides.setOutlineX(outline_width);
                     } else {
                         // y outline width
                         overrides.setOutlineY(outline_width);
                     }
-                },
+                }
+            },
+            {
+                regular_expression: /^([1-4])?c/,
                 /**
                  * Handles color settings.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
                     var color_index = 1;
-                    if (parameters[1] != null)
-                        color_index = parseInt(parameters[1], 10);
-                    var pcolor = parseInt(parameters[2], 16);
-                    var r = (pcolor & 0xff) / 255;
-                    pcolor = pcolor >> 8;
-                    var g = (pcolor & 0xff) / 255;
-                    pcolor = pcolor >> 8;
-                    var b = (pcolor & 0xff) / 255;
+                    if (
+                        typeof parameters[0] != "undefined" &&
+                        parameters[0] != ""
+                    )
+                        color_index = parseInt(parameters[0], 10);
                     var color;
-                    switch (color_index) {
-                        case 1:
-                            color = overrides.getPrimaryColor();
-                            if (color == null)
-                                overrides.setPrimaryColor(
-                                    new sabre.SSAOverrideColor(r, g, b, null)
-                                );
-                            else {
-                                color.setR(r);
-                                color.setG(g);
-                                color.setB(b);
-                            }
-                            break;
-                        case 2:
-                            color = overrides.getSecondaryColor();
-                            if (color == null)
-                                overrides.setSecondaryColor(
-                                    new sabre.SSAOverrideColor(r, g, b, null)
-                                );
-                            else {
-                                color.setR(r);
-                                color.setG(g);
-                                color.setB(b);
-                            }
-                            break;
-                        case 3:
-                            color = overrides.getTertiaryColor();
-                            if (color == null)
-                                overrides.setTertiaryColor(
-                                    new sabre.SSAOverrideColor(r, g, b, null)
-                                );
-                            else {
-                                color.setR(r);
-                                color.setG(g);
-                                color.setB(b);
-                            }
-                            break;
-                        case 4:
-                            color = overrides.getQuaternaryColor();
-                            if (color == null)
-                                overrides.setQuaternaryColor(
-                                    new sabre.SSAOverrideColor(r, g, b, null)
-                                );
-                            else {
-                                color.setR(r);
-                                color.setG(g);
-                                color.setB(b);
-                            }
-                            break;
+                    if (
+                        typeof parameters[1] != "undefined" &&
+                        parameters[1] != ""
+                    ) {
+                        var pcolor = parseInt(
+                            this._cleanRawColor(parameters[1]),
+                            16
+                        );
+                        if (isNaN(pcolor)) return;
+                        var r = (pcolor & 0xff) / 255;
+                        pcolor = pcolor >> 8;
+                        var g = (pcolor & 0xff) / 255;
+                        pcolor = pcolor >> 8;
+                        var b = (pcolor & 0xff) / 255;
+                        switch (color_index) {
+                            case 1:
+                                color = overrides.getPrimaryColor();
+                                if (color == null)
+                                    overrides.setPrimaryColor(
+                                        new sabre.SSAOverrideColor(
+                                            r,
+                                            g,
+                                            b,
+                                            null
+                                        )
+                                    );
+                                else {
+                                    color.setR(r);
+                                    color.setG(g);
+                                    color.setB(b);
+                                }
+                                break;
+                            case 2:
+                                color = overrides.getSecondaryColor();
+                                if (color == null)
+                                    overrides.setSecondaryColor(
+                                        new sabre.SSAOverrideColor(
+                                            r,
+                                            g,
+                                            b,
+                                            null
+                                        )
+                                    );
+                                else {
+                                    color.setR(r);
+                                    color.setG(g);
+                                    color.setB(b);
+                                }
+                                break;
+                            case 3:
+                                color = overrides.getTertiaryColor();
+                                if (color == null)
+                                    overrides.setTertiaryColor(
+                                        new sabre.SSAOverrideColor(
+                                            r,
+                                            g,
+                                            b,
+                                            null
+                                        )
+                                    );
+                                else {
+                                    color.setR(r);
+                                    color.setG(g);
+                                    color.setB(b);
+                                }
+                                break;
+                            case 4:
+                                color = overrides.getQuaternaryColor();
+                                if (color == null)
+                                    overrides.setQuaternaryColor(
+                                        new sabre.SSAOverrideColor(
+                                            r,
+                                            g,
+                                            b,
+                                            null
+                                        )
+                                    );
+                                else {
+                                    color.setR(r);
+                                    color.setG(g);
+                                    color.setB(b);
+                                }
+                                break;
+                        }
+                    } else {
+                        switch (color_index) {
+                            case 1:
+                                color = overrides.getPrimaryColor();
+                                if (color != null) {
+                                    color.setR(null);
+                                    color.setG(null);
+                                    color.setB(null);
+                                }
+                                break;
+                            case 2:
+                                color = overrides.getSecondaryColor();
+                                if (color != null) {
+                                    color.setR(null);
+                                    color.setG(null);
+                                    color.setB(null);
+                                }
+                                break;
+                            case 3:
+                                color = overrides.getTertiaryColor();
+                                if (color != null) {
+                                    color.setR(null);
+                                    color.setG(null);
+                                    color.setB(null);
+                                }
+                                break;
+                            case 4:
+                                color = overrides.getQuaternaryColor();
+                                if (color != null) {
+                                    color.setR(null);
+                                    color.setG(null);
+                                    color.setB(null);
+                                }
+                                break;
+                        }
                     }
-                },
-                /**
-                 * Resets color settings.
-                 * @param {function(SSAStyleDefinition):void} setStyle
-                 * @param {SSAStyleOverride} overrides
-                 * @param {Array<?string>} parameters
-                 */
-                function (setStyle, overrides, parameters) {
-                    var color_index = 1;
-                    if (parameters[1] != null)
-                        color_index = parseInt(parameters[1], 10);
-                    var color;
-                    switch (color_index) {
-                        case 1:
-                            color = overrides.getPrimaryColor();
-                            if (color != null) {
-                                color.setR(null);
-                                color.setG(null);
-                                color.setB(null);
-                            }
-                            break;
-                        case 2:
-                            color = overrides.getSecondaryColor();
-                            if (color != null) {
-                                color.setR(null);
-                                color.setG(null);
-                                color.setB(null);
-                            }
-                            break;
-                        case 3:
-                            color = overrides.getTertiaryColor();
-                            if (color != null) {
-                                color.setR(null);
-                                color.setG(null);
-                                color.setB(null);
-                            }
-                            break;
-                        case 4:
-                            color = overrides.getQuaternaryColor();
-                            if (color != null) {
-                                color.setR(null);
-                                color.setG(null);
-                                color.setB(null);
-                            }
-                            break;
-                    }
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^fa([xy])/,
                 /**
                  * Handles shearing.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var factor = parseFloat(parameters[2]);
-                    if (parameters[1] == "x") {
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var factor = parseFloat(parameters[1]);
+                    if (isNaN(factor)) return;
+                    if (parameters[0] == "x") {
                         // x outline width
                         overrides.setShearX(factor);
                     } else {
                         // y outline width
                         overrides.setShearY(factor);
                     }
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^fe/,
                 /**
                  * Handles encoding.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var encoding = parseInt(parameters[1], 10);
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var encoding = parseInt(parameters[0], 10);
                     overrides.setEncoding(encoding);
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^fn/,
                 /**
                  * Handles switching fonts.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var fontName = parameters[1];
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var fontName = parameters[0];
                     this._loadFont.call(null, fontName);
                     overrides.setFont(fontName);
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^fr([xyz])?/,
                 /**
                  * Handles rotation.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
                     var rotation_axis = "z";
-                    if (parameters[1] != null) rotation_axis = parameters[1];
-                    var value = parseFloat(parameters[2]);
+                    if (
+                        typeof parameters[0] != "undefined" &&
+                        parameters[0] != ""
+                    )
+                        rotation_axis = parameters[0];
+                    var value = parseFloat(parameters[1]);
+                    if (isNaN(value)) return;
                     switch (rotation_axis) {
                         case "x":
                             overrides.addRotation(value, 0, 0);
@@ -839,73 +949,131 @@ const main_prototype = global.Object.create(global.Object, {
                             overrides.addRotation(0, 0, value);
                             break;
                     }
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^fs([+-])?/,
                 /**
-                 * Increases or decreases font size.
+                 * Increases or decreases font size, or sets font size.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var add_to = parameters[1] == "+";
-                    var font_size_modifier = parseFloat(parameters[2]);
-                    if (add_to)
-                        overrides.increaseFontSizeModifier(font_size_modifier);
-                    else overrides.decreaseFontSizeModifier(font_size_modifier);
-                },
-                /**
-                 * Sets font size.
-                 * @param {function(SSAStyleDefinition):void} setStyle
-                 * @param {SSAStyleOverride} overrides
-                 * @param {Array<?string>} parameters
-                 */
-                function (setStyle, overrides, parameters) {
-                    var font_size = parseFloat(parameters[1]);
-                    overrides.resetFontSizeModifier();
-                    overrides.setFontSize(font_size);
-                },
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    if (
+                        typeof parameters[0] != "undefined" &&
+                        parameters[0] != ""
+                    ) {
+                        var add_to = parameters[0] == "+";
+                        var font_size_modifier = parseFloat(parameters[1]);
+                        if (add_to)
+                            overrides.increaseFontSizeModifier(
+                                font_size_modifier
+                            );
+                        else
+                            overrides.decreaseFontSizeModifier(
+                                font_size_modifier
+                            );
+                    } else {
+                        var font_size = parseFloat(parameters[1]);
+                        overrides.resetFontSizeModifier();
+                        overrides.setFontSize(font_size);
+                    }
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^fsc([xy])/,
                 /**
                  * Handles font scaling.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var is_x = parameters[1] == "x";
-                    var value = parseFloat(parameters[2]);
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var is_x = parameters[0] == "x";
+                    var value = parseFloat(parameters[1]);
+                    if (isNaN(value)) return;
                     if (is_x) overrides.setScaleX(value);
                     else overrides.setScaleY(value);
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^fsp/,
                 /**
                  * Handles font spacing.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var value = parseFloat(parameters[1]);
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var value = parseFloat(parameters[0]);
+                    if (isNaN(value)) return;
                     overrides.setSpacing(value);
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^i/,
                 /**
                  * Handles italicization.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var value = parameters[1] == "1";
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var value = parameters[0] == "1";
+                    if (parameters[0] != "0" && !value) return;
                     overrides.setItalic(value);
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^([kK][fo]?)/,
                 /**
                  * Handles karaoke.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var karaoke_tag = parameters[1];
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var karaoke_tag = parameters[0];
+                    var param = parseFloat(parameters[1]);
+                    if (isNaN(param)) return;
                     var kstart = overrides.getKaraokeEnd();
-                    var kend = kstart + parseFloat(parameters[2]) * 10;
+                    var kend = kstart + param * 10;
                     var mode = 0;
                     switch (karaoke_tag) {
                         case "k":
@@ -924,62 +1092,120 @@ const main_prototype = global.Object.create(global.Object, {
                     overrides.setKaraokeMode(mode);
                     overrides.setKaraokeStart(kstart);
                     overrides.setKaraokeEnd(kend);
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^p/,
                 /**
                  * Handles setting draw mode.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var drawScale = parseFloat(parameters[1]);
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var drawScale = parseFloat(parameters[0]);
+                    if (isNaN(drawScale)) return;
                     if (drawScale > 0) {
                         overrides.setDrawingMode(true);
                         overrides.setDrawingScale(drawScale);
                     } else {
                         overrides.setDrawingMode(false);
                     }
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^pbo/,
                 /**
                  * Handles Baseline offset.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var baselineOffset = parseFloat(parameters[1]);
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var baselineOffset = parseFloat(parameters[0]);
+                    if (isNaN(baselineOffset)) return;
                     overrides.setBaselineOffset(baselineOffset);
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^q/,
                 /**
                  * Handles wrapping style.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var wrapStyle = parseInt(parameters[1], 10);
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var wrapStyle = parseInt(parameters[0], 10);
+                    if (isNaN(wrapStyle) || wrapStyle < 0 || wrapStyle > 3)
+                        return;
                     overrides.setWrapStyle(wrapStyle);
-                },
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^r/,
                 /**
                  * Handles changing or resetting styling.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
                     overrides.reset();
-                    var styleName = parameters[1];
-                    if (styleName != null) setStyle(this._getStyle(styleName));
-                },
+                    var styleName = parameters[0];
+                    if (typeof styleName != "undefined" && styleName != "")
+                        setStyle(this._getStyle(styleName));
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^([xy])?shad/,
                 /**
                  * Handles drop shadow.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
-                    var setting = parameters[1];
-                    var value = parseFloat(parameters[2]);
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var setting = parameters[0];
+                    if (typeof setting == "undefined" || setting == "")
+                        setting = null;
+                    var value = parseFloat(parameters[1]);
+                    if (isNaN(value)) return;
                     switch (setting) {
                         case "x":
                             overrides.setShadowX(value);
@@ -990,126 +1216,131 @@ const main_prototype = global.Object.create(global.Object, {
                         case null:
                             overrides.setShadow(value);
                     }
-                },
+                }
+            },
+            {
+                ignore_exterior: true,
+                regular_expression: /^t/,
                 /**
-                 * Handles underline.
+                 * Handles transitions.
+                 * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
                  */
-                function (setStyle, overrides, parameters) {
+                function(timeInfo, setStyle, overrides, parameters) {
+                    var idx = parameters.length;
+                    var lparameters = parameters;
+                    if (idx > 4) {
+                        var final_param = lparameters.slice(4).join(",");
+                        lparameters = lparameters.slice(0, 4);
+                        lparameters.push(final_param);
+                        idx = 4;
+                    }
+                    gassert(INVALID_T_FUNCTION_TAG, idx > 0);
+                    var transitionStart = 0;
+                    var transitionEnd = timeInfo.end - timeInfo.start;
+                    var acceleration = 1;
+
+                    switch (idx) {
+                        case 4:
+                            acceleration = parseFloat(lparameters[3]);
+                        case 3:
+                            transitionStart = parseFloat(lparameters[1]);
+                            transitionEnd = parseFloat(lparameters[2]);
+                            break;
+                        case 2:
+                            acceleration = parseFloat(lparameters[1]);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    overrides.setTransition([
+                        transitionStart,
+                        transitionEnd,
+                        acceleration
+                    ]);
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^u/,
+                /**
+                 * Handles underline.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {Array<?string>} parameters
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
                     var value = parameters[1] == "1";
+                    if (
+                        typeof parameters[0] == "undefined" ||
+                        (parameters[0] != "0" && !value)
+                    )
+                        return;
                     overrides.setUnderline(value);
                 }
-            ])
-        }),
-        writable: false
-    },
-
-    _overrideFunctions: {
-        /**
-         * Contains parsing methods for override functions.
-         * @dict
-         * @type {Object<string,function({start:number,end:number},SSAStyleOverride,Array<string>)>}
-         */
-        value: Object.freeze({
-            "t": function (timeInfo, overrides, parameters) {
-                var idx = parameters.length;
-                var lparameters = parameters;
-                if (idx > 4) {
-                    var final_param = lparameters.slice(4).join(",");
-                    lparameters = lparameters.slice(0, 4);
-                    lparameters.push(final_param);
-                    idx = 4;
-                }
-                gassert(INVALID_T_FUNCTION_TAG, idx > 0);
-                var transitionStart = 0;
-                var transitionEnd = timeInfo.end - timeInfo.start;
-                var acceleration = 1;
-
-                switch (idx) {
-                    case 4:
-                        acceleration = parseFloat(lparameters[3]);
-                    case 3:
-                        transitionStart = parseFloat(lparameters[1]);
-                        transitionEnd = parseFloat(lparameters[2]);
-                        break;
-                    case 2:
-                        acceleration = parseFloat(lparameters[1]);
-                        break;
-                    default:
-                        break;
-                }
-
-                overrides.setTransition([
-                    transitionStart,
-                    transitionEnd,
-                    acceleration
-                ]);
             }
-        }),
+        ]),
         writable: false
     },
 
     _parseOverrides: {
         value: function (timeInfo, setStyle, old_overrides, tags) {
-            const override_regex = /\\([^}{\\()]+)(?:\((.*?)\))?/g;
+            const override_regex = /\\([^}{\\()]+)(?:\((.*?)\))?([^\\}{\\()]+)?/g;
             var overrides = old_overrides.clone();
-            var code = null;
-            var params;
-            while ((code = override_regex.exec(tags)) !== null) {
-                params = code[2];
-                code = code[1];
-                if (typeof params == "undefined") {
-                    var found = false;
-                    var result;
-                    for (
-                        var i = 0;
-                        i < this._overrideTags.regular_expressions.length;
-                        i++
-                    ) {
-                        var regex = this._overrideTags.regular_expressions[i];
-                        if (regex.test(code)) {
-                            found = true;
-                            var match = regex.match(code);
-                            var rarray = [];
-                            for (var j = 0; j < match.length; j++) {
-                                if (typeof match[j] != "undefined")
-                                    rarray[j] = match[j];
-                                else rarray[j] = null;
-                            }
-                            result = this._overrideTags.tag_handlers[i].call(
-                                this,
-                                setStyle,
-                                overrides,
-                                rarray
-                            );
-                            if (typeof result !== "undefined")
-                                overrides = result;
-                            break;
+            var pre_params = null;
+            var params = null;
+            var post_params = null;
+            var code;
+            while ((pre_params = override_regex.exec(tags)) !== null) {
+                params = pre_params[2] || "";
+                post_params = pre_params[3] || "";
+                pre_params = pre_params[1];
+                code = pre_params[0];
+                var found = false;
+                for (var i = this._overrideTags.length - 1; i >= 0; i--) {
+                    var regex = this._overrideTags[i].regular_expression;
+                    if (regex.test(pre_params)) {
+                        found = true;
+                        var match = regex.match(pre_params);
+                        if (!this._overrideTags[i].ignore_exterior) {
+                            pre_params = pre_params.slice(match[0].length);
+                            if (pre_params != "")
+                                pre_params = pre_params.split(",");
+                            else pre_params = [];
+                            if (post_params != "")
+                                post_params = post_params.split(",");
+                            else post_params = [];
+                            if (params != "") params = params.split(",");
+                            else params = [];
+                            params = Array.prototype.slice
+                                .call(match, 1)
+                                .concat(params, pre_params, post_params);
+                        } else {
+                            if (params != "") params = params.split(",");
+                            else params = [];
                         }
-                    }
-                    if (!found)
-                        console.error("Unrecognized Override Tag: " + code);
-                } else {
-                    var func = this._overrideFunctions[code];
-                    if (typeof func !== "undefined") {
-                        result = func.call(
+                        params = params.map((str) => str.trim());
+                        var result = this._overrideTags.tag_handlers[i].call(
                             this,
                             timeInfo,
+                            setStyle,
                             overrides,
-                            params.split(",")
+                            params
                         );
                         if (typeof result !== "undefined") overrides = result;
-                    } else
-                        console.error(
-                            "Unrecognized Override Function: " +
-                                code +
-                                "(" +
-                                params +
-                                ")"
-                        );
+                        break;
+                    }
                 }
+                if (!found) console.error("Unrecognized Override Tag: " + code);
             }
             return overrides;
         },
