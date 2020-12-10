@@ -5,6 +5,7 @@
  |
  |-
  */
+//@include [global-constants.js]
 //@include [util.js]
 //@include [color.js]
 //@include [style.js]
@@ -35,6 +36,9 @@ const FOUND_DEPRICATED_COMMENT = new sabre.Complaint(
 );
 const INVALID_T_FUNCTION_TAG = new sabre.Complaint(
     "Encountered a parameterless \\t function tag, ignoring."
+);
+const MOVE_ENDS_BEFORE_IT_STARTS = new sabre.Complaint(
+    "Encountered a move tag where the animation ends before it starts, ignoring."
 );
 
 //Default style and dialogue formats
@@ -619,11 +623,11 @@ const main_prototype = global.Object.create(global.Object, {
                     var weight = parseInt(parameters[1], 10);
                     if (isNaN(weight)) return;
                     if (weight == 0) {
-                        overrides.setBold(400);
+                        overrides.setWeight(400);
                     } else if (weight == 1) {
-                        overrides.setBold(700);
+                        overrides.setWeight(700);
                     } else {
-                        overrides.setBold(weight);
+                        overrides.setWeight(weight);
                     }
                 }
             },
@@ -911,7 +915,7 @@ const main_prototype = global.Object.create(global.Object, {
                 ) {
                     var fontName = parameters[0];
                     this._loadFont.call(null, fontName);
-                    overrides.setFont(fontName);
+                    overrides.setFontName(fontName);
                 }
             },
             {
@@ -974,16 +978,11 @@ const main_prototype = global.Object.create(global.Object, {
                         var add_to = parameters[0] == "+";
                         var font_size_modifier = parseFloat(parameters[1]);
                         if (add_to)
-                            overrides.increaseFontSizeModifier(
-                                font_size_modifier
-                            );
-                        else
-                            overrides.decreaseFontSizeModifier(
-                                font_size_modifier
-                            );
+                            overrides.increaseFontSizeMod(font_size_modifier);
+                        else overrides.decreaseFontSizeMod(font_size_modifier);
                     } else {
                         var font_size = parseFloat(parameters[1]);
-                        overrides.resetFontSizeModifier();
+                        overrides.resetFontSizeMod();
                         overrides.setFontSize(font_size);
                     }
                 }
@@ -1055,7 +1054,7 @@ const main_prototype = global.Object.create(global.Object, {
             },
             {
                 ignore_exterior: false,
-                regular_expression: /^([kK][fo]?)/,
+                regular_expression: /^([kK][fot]?)/,
                 /**
                  * Handles karaoke.
                  * @param {{start:number,end:number}} timeInfo
@@ -1072,26 +1071,70 @@ const main_prototype = global.Object.create(global.Object, {
                     var karaoke_tag = parameters[0];
                     var param = parseFloat(parameters[1]);
                     if (isNaN(param)) return;
+                    param = param * 10;
                     var kstart = overrides.getKaraokeEnd();
-                    var kend = kstart + param * 10;
-                    var mode = 0;
+                    var kend = kstart + param;
                     switch (karaoke_tag) {
                         case "k":
-                            mode = 1;
+                            overrides.setKaraokeMode(
+                                sabre.KaraokeModes.COLOR_SWAP
+                            );
                             break;
                         case "K":
                         case "kf":
-                            mode = 2;
+                            overrides.setKaraokeMode(
+                                sabre.KaraokeModes.COLOR_SWEEP
+                            );
                             break;
                         case "ko":
-                            mode = 3;
+                            overrides.setKaraokeMode(
+                                sabre.KaraokeModes.OUTLINE_TOGGLE
+                            );
+                            break;
+                        case "kt":
+                            kstart = timeInfo.start + param;
+                            kend = kstart;
                             break;
                         default:
-                            break;
+                            return;
                     }
-                    overrides.setKaraokeMode(mode);
                     overrides.setKaraokeStart(kstart);
                     overrides.setKaraokeEnd(kend);
+                }
+            },
+            {
+                ignore_exterior: true,
+                regular_expression: /^move/,
+                /**
+                 * Handles motion animation.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {Array<?string>} parameters
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var x1 = parseInt(parameters[0], 10);
+                    var y1 = parseInt(parameters[1], 10);
+                    var x2 = parseInt(parameters[2], 10);
+                    var y2 = parseInt(parameters[3], 10);
+                    if (isNaN(x1) || isNaN(x2) || isNaN(y1) || isNaN(y2))
+                        return;
+                    var t1 = parseInt(parameters[0], 10);
+                    var t2 = parseInt(parameters[1], 10);
+                    if (isNaN(t1) || isNaN(t2)) {
+                        t1 = timeInfo.start;
+                        t2 = timeInfo.end;
+                    } else {
+                        t1 = t1 / 1000 + timeInfo.start;
+                        t2 = t2 / 1000 + timeInfo.start;
+                    }
+                    if (!gassert(MOVE_ENDS_BEFORE_IT_STARTS, t2 >= t1)) return;
+                    overrides.setMovement(x1, y1, x2, y2, t1, t2);
                 }
             },
             {
@@ -1139,6 +1182,28 @@ const main_prototype = global.Object.create(global.Object, {
                     var baselineOffset = parseFloat(parameters[0]);
                     if (isNaN(baselineOffset)) return;
                     overrides.setBaselineOffset(baselineOffset);
+                }
+            },
+            {
+                ignore_exterior: true,
+                regular_expression: /^pos/,
+                /**
+                 * Handles setting the position.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {Array<?string>} parameters
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    var x = parseInt(parameters[0], 10);
+                    var y = parseInt(parameters[1], 10);
+                    if (isNaN(x) || isNaN(y)) return;
+                    overrides.setPosition(x, y);
                 }
             },
             {
@@ -1301,10 +1366,10 @@ const main_prototype = global.Object.create(global.Object, {
             var post_params = null;
             var code;
             while ((pre_params = override_regex.exec(tags)) !== null) {
+                code = pre_params[0];
                 params = pre_params[2] || "";
                 post_params = pre_params[3] || "";
                 pre_params = pre_params[1];
-                code = pre_params[0];
                 var found = false;
                 for (var i = this._overrideTags.length - 1; i >= 0; i--) {
                     var regex = this._overrideTags[i].regular_expression;
@@ -1449,7 +1514,7 @@ const main_prototype = global.Object.create(global.Object, {
             if (line[0] == ";") return; // this means it's a comment so we just ignore it.
             var keypair = this._splitOnce(line, ":");
             if (keypair.length > 1) {
-                if (gassert(FOUND_DEPRICATED_COMMENT, keypair[0] !== "!"))
+                if (!gassert(FOUND_DEPRICATED_COMMENT, keypair[0] !== "!"))
                     return; //depricated comment
                 try {
                     if (typeof this._parser[this._heading] !== "undefined")
