@@ -35,7 +35,7 @@ const FOUND_DEPRICATED_COMMENT = new sabre.Complaint(
     "Found a comment in the old depricated style."
 );
 const INVALID_T_FUNCTION_TAG = new sabre.Complaint(
-    "Encountered a parameterless \\t function tag, ignoring."
+    "Encountered a parameterless or tagless \\t function tag, ignoring."
 );
 const MOVE_ENDS_BEFORE_IT_STARTS = new sabre.Complaint(
     "Encountered a move tag where the animation ends before it starts, ignoring."
@@ -1279,6 +1279,7 @@ const main_prototype = global.Object.create(global.Object, {
                             overrides.setShadowY(value);
                         default:
                         case null:
+                            if (value < 0) return;
                             overrides.setShadow(value);
                     }
                 }
@@ -1294,37 +1295,60 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {Array<?string>} parameters
                  */
                 function(timeInfo, setStyle, overrides, parameters) {
-                    var idx = parameters.length;
                     var lparameters = parameters;
+                    var final_param;
                     if (idx > 4) {
                         var final_param = lparameters.slice(4).join(",");
                         lparameters = lparameters.slice(0, 4);
                         lparameters.push(final_param);
                         idx = 4;
                     }
-                    gassert(INVALID_T_FUNCTION_TAG, idx > 0);
+
                     var transitionStart = 0;
                     var transitionEnd = timeInfo.end - timeInfo.start;
                     var acceleration = 1;
 
-                    switch (idx) {
-                        case 4:
-                            acceleration = parseFloat(lparameters[3]);
-                        case 3:
-                            transitionStart = parseFloat(lparameters[1]);
-                            transitionEnd = parseFloat(lparameters[2]);
-                            break;
-                        case 2:
-                            acceleration = parseFloat(lparameters[1]);
-                            break;
-                        default:
-                            break;
+                    var temp = parseFloat(lparameters[0]);
+                    var temp2;
+                    if (global.isNaN(temp)) {
+                        final_param = lparameters.join(",");
+                        if (!gassert(INVALID_T_FUNCTION_TAG, final_param != ""))
+                            return;
+                    } else {
+                        temp2 = parseFloat(lparameters[1]);
+                        if (!global.isNaN(temp2)) {
+                            transitionStart = temp;
+                            transitionEnd = temp2;
+                            temp = parseFloat(lparameters[2]);
+                            if (!global.isNaN(temp)) {
+                                acceleration = temp;
+                                final_param = lparameters.slice(3).join(",");
+                            } else final_param = lparameters.slice(2).join(",");
+                            if (
+                                !gassert(
+                                    INVALID_T_FUNCTION_TAG,
+                                    final_param != ""
+                                )
+                            )
+                                return;
+                        } else {
+                            acceleration = temp;
+                            final_param = lparameters.slice(1).join(",");
+                            if (
+                                !gassert(
+                                    INVALID_T_FUNCTION_TAG,
+                                    final_param != ""
+                                )
+                            )
+                                return;
+                        }
                     }
 
                     overrides.setTransition([
                         transitionStart,
                         transitionEnd,
-                        acceleration
+                        acceleration,
+                        final_param
                     ]);
                 }
             },
@@ -1344,7 +1368,7 @@ const main_prototype = global.Object.create(global.Object, {
                     overrides,
                     parameters
                 ) {
-                    var value = parameters[1] == "1";
+                    var value = parameters[0] == "1";
                     if (
                         typeof parameters[0] == "undefined" ||
                         (parameters[0] != "0" && !value)

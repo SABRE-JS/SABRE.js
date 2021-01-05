@@ -1,5 +1,5 @@
 sabre["SSAStyleOverride"] = function () {
-    var obj = {
+    const template = Object.freeze({
         alignment: null,
         blur_iterations: 0,
         gblur_value: 0,
@@ -15,8 +15,16 @@ sabre["SSAStyleOverride"] = function () {
         fontName: null,
         fontSize: null,
         fontSizeMod: 0,
-        rotations: []
-    };
+        rotations: [],
+        movement: null,
+        drawingMode: false,
+        drawingScale: 1,
+        baselineOffset: 0,
+        position: null,
+        wrapStyle: 0,
+        transition: null
+    });
+    var obj = Object.assign({}, template);
     return Object.create(Object, {
         "toJSON": {
             value: function () {
@@ -35,6 +43,48 @@ sabre["SSAStyleOverride"] = function () {
         "getAlignment": {
             value: function () {
                 return obj.alignment;
+            },
+            writable: false
+        },
+
+        "setBaselineOffset": {
+            value: function (/** number */ offset) {
+                obj.baselineOffset = offset;
+            },
+            writable: false
+        },
+
+        "getBaselineOffset": {
+            value: function () {
+                return obj.baselineOffset;
+            },
+            writable: false
+        },
+
+        "setDrawingMode": {
+            value: function (/** boolean */ enabled) {
+                obj.drawingEnabled = enabled;
+            },
+            writable: false
+        },
+
+        "getDrawingMode": {
+            value: function () {
+                return obj.drawingEnabled;
+            },
+            writable: false
+        },
+
+        "setDrawingScale": {
+            value: function (/** number */ scale) {
+                obj.drawingScale = scale;
+            },
+            writable: false
+        },
+
+        "getDrawingScale": {
+            value: function () {
+                return obj.drawingScale;
             },
             writable: false
         },
@@ -201,6 +251,28 @@ sabre["SSAStyleOverride"] = function () {
             writable: false
         },
 
+        "setMovement": {
+            value: function (
+                /** number */ x1,
+                /** number */ y1,
+                /** number */ x2,
+                /** number */ y2,
+                /** number */ t1,
+                /** number */ t2
+            ) {
+                obj.movement = [x1, y1, x2, y2, t1, t2];
+            },
+            writable: false
+        },
+
+        "getMovement": {
+            value: function () {
+                if (obj.movement != null) return obj.movement.slice(0);
+                return null;
+            },
+            writable: false
+        },
+
         "setOutline": {
             value: function (/** number */ outline) {
                 obj.outlineX = outline;
@@ -233,6 +305,21 @@ sabre["SSAStyleOverride"] = function () {
         "getOutlineY": {
             value: function () {
                 return obj.outlineY;
+            },
+            writable: false
+        },
+
+        "setPosition": {
+            value: function (/** number */ x, /** number */ y) {
+                obj.position = [x, y];
+            },
+            writable: false
+        },
+
+        "getPosition": {
+            value: function () {
+                if (obj.position != null) return obj.position.slice(0);
+                return null;
             },
             writable: false
         },
@@ -339,6 +426,43 @@ sabre["SSAStyleOverride"] = function () {
             writable: false
         },
 
+        "setShadowX": {
+            value: function (/** number */ shadowX) {
+                obj.shadowX = shadowX;
+            },
+            writable: false
+        },
+
+        "getShadowX": {
+            value: function () {
+                return obj.shadowX;
+            },
+            writable: false
+        },
+
+        "setShadowY": {
+            value: function (/** number */ shadowY) {
+                obj.shadowY = shadowY;
+            },
+            writable: false
+        },
+
+        "getShadowY": {
+            value: function () {
+                return obj.shadowY;
+            },
+            writable: false
+        },
+
+        "setShadow": {
+            value: function (/** number */ shadow) {
+                shadow = shadow / global.Math.sqrt(2);
+                obj.shadowX = shadow;
+                obj.shadowY = shadow;
+            },
+            writable: false
+        },
+
         "setShearX": {
             value: function (/** number */ shearX) {
                 obj.shearX = shearX;
@@ -381,6 +505,20 @@ sabre["SSAStyleOverride"] = function () {
             writable: false
         },
 
+        "setTransition": {
+            value: function (/** Array<number|string> */ transition) {
+                obj.transition = transition.slice(0);
+            },
+            writable: false
+        },
+
+        "getTransition": {
+            value: function () {
+                return obj.transition.slice(0);
+            },
+            writable: false
+        },
+
         "setWeight": {
             value: function (/** number */ weight) {
                 obj.weight = weight;
@@ -395,11 +533,39 @@ sabre["SSAStyleOverride"] = function () {
             writable: false
         },
 
-        clone: {
+        "setWrapStyle": {
+            value: function (/** number */ wrapStyle) {
+                obj.wrapStyle = wrapStyle;
+            },
+            writable: false
+        },
+
+        "getWrapStyle": {
+            value: function () {
+                return obj.wrapStyle;
+            },
+            writable: false
+        },
+
+        "reset": {
+            value: function () {
+                obj = Object.assign({}, template);
+            },
+            writable: false
+        },
+
+        "clone": {
             value: function () {
                 var new_override = new sabre["SSAStyleOverride"]();
-
+                new_override._cloneHelper(obj);
                 return new_override;
+            },
+            writable: false
+        },
+
+        _cloneHelper: {
+            value: function (other) {
+                obj = Object.assign(obj, other);
             },
             writable: false
         }
