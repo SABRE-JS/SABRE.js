@@ -10,7 +10,7 @@ sabre["SSAStyleDefinition"] = function () {
         secondaryColor: new sabre.SSAColor(0x00ffff00),
         tertiaryColor: new sabre.SSAColor(0x00000000),
         quaternaryColor: new sabre.SSAColor(0x00000080),
-        bold: 200,
+        weight: 200,
         scaleX: 1,
         scaleY: 1,
         spacing: 0,
@@ -39,8 +39,8 @@ sabre["SSAStyleDefinition"] = function () {
                     JSON.stringify(obj.tertiaryColor) +
                     ",qc:" +
                     JSON.stringify(obj.quaternaryColor) +
-                    ",b:" +
-                    obj.bold +
+                    ",w:" +
+                    obj.weight +
                     ",i:" +
                     obj.italic +
                     ",u:" +
@@ -173,16 +173,16 @@ sabre["SSAStyleDefinition"] = function () {
             writable: false
         },
 
-        "setBold": {
-            value: function (/** number */ bold) {
-                obj.bold = bold;
+        "setWeight": {
+            value: function (/** number */ weight) {
+                obj.weight = weight;
             },
             writable: false
         },
 
-        "getBold": {
+        "getWeight": {
             value: function () {
-                return obj.bold;
+                return obj.weight;
             },
             writable: false
         },

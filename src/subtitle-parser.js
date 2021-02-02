@@ -1,7 +1,7 @@
 /*
  |   subtitle-parser.js
  |----------------
- |  subtitle-parser.js is copyright Patrick Rhodes Martin 2020.
+ |  subtitle-parser.js is copyright Patrick Rhodes Martin 2020,2021.
  |
  |-
  */
@@ -42,7 +42,7 @@ const MOVE_ENDS_BEFORE_IT_STARTS = new sabre.Complaint(
 );
 
 //Default style and dialogue formats
-const default_ssa_style_format = [
+const default_ssa_style_format = global.Object.freeze([
     "Name",
     "Fontname",
     "Fontsize",
@@ -61,8 +61,8 @@ const default_ssa_style_format = [
     "MarginV",
     "AlphaLevel",
     "Encoding"
-];
-const default_ass_style_format = [
+]);
+const default_ass_style_format = global.Object.freeze([
     "Name",
     "Fontname",
     "Fontsize",
@@ -86,8 +86,8 @@ const default_ass_style_format = [
     "MarginR",
     "MarginV",
     "Encoding"
-];
-const default_ssa_event_format = [
+]);
+const default_ssa_event_format = global.Object.freeze([
     "Marked",
     "Start",
     "End",
@@ -98,8 +98,8 @@ const default_ssa_event_format = [
     "MarginV",
     "Effect",
     "Text"
-];
-const default_ass_event_format = [
+]);
+const default_ass_event_format = global.Object.freeze([
     "Layer",
     "Start",
     "End",
@@ -110,7 +110,7 @@ const default_ass_event_format = [
     "MarginV",
     "Effect",
     "Text"
-];
+]);
 
 const main_prototype = global.Object.create(global.Object, {
     _config: {
@@ -914,8 +914,9 @@ const main_prototype = global.Object.create(global.Object, {
                     parameters
                 ) {
                     var fontName = parameters[0];
+                    if (fontName == null) return;
                     this._loadFont.call(null, fontName);
-                    overrides.setFontName(fontName);
+                    overrides.setFontName(/** string */ fontName);
                 }
             },
             {
@@ -1297,13 +1298,6 @@ const main_prototype = global.Object.create(global.Object, {
                 function(timeInfo, setStyle, overrides, parameters) {
                     var lparameters = parameters;
                     var final_param;
-                    if (idx > 4) {
-                        var final_param = lparameters.slice(4).join(",");
-                        lparameters = lparameters.slice(0, 4);
-                        lparameters.push(final_param);
-                        idx = 4;
-                    }
-
                     var transitionStart = 0;
                     var transitionEnd = timeInfo.end - timeInfo.start;
                     var acceleration = 1;
@@ -1467,7 +1461,7 @@ const main_prototype = global.Object.create(global.Object, {
                         event.setText(value.replace(/\\h/g, "\u00A0"));
                         break;
                     case "Effect":
-                        event_overrides.setEffect(value);
+                        //event_overrides.setEffect(value);
                         break;
                     case "MarginL":
                         event_overrides.setMarginLeft(parseInt(value, 10));

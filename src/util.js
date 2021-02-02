@@ -85,7 +85,6 @@ const lehex = function (value) {
 
 //implement toBlob on systems that don't support it in a manner that avoids using costly dataurls
 const canvas2blob = function (callback /*, type, quality*/) {
-    //put this in a webworker and get it working using 32bit Alpha bitmaps
     var ctx = this.getContext("2d");
     var imgdata = ctx.getImageData(0, 0, this.width, this.height);
     var header =

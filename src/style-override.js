@@ -1,28 +1,47 @@
+/*
+ |   style-override.js
+ |----------------
+ |  style-override.js is copyright Patrick Rhodes Martin 2020,2021.
+ |
+ |-
+ */
+//@include [color.js]
 sabre["SSAStyleOverride"] = function () {
     const template = Object.freeze({
         alignment: null,
-        blur_iterations: 0,
-        gblur_value: 0,
+        baselineOffset: 0,
+        blurIterations: 0,
+        drawingMode: false,
+        drawingScale: 1,
+        encoding: null,
+        fontName: null,
+        fontSize: null,
+        fontSizeMod: 0,
+        gblurValue: 0,
+        italic: null,
+        karaokeMode: 0,
+        karaokeStart: global.NaN,
+        karaokeEnd: global.NaN,
+        movement: null,
         outlineX: null,
         outlineY: null,
-        shearX: 0,
-        shearY: 0,
-        encoding: null,
+        position: null,
         primaryColor: null,
         secondaryColor: null,
         tertiaryColor: null,
         quaternaryColor: null,
-        fontName: null,
-        fontSize: null,
-        fontSizeMod: 0,
         rotations: [],
-        movement: null,
-        drawingMode: false,
-        drawingScale: 1,
-        baselineOffset: 0,
-        position: null,
-        wrapStyle: 0,
-        transition: null
+        scaleX: null,
+        scaleY: null,
+        shadowX: null,
+        shadowY: null,
+        shearX: 0,
+        shearY: 0,
+        spacing: null,
+        transition: null,
+        underline: null,
+        weight: null,
+        wrapStyle: 0
     });
     var obj = Object.assign({}, template);
     return Object.create(Object, {
@@ -63,14 +82,14 @@ sabre["SSAStyleOverride"] = function () {
 
         "setDrawingMode": {
             value: function (/** boolean */ enabled) {
-                obj.drawingEnabled = enabled;
+                obj.drawingMode = enabled;
             },
             writable: false
         },
 
         "getDrawingMode": {
             value: function () {
-                return obj.drawingEnabled;
+                return obj.drawingMode;
             },
             writable: false
         },
@@ -104,15 +123,15 @@ sabre["SSAStyleOverride"] = function () {
         },
 
         "setEdgeBlur": {
-            value: function (/** number */ blur_iterations) {
-                obj.blur_iterations = blur_iterations;
+            value: function (/** number */ blurIterations) {
+                obj.blurIterations = blurIterations;
             },
             writable: false
         },
 
         "getEdgeBlur": {
             value: function () {
-                return obj.blur_iterations;
+                return obj.blurIterations;
             },
             writable: false
         },
@@ -183,14 +202,14 @@ sabre["SSAStyleOverride"] = function () {
 
         "setGaussianEdgeBlur": {
             value: function (/** number */ blur_value) {
-                obj.gblur_value = blur_value;
+                obj.gblurValue = blur_value;
             },
             writable: false
         },
 
         "getGaussianEdgeBlur": {
             value: function () {
-                return obj.gblur_value;
+                return obj.gblurValue;
             },
             writable: false
         },
@@ -515,6 +534,20 @@ sabre["SSAStyleOverride"] = function () {
         "getTransition": {
             value: function () {
                 return obj.transition.slice(0);
+            },
+            writable: false
+        },
+
+        "setUnderline": {
+            value: function (/** boolean */ underline) {
+                obj.underline = underline;
+            },
+            writable: false
+        },
+
+        "getUnderline": {
+            value: function () {
+                return obj.underline;
             },
             writable: false
         },

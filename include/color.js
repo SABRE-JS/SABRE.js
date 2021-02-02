@@ -26,13 +26,13 @@ sabre.SSAColor = function (r, g, b, a) {};
  *              clone:function():SSAOverrideColor,
  *              applyOverride:function(SSAColor):SSAColor,
  *              getR:function():number,
- *              setR:function(number):void,
+ *              setR:function(?number):void,
  *              getG:function():number,
- *              setG:function(number):void,
+ *              setG:function(?number):void,
  *              getB:function():number,
- *              setB:function(number):void,
+ *              setB:function(?number):void,
  *              getA:function():number,
- *              setA:function(number):void,
+ *              setA:function(?number):void,
  * }}
  */
 var SSAOverrideColor;

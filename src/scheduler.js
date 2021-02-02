@@ -5,6 +5,9 @@
  |
  |-
  */
+//@include [color.js]
+//@include [style.js]
+//@include [style-override.js]
 //@include [subtitle-event.js]
 /**
  * @typedef {!{
