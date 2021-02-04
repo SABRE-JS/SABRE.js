@@ -405,7 +405,7 @@ sabre["SSAStyleDefinition"] = function () {
 
         "getMargins": {
             value: function () {
-                return obj.margins;
+                return obj.margins.slice(0);
             },
             writable: false
         },

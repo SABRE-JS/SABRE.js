@@ -1434,7 +1434,6 @@ const main_prototype = global.Object.create(global.Object, {
         value: function (values, config) {
             var event = new sabre.SSASubtitleEvent();
             var style = this._getStyle("Default");
-            event.setStyle(style);
             var event_overrides = new sabre.SSAStyleOverride();
             var tmp;
             for (var i = 0; i < values.length; i++) {
@@ -1443,7 +1442,6 @@ const main_prototype = global.Object.create(global.Object, {
                 switch (key) {
                     case "Style":
                         style = this._getStyle(value);
-                        event.setStyle(style);
                         break;
                     case "Layer":
                         event.setLayer(parseInt(value, 10));
@@ -1464,13 +1462,19 @@ const main_prototype = global.Object.create(global.Object, {
                         //event_overrides.setEffect(value);
                         break;
                     case "MarginL":
-                        event_overrides.setMarginLeft(parseInt(value, 10));
+                        tmp = parseInt(value, 10);
+                        if (!global.isNaN(tmp))
+                            event_overrides.setMarginLeft(tmp);
                         break;
                     case "MarginR":
-                        event_overrides.setMarginRight(parseInt(value, 10));
+                        tmp = parseInt(value, 10);
+                        if (!global.isNaN(tmp))
+                            event_overrides.setMarginRight(tmp);
                         break;
                     case "MarginV":
-                        event_overrides.setMarginVertical(parseInt(value, 10));
+                        tmp = parseInt(value, 10);
+                        if (!global.isNaN(tmp))
+                            event_overrides.setMarginVertical(tmp);
                         break;
                     case "Name":
                     case "Actor":
@@ -1479,6 +1483,7 @@ const main_prototype = global.Object.create(global.Object, {
                         break;
                 }
             }
+            event.setStyle(style);
             event.setOverrides(event_overrides);
             var events = [event];
             events = this._parseDialogueText(events);

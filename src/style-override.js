@@ -22,6 +22,7 @@ sabre["SSAStyleOverride"] = function () {
         karaokeMode: 0,
         karaokeStart: global.NaN,
         karaokeEnd: global.NaN,
+        margins: [null, null, null],
         movement: null,
         outlineX: null,
         outlineY: null,
@@ -266,6 +267,45 @@ sabre["SSAStyleOverride"] = function () {
         "getKaraokeEnd": {
             value: function () {
                 return obj.karaokeEnd;
+            },
+            writable: false
+        },
+
+        "setMargins": {
+            value: function (
+                /** number */ left,
+                /** number */ right,
+                /** number */ vertical
+            ) {
+                obj.margins = [left, right, vertical];
+            },
+            writable: false
+        },
+
+        "setMarginLeft": {
+            value: function (/** number */ left) {
+                obj.margins[0] = left;
+            },
+            writable: false
+        },
+
+        "setMarginRight": {
+            value: function (/** number */ right) {
+                obj.margins[1] = right;
+            },
+            writable: false
+        },
+
+        "setMarginVertical": {
+            value: function (/** number */ vertical) {
+                obj.margins[2] = vertical;
+            },
+            writable: false
+        },
+
+        "getMargins": {
+            value: function () {
+                return obj.margins.slice(0);
             },
             writable: false
         },

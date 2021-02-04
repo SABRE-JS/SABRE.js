@@ -23,7 +23,7 @@ sabre["SSASubtitleEvent"] = function () {
                     obj.start +
                     ",e:" +
                     obj.end +
-                    ",s:" +
+                    ",st:" +
                     JSON.stringify(obj.style) +
                     ",o:" +
                     JSON.stringify(obj.overrides) +
