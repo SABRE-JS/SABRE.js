@@ -368,6 +368,36 @@ const main_prototype = global.Object.create(global.Object, {
         writable: false
     },
 
+    _parseColor: {
+        value: function (style, color, colornum) {
+            var tmp = parseInt(this._cleanRawColor(color), 16);
+            if (global.isNaN(tmp)) throw "Invalid color in style.";
+            var r = (tmp & 0xff) / 255;
+            tmp = tmp >> 8;
+            var g = (tmp & 0xff) / 255;
+            tmp = tmp >> 8;
+            var b = (tmp & 0xff) / 255;
+            tmp = tmp >> 8;
+            var a = (tmp & 0xff) / 255;
+            var colorObj = new sabre.SSAColor(r, g, b, a);
+            switch (colornum) {
+                case 1:
+                    style.setPrimaryColor(colorObj);
+                    break;
+                case 2:
+                    style.setSecondaryColor(colorObj);
+                    break;
+                case 3:
+                    style.setTertiaryColor(colorObj);
+                    break;
+                case 4:
+                    style.setQuaternaryColor(colorObj);
+                    break;
+            }
+        },
+        writable: false
+    },
+
     _parseOldStyle: {
         value: function (values, config) {
             var style = new sabre.SSAStyleDefinition();
@@ -386,6 +416,7 @@ const main_prototype = global.Object.create(global.Object, {
     _parseStyle: {
         value: function (values, config) {
             var style = new sabre.SSAStyleDefinition();
+            var tmp;
             for (
                 var i = 0;
                 i < values.length && i < config.parser.style_format.length;
@@ -393,6 +424,112 @@ const main_prototype = global.Object.create(global.Object, {
             ) {
                 var key = config.parser.style_format.length[i];
                 var value = values[i];
+                switch (key) {
+                    case "Name":
+                        style.setName(value);
+                        break;
+                    case "Fontname":
+                        style.setFontName(value);
+                        break;
+                    case "Fontsize":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp)) style.setFontSize(tmp);
+                        else throw "Invalid font size in style.";
+                        break;
+                    case "PrimaryColour":
+                        this._parseColor(style, value, 1);
+                        break;
+                    case "SecondaryColour":
+                        this._parseColor(style, value, 2);
+                        break;
+                    case "OutlineColour":
+                        this._parseColor(style, value, 3);
+                        break;
+                    case "BackColour":
+                        this._parseColor(style, value, 4);
+                        break;
+                    case "Bold":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setWeight(tmp);
+                        else throw "Invalid font weight in style.";
+                        break;
+                    case "Italic":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setItalic(tmp > 0);
+                        else throw "Invalid italic setting in style.";
+                    case "Underline":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setUnderline(tmp > 0);
+                        else throw "Invalid underline setting in style.";
+                    case "StrikeOut":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setStrikeout(tmp > 0);
+                        else
+                            throw "Invalid Strikeout/Strikethrough setting in style.";
+                    case "ScaleX":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp)) style.setScaleX(tmp);
+                        else throw "Invalid x scale multiplier in style.";
+                        break;
+                    case "ScaleY":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp)) style.setScaleY(tmp);
+                        else throw "Invalid y scale multiplier in style.";
+                        break;
+                    case "Spacing":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp)) style.setSpacing(tmp);
+                        else throw "Invalid relative kerning value in style.";
+                        break;
+                    case "Angle":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp)) style.setAngle(tmp);
+                        else throw "Invalid angle in style.";
+                        break;
+                    case "BorderStyle":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setBorderStyle(tmp);
+                        else throw "Invalid border type in style.";
+                        break;
+                    case "Outline":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp)) style.setOutline(tmp);
+                        else throw "Invalid outline width in style.";
+                        break;
+                    case "Shadow":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp))
+                            style.setShadow(tmp / global.Math.sqrt(2));
+                        else throw "Invalid shadow distance in style.";
+                        break;
+                    case "Alignment":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setAlignment(tmp);
+                        else throw "Invalid border type in style.";
+                        break;
+                    case "MarginL":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setMarginLeft(tmp);
+                        else throw "Invalid left margin in style.";
+                        break;
+                    case "MarginR":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setMarginLeft(tmp);
+                        else throw "Invalid right margin in style.";
+                        break;
+                    case "MarginV":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setMarginVertical(tmp);
+                        else throw "Invalid vertical margin in style.";
+                        break;
+                    case "Encoding":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setEncoding(tmp);
+                        else throw "Invalid encoding in style.";
+                        break;
+                    default:
+                        throw 'Unrecognized Style Entry "' + key + '"';
+                }
             }
         },
         writable: false
@@ -737,11 +874,11 @@ const main_prototype = global.Object.create(global.Object, {
                             16
                         );
                         if (isNaN(pcolor)) return;
-                        var r = (pcolor & 0xff) / 255;
+                        var b = (pcolor & 0xff) / 255;
                         pcolor = pcolor >> 8;
                         var g = (pcolor & 0xff) / 255;
                         pcolor = pcolor >> 8;
-                        var b = (pcolor & 0xff) / 255;
+                        var r = (pcolor & 0xff) / 255;
                         switch (color_index) {
                             case 1:
                                 color = overrides.getPrimaryColor();
