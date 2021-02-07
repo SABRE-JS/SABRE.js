@@ -401,6 +401,7 @@ const main_prototype = global.Object.create(global.Object, {
     _parseOldStyle: {
         value: function (values, config) {
             var style = new sabre.SSAStyleDefinition();
+            var tmp, tmp2, tmp3, tmp4;
             for (
                 var i = 0;
                 i < values.length && i < config.parser.style_format.length;
@@ -408,6 +409,102 @@ const main_prototype = global.Object.create(global.Object, {
             ) {
                 var key = config.parser.style_format.length[i];
                 var value = values[i];
+                switch (key) {
+                    case "Name":
+                        style.setName(value);
+                        break;
+                    case "Fontname":
+                        style.setFontName(value);
+                        break;
+                    case "Fontsize":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp)) style.setFontSize(tmp);
+                        else throw "Invalid font size in style.";
+                        break;
+                    case "PrimaryColour":
+                        this._parseColor(style, value, 1);
+                        break;
+                    case "SecondaryColour":
+                        this._parseColor(style, value, 2);
+                        break;
+                    case "OutlineColour":
+                        this._parseColor(style, value, 3);
+                        break;
+                    case "BackColour":
+                        this._parseColor(style, value, 4);
+                        break;
+                    case "Bold":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setWeight(tmp);
+                        else throw "Invalid font weight in style.";
+                        break;
+                    case "Italic":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setItalic(tmp > 0);
+                        else throw "Invalid italic setting in style.";
+                    case "BorderStyle":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setBorderStyle(tmp);
+                        else throw "Invalid border type in style.";
+                        break;
+                    case "Outline":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp)) style.setOutline(tmp);
+                        else throw "Invalid outline width in style.";
+                        break;
+                    case "Shadow":
+                        tmp = global.parseFloat(value);
+                        if (!global.isNaN(tmp))
+                            style.setShadow(tmp / global.Math.sqrt(2));
+                        else throw "Invalid shadow distance in style.";
+                        break;
+                    case "Alignment":
+                        tmp = global.parseInt(value);
+                        if (isNaN(tmp) || tmp > 11)
+                            throw "Invalid alignment type in style.";
+                        tmp2 = depricated_align & 0x03;
+                        tmp3 = (depricated_align >>> 2) & 0x03;
+                        tmp4 = tmp2;
+                        switch (tmp3) {
+                            case 1:
+                                align += 3;
+                            case 2:
+                                align += 3;
+                                style.setAlignment(align);
+                                break;
+                            case 0:
+                                style.setAlignment(align);
+                                break;
+                            default:
+                                throw "Invalid alignment type in style.";
+                        }
+                        break;
+                    case "MarginL":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setMarginLeft(tmp);
+                        else throw "Invalid left margin in style.";
+                        break;
+                    case "MarginR":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setMarginRight(tmp);
+                        else throw "Invalid left margin in style.";
+                        break;
+                    case "MarginV":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setMarginVertical(tmp);
+                        else throw "Invalid vertical margin in style.";
+                        break;
+                    case "AlphaLevel":
+                        //UNUSED: SSA has this style entry, but does not use it.
+                        break;
+                    case "Encoding":
+                        tmp = global.parseInt(value, 10);
+                        if (!global.isNaN(tmp)) style.setEncoding(tmp);
+                        else throw "Invalid encoding in style.";
+                        break;
+                    default:
+                        throw 'Unrecognized Style Entry "' + key + '"';
+                }
             }
         },
         writable: false
@@ -505,7 +602,7 @@ const main_prototype = global.Object.create(global.Object, {
                     case "Alignment":
                         tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp)) style.setAlignment(tmp);
-                        else throw "Invalid border type in style.";
+                        else throw "Invalid alignment type in style.";
                         break;
                     case "MarginL":
                         tmp = global.parseInt(value, 10);
@@ -514,7 +611,7 @@ const main_prototype = global.Object.create(global.Object, {
                         break;
                     case "MarginR":
                         tmp = global.parseInt(value, 10);
-                        if (!global.isNaN(tmp)) style.setMarginLeft(tmp);
+                        if (!global.isNaN(tmp)) style.setMarginRight(tmp);
                         else throw "Invalid right margin in style.";
                         break;
                     case "MarginV":
@@ -608,6 +705,7 @@ const main_prototype = global.Object.create(global.Object, {
                             overrides.setAlignment(align);
                             break;
                         case 0:
+                            overrides.setAlignment(align);
                             break;
                         default:
                             console.error(
@@ -874,11 +972,11 @@ const main_prototype = global.Object.create(global.Object, {
                             16
                         );
                         if (isNaN(pcolor)) return;
-                        var b = (pcolor & 0xff) / 255;
+                        var r = (pcolor & 0xff) / 255;
                         pcolor = pcolor >> 8;
                         var g = (pcolor & 0xff) / 255;
                         pcolor = pcolor >> 8;
-                        var r = (pcolor & 0xff) / 255;
+                        var b = (pcolor & 0xff) / 255;
                         switch (color_index) {
                             case 1:
                                 color = overrides.getPrimaryColor();
