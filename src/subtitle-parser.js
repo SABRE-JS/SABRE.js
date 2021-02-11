@@ -269,7 +269,10 @@ const main_prototype = global.Object.create(global.Object, {
                         return;
                 }
             },
-            "v4 Styles": function (keypair, config) {
+            "v4 Styles": function (
+                /** Array<string> */ keypair,
+                /** Object */ config
+            ) {
                 if (config.info.version < 4) {
                     console.warn(
                         'Warning: The "v4 Styles" heading is only available in SSA v4 and Higher and will be ignored as the script version is: ' +
@@ -302,7 +305,10 @@ const main_prototype = global.Object.create(global.Object, {
                         return;
                 }
             },
-            "v4+ Styles": function (keypair, config) {
+            "v4+ Styles": function (
+                /** Array<string> */ keypair,
+                /** Object */ config
+            ) {
                 if (config.info.version < 4) {
                     console.warn(
                         'Warning: The "v4+ Styles" heading is only available in ASS v4 and Higher and will be ignored as the script version is: ' +
@@ -335,7 +341,10 @@ const main_prototype = global.Object.create(global.Object, {
                         return;
                 }
             },
-            "Events": function (keypair, config) {
+            "Events": function (
+                /** Array<string> */ keypair,
+                /** Object */ config
+            ) {
                 if (config.info.is_ass)
                     config.parser.event_format =
                         config.parser.event_format || default_ass_event_format;
@@ -369,6 +378,12 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     _parseColor: {
+        /**
+         * Parses colors for styles.
+         * @param {SSAStyleDefinition} style
+         * @param {string} color
+         * @param {number} colornum
+         */
         value: function (style, color, colornum) {
             var tmp = parseInt(this._cleanRawColor(color), 16);
             if (global.isNaN(tmp)) throw "Invalid color in style.";
@@ -399,6 +414,11 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     _parseOldStyle: {
+        /**
+         * Parses Substation Alpha Subtitles Style lines.
+         * @param {Array<string>} values Values of style line.
+         * @param {Object} config Renderer config object.
+         */
         value: function (values, config) {
             var style = new sabre.SSAStyleDefinition();
             var tmp, tmp2, tmp3, tmp4;
@@ -511,6 +531,11 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     _parseStyle: {
+        /**
+         * Parses Advanced Substation Alpha Subtitles Style lines.
+         * @param {Array<string>} values Values of style line.
+         * @param {Object} config Renderer config object.
+         */
         value: function (values, config) {
             var style = new sabre.SSAStyleDefinition();
             var tmp;
@@ -633,9 +658,15 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     _parseDialogueText: {
+        /**
+         * Handles parsing of override tags and other things in the actual text of the subtitle.
+         * @param {Array<SSASubtitleEvent>} events
+         * @returns {Array<SSASubtitleEvent>}
+         */
         value: function (events) {
             var event;
             var match;
+            //We don't have override tags in SSA
             if (this._config.info.is_ass) {
                 for (var i = 0; i < events.length; i++) {
                     event = events[i];
@@ -657,7 +688,7 @@ const main_prototype = global.Object.create(global.Object, {
                             )
                         );
                         new_event.setText(match[3]);
-                        events = events.splice(++i, 0, new_event);
+                        events = events.splice(i + 1, 0, new_event);
                     }
                 }
             }
@@ -669,7 +700,6 @@ const main_prototype = global.Object.create(global.Object, {
     _overrideTags: {
         /**
          * Contains parsing methods for override tags.
-         * @struct
          */
         value: Object.freeze([
             {
@@ -1611,25 +1641,39 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     _parseOverrides: {
+        /**
+         * Does initial parsing of override tags for tag handling.
+         * @param {{start:number,end:number}} timeInfo
+         * @param {function(SSAStyleDefinition):void} setStyle
+         * @param {SSAStyleOverride} old_overrides
+         * @param {string} tags
+         */
         value: function (timeInfo, setStyle, old_overrides, tags) {
+            //Regex for separating override tags.
             const override_regex = /\\([^}{\\()]+)(?:\((.*?)\))?([^\\}{\\()]+)?/g;
+            //clone the old overrides so we can change them without affecting the prior tag.
             var overrides = old_overrides.clone();
             var pre_params = null;
             var params = null;
             var post_params = null;
             var code;
+            //For each override tag
             while ((pre_params = override_regex.exec(tags)) !== null) {
                 code = pre_params[0];
                 params = pre_params[2] || "";
                 post_params = pre_params[3] || "";
                 pre_params = pre_params[1];
                 var found = false;
+                //Search for a coresponding override tag supported by the parser.
                 for (var i = this._overrideTags.length - 1; i >= 0; i--) {
                     var regex = this._overrideTags[i].regular_expression;
+                    //Test for matching tag.
                     if (regex.test(pre_params)) {
                         found = true;
                         var match = regex.match(pre_params);
+                        //Does the tag ignore parameters that are outside parenthesis?
                         if (!this._overrideTags[i].ignore_exterior) {
+                            //No it does not ignore them.
                             pre_params = pre_params.slice(match[0].length);
                             if (pre_params != "")
                                 pre_params = pre_params.split(",");
@@ -1643,11 +1687,14 @@ const main_prototype = global.Object.create(global.Object, {
                                 .call(match, 1)
                                 .concat(params, pre_params, post_params);
                         } else {
+                            //Yes it does ignore them.
                             if (params != "") params = params.split(",");
                             else params = [];
                         }
+                        //Remove whitespace from beginning and end of all parameters.
                         params = params.map((str) => str.trim());
-                        var result = this._overrideTags.tag_handlers[i].call(
+                        //Handle the override tag.
+                        let result = this._overrideTags.tag_handlers[i].call(
                             this,
                             timeInfo,
                             setStyle,
@@ -1658,6 +1705,7 @@ const main_prototype = global.Object.create(global.Object, {
                         break;
                     }
                 }
+                //Error if we didn't find a matching tag.
                 if (!found) console.error("Unrecognized Override Tag: " + code);
             }
             return overrides;
@@ -1666,20 +1714,32 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     _parseDialogue: {
+        /**
+         * Parse dialog lines.
+         * @param {string} values
+         * @param {Object} config
+         */
         value: function (values, config) {
+            //Create a new event for the line.
             var event = new sabre.SSASubtitleEvent();
+            //Preload the default style into the event.
             var style = this._getStyle("Default");
+            //Create a new style override for the event.
             var event_overrides = new sabre.SSAStyleOverride();
             var tmp;
             for (var i = 0; i < values.length; i++) {
+                //Handle each key's value.
                 var key = config.parser.event_format[i];
                 var value = values[i];
                 switch (key) {
                     case "Style":
+                        //Set the style to the specified one.
                         style = this._getStyle(value);
                         break;
                     case "Layer":
-                        event.setLayer(parseInt(value, 10));
+                        //Set the layer.
+                        tmp = parseInt(value, 10);
+                        if (!global.isNaN(tmp)) event.setLayer(tmp);
                         break;
                     case "Start":
                         tmp = this._parseTime(value);
@@ -1694,7 +1754,7 @@ const main_prototype = global.Object.create(global.Object, {
                         event.setText(value.replace(/\\h/g, "\u00A0"));
                         break;
                     case "Effect":
-                        //event_overrides.setEffect(value);
+                        //event_overrides.setEffect(value); //TODO: How does this get handled...
                         break;
                     case "MarginL":
                         tmp = parseInt(value, 10);
@@ -1714,20 +1774,29 @@ const main_prototype = global.Object.create(global.Object, {
                     case "Name":
                     case "Actor":
                     case "Marked":
+                    //These aren't needed and so are ignored, they're just for people who are editing subtitles.
                     default:
                         break;
                 }
             }
+            //Set the event's style and style override properties.
             event.setStyle(style);
             event.setOverrides(event_overrides);
             var events = [event];
+            //Split the event into sub-events for the various style override tags.
             events = this._parseDialogueText(events);
+            //concatinate the resulting events.
             config.renderer.events = config.renderer.events.concat(events);
         },
         writable: false
     },
 
     _parseFontName: {
+        /**
+         * Handles font typing for embedded fonts.
+         * @param {string} internalName filename for encoded font.
+         * @returns {Object} Info on the font.
+         */
         value: function (internalName) {
             var fontNameData = /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff|woff2)$/.exec(
                 internalName
@@ -1764,26 +1833,43 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     _parse: {
+        /**
+         * Performs parsing of each line of text, delegating to the specific parsers for each type of line.
+         * @param {string} line
+         */
         value: function (line) {
             if (line[0] == "[" && line[line.length - 1] == "]") {
-                this._heading = line.slice(1, line.length - 1);
+                //If it's a heading line.
+                this._heading = line.slice(1, line.length - 1); //Set the current heading.
                 return;
             }
-            if (line[0] == ";") return; // this means it's a comment so we just ignore it.
-            var keypair = this._splitOnce(line, ":");
+            if (line[0] == ";") return; // this means the current line is just a comment so we just ignore it.
+            var keypair = this._splitOnce(line, ":"); //Split line into it's key and value.
             if (keypair.length > 1) {
+                // ignore keys with no value.
                 if (!gassert(FOUND_DEPRICATED_COMMENT, keypair[0] !== "!"))
-                    return; //depricated comment
+                    //Check for the depricated comment style.
+                    return; //Ignore depricated comments.
                 try {
                     if (typeof this._parser[this._heading] !== "undefined")
+                        //Check to see if we can parse this heading.
                         this._parser[this._heading].call(
+                            // Parse the heading.
                             this,
                             keypair,
                             this._config
                         );
-                    else throw "Unknown Heading Error";
+                    else throw "Unknown Heading Error"; //Otherwise we error.
                 } catch (e) {
-                    throw "[" + this._heading + "] Error:" + e;
+                    throw (
+                        "[" +
+                        this._heading +
+                        "] Error:" +
+                        e +
+                        "\n\t" +
+                        "On Line: " +
+                        line
+                    );
                 }
             }
         },
@@ -1791,15 +1877,25 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     init: {
+        /**
+         * Perform initialization of the library and all it's components. Load default fonts.
+         * @param {function(string):void} loadFont
+         */
         value: function (loadFont) {
             this._renderer = new sabre.Renderer();
             this._loadFont = loadFont;
+            this._loadFont.call(null, "Arial");
             this._loadFont.call(null, "Open Sans");
         },
         writable: false
     },
 
     updateViewport: {
+        /**
+         * Updates the resolution/scale at which the subtitles are rendered (if the player is resized, for example).
+         * @param {number} width
+         * @param {number} height
+         */
         value: function (width, height) {
             this._renderer.updateViewport(width, height);
         },
@@ -1807,6 +1903,11 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     frame: {
+        /**
+         * A wrapper method around the renderer that allows our delegate to fetch rendered subtitle frames.
+         * @param {number} time the time as provided by HTMLVideoElement.currentTime.
+         * @returns {string} Object URI of frame.
+         */
         value: function (time) {
             this._renderer.frame(time);
             return this._renderer.getDisplayUri();
@@ -1815,37 +1916,61 @@ const main_prototype = global.Object.create(global.Object, {
     },
 
     load: {
-        value: function (subs_text) {
+        /**
+         * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
+         * @param {string} subsText the passed subtitle file contents.
+         */
+        value: function (subsText) {
             this._config = { info: {}, parser: {}, renderer: {} };
-            if (subs_text.indexOf("\xEF\xBB\xBF") === 0) {
-                subs_text = subs_text.replace("\xEF\xBB\xBF", ""); //ignore BOM
+            if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
+                //check for BOM
+                subsText = subsText.replace("\xEF\xBB\xBF", ""); //ignore BOM, we're on the web, everything is big endian.
             }
-            var subs = subs_text.split(/(?:\r?\n)|(?:\n\r?)/);
+            var subs = subsText.split(/(?:\r?\n)|(?:\n\r?)/); //Split up all lines.
             console.info("Parsing Sub Station Alpha subtitle file...");
             if (subs[0].trim() != "[Script Info]") {
                 throw "Invalid Sub Station Alpha script";
             }
             for (var i = 0; i < subs.length; i++) {
-                this._parse(subs[i]);
+                this._parse(subs[i]); //Parse individual lines of the file.
             }
-            this._renderer.load(this._config);
+            this._renderer.load(this._config); //pass the config to the renderer
         },
         writable: false
     }
 });
 
+/**
+ * The entry point for the library; returns the delegate for controlling the library.
+ * @param {function(string):void} loadFont This parameter is a function that loads a font using the CSSFontLoading API for use by the library.
+ */
+
 external["SABRERenderer"] = function (loadFont) {
-    var renderer = global.Object.create(main_prototype);
-    renderer.init(loadFont);
+    var parser = global.Object.create(main_prototype);
+    parser.init(loadFont);
     return Object.freeze({
-        "loadSubtitles": function (ass) {
-            renderer.load(ass);
+        /**
+         * Delegate method; see main_prototype.load above.
+         * @param {string} subsText
+         */
+        "loadSubtitles": function (subsText) {
+            parser.load(subsText);
         },
+        /**
+         * Delegate method; see main_prototype.updateViewport above.
+         * @param {number} width
+         * @param {number} height
+         */
         "setViewport": function (width, height) {
-            renderer.updateViewport(width, height);
+            parser.updateViewport(width, height);
         },
+        /**
+         * Delegate method; see main_prototype.frame above.
+         * @param {number} time
+         * @returns {string}
+         */
         "getFrame": function (time) {
-            return renderer.frame(time);
+            return parser.frame(time);
         }
     });
 };
