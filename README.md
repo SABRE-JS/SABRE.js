@@ -16,7 +16,7 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 
 ### Documentation
 
-## Functions
+#### Functions
 
 <dl>
 <dt><a href="#gassert">gassert(complaint, test)</a></dt>
@@ -33,7 +33,7 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 </dd>
 </dl>
 
-## Typedefs
+#### Typedefs
 
 <dl>
 <dt><a href="#TextRenderingProperties">TextRenderingProperties</a> : <code>Object</code></dt>
@@ -44,7 +44,7 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 
 <a name="gassert"></a>
 
-## gassert(complaint, test)
+#### gassert(complaint, test)
 
 Assert using grumbles.
 
@@ -57,7 +57,7 @@ Assert using grumbles.
 
 <a name="loadSubtitles"></a>
 
-## loadSubtitles(subsText)
+#### loadSubtitles(subsText)
 
 Delegate method; see load.
 
@@ -69,7 +69,7 @@ Delegate method; see load.
 
 <a name="setViewport"></a>
 
-## setViewport(width, height)
+#### setViewport(width, height)
 
 Delegate method; see updateViewport.
 
@@ -82,7 +82,7 @@ Delegate method; see updateViewport.
 
 <a name="getFrame"></a>
 
-## getFrame(time) ⇒ <code>string</code>
+#### getFrame(time) ⇒ <code>string</code>
 
 Delegate method; see frame.
 
@@ -94,12 +94,12 @@ Delegate method; see frame.
 
 <a name="TextRenderingProperties"></a>
 
-## TextRenderingProperties : <code>Object</code>
+#### TextRenderingProperties : <code>Object</code>
 
 **Kind**: global typedef  
 <a name="TreeNode"></a>
 
-## TreeNode : <code>Object</code>
+#### TreeNode : <code>Object</code>
 
 **Kind**: global typedef
 

@@ -36,4 +36,4 @@ buildfix:
 	@find ./sbin/ -name *.sh -print | xargs chmod +x
 
 genreadme:
-	@jsdoc2md --template README.hbs --files src/*.js > README.md
+	@jsdoc2md -d 4 --template README.hbs --files src/*.js > README.md
