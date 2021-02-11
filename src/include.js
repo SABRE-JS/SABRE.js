@@ -1,11 +1,11 @@
-﻿/**
+﻿/*
  |   include.js
  |----------------
  |  include.js is copyright Patrick Rhodes Martin 2013,2016,2019.
  |
  |- import - async inclusion of ecmascript, ecmascript may finish loading well after function returns, behaves like include when in a webworker
  |- include - synchronous inclusion of ecmascript, ecmascript is garunteed to be loaded as soon as control of the thread is returned to the browser.
-*/
+ */
 var includelog = Object.create(Object, {});
 var scriptpath = null;
 (function () {

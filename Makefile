@@ -34,3 +34,6 @@ cleanup:
 buildfix: 
 	@echo "Fixing build tools."
 	@find ./sbin/ -name *.sh -print | xargs chmod +x
+
+genreadme:
+	@jsdoc2md --template README.hbs --files src/*.js > README.md
