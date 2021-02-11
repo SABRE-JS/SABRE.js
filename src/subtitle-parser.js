@@ -114,20 +114,39 @@ const default_ass_event_format = global.Object.freeze([
 
 const main_prototype = global.Object.create(global.Object, {
     _config: {
+        /**
+         * Config for the renderer.
+         * @private
+         */
         value: null,
         writable: true
     },
 
     _loadFont: {
+        /**
+         * Function to load fonts.
+         * @private
+         */
         value: null,
         writable: true
     },
+
     _renderer: {
+        /**
+         * Renderer instance.
+         * @private
+         */
         value: null,
         writable: true
     },
 
     _splitOnce: {
+        /**
+         * Splits a string once.
+         * @param {string} string the string to split.
+         * @param {string} separator the separator to split on.
+         * @private
+         */
         value: function (string, separator) {
             var j = string.indexOf(separator);
             if (j == -1) return [string.trim()];
@@ -141,6 +160,7 @@ const main_prototype = global.Object.create(global.Object, {
          * Cleanup a raw color string.
          * @param {string} raw the raw string.
          * @returns {string} the cleaned string.
+         * @private
          */
         value: function (raw) {
             return raw.replace(
@@ -156,6 +176,7 @@ const main_prototype = global.Object.create(global.Object, {
          * Clone a SSASubtitleEvent, but leave the text uncloned.
          * @param {SSASubtitleEvent} event
          * @returns {SSASubtitleEvent} the clone.
+         * @private
          */
         value: function (event) {
             var new_event = new sabre.SSASubtitleEvent();
@@ -172,6 +193,7 @@ const main_prototype = global.Object.create(global.Object, {
     _parser: {
         /**
          * Contains parsing methods for root entries.
+         * @private
          * @dict
          * @type {Object<string,function(Array<string>,Object):void>}
          */
@@ -383,6 +405,7 @@ const main_prototype = global.Object.create(global.Object, {
          * @param {SSAStyleDefinition} style
          * @param {string} color
          * @param {number} colornum
+         * @private
          */
         value: function (style, color, colornum) {
             var tmp = parseInt(this._cleanRawColor(color), 16);
@@ -416,6 +439,7 @@ const main_prototype = global.Object.create(global.Object, {
     _parseOldStyle: {
         /**
          * Parses Substation Alpha Subtitles Style lines.
+         * @private
          * @param {Array<string>} values Values of style line.
          * @param {Object} config Renderer config object.
          */
@@ -533,6 +557,7 @@ const main_prototype = global.Object.create(global.Object, {
     _parseStyle: {
         /**
          * Parses Advanced Substation Alpha Subtitles Style lines.
+         * @private
          * @param {Array<string>} values Values of style line.
          * @param {Object} config Renderer config object.
          */
@@ -660,6 +685,7 @@ const main_prototype = global.Object.create(global.Object, {
     _parseDialogueText: {
         /**
          * Handles parsing of override tags and other things in the actual text of the subtitle.
+         * @private
          * @param {Array<SSASubtitleEvent>} events
          * @returns {Array<SSASubtitleEvent>}
          */
@@ -700,6 +726,7 @@ const main_prototype = global.Object.create(global.Object, {
     _overrideTags: {
         /**
          * Contains parsing methods for override tags.
+         * @private
          */
         value: Object.freeze([
             {
@@ -711,6 +738,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -754,6 +782,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -782,6 +811,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -878,6 +908,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -905,6 +936,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -926,6 +958,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -947,6 +980,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -979,6 +1013,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1124,6 +1159,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1151,6 +1187,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1171,6 +1208,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1193,6 +1231,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1230,6 +1269,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1262,6 +1302,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1285,6 +1326,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1306,6 +1348,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1327,6 +1370,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1377,6 +1421,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1412,6 +1457,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1438,6 +1484,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1459,6 +1506,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1481,6 +1529,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1503,6 +1552,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1525,6 +1575,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1559,6 +1610,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 function(timeInfo, setStyle, overrides, parameters) {
                     var lparameters = parameters;
@@ -1620,6 +1672,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {Array<?string>} parameters
+                 * @private
                  */
                 tag_handler: function (
                     timeInfo,
@@ -1643,10 +1696,12 @@ const main_prototype = global.Object.create(global.Object, {
     _parseOverrides: {
         /**
          * Does initial parsing of override tags for tag handling.
+         * @private
          * @param {{start:number,end:number}} timeInfo
          * @param {function(SSAStyleDefinition):void} setStyle
          * @param {SSAStyleOverride} old_overrides
          * @param {string} tags
+         * @private
          */
         value: function (timeInfo, setStyle, old_overrides, tags) {
             //Regex for separating override tags.
@@ -1716,8 +1771,10 @@ const main_prototype = global.Object.create(global.Object, {
     _parseDialogue: {
         /**
          * Parse dialog lines.
+         * @private
          * @param {string} values
          * @param {Object} config
+         * @private
          */
         value: function (values, config) {
             //Create a new event for the line.
@@ -1794,8 +1851,10 @@ const main_prototype = global.Object.create(global.Object, {
     _parseFontName: {
         /**
          * Handles font typing for embedded fonts.
+         * @private
          * @param {string} internalName filename for encoded font.
          * @returns {Object} Info on the font.
+         * @private
          */
         value: function (internalName) {
             var fontNameData = /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff|woff2)$/.exec(
@@ -1836,6 +1895,7 @@ const main_prototype = global.Object.create(global.Object, {
         /**
          * Performs parsing of each line of text, delegating to the specific parsers for each type of line.
          * @param {string} line
+         * @private
          */
         value: function (line) {
             if (line[0] == "[" && line[line.length - 1] == "]") {
@@ -1950,14 +2010,14 @@ external["SABRERenderer"] = function (loadFont) {
     parser.init(loadFont);
     return Object.freeze({
         /**
-         * Delegate method; see main_prototype.load above.
+         * Delegate method; see load.
          * @param {string} subsText
          */
         "loadSubtitles": function (subsText) {
             parser.load(subsText);
         },
         /**
-         * Delegate method; see main_prototype.updateViewport above.
+         * Delegate method; see updateViewport.
          * @param {number} width
          * @param {number} height
          */
@@ -1965,7 +2025,7 @@ external["SABRERenderer"] = function (loadFont) {
             parser.updateViewport(width, height);
         },
         /**
-         * Delegate method; see main_prototype.frame above.
+         * Delegate method; see frame.
          * @param {number} time
          * @returns {string}
          */
