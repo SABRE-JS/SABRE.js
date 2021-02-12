@@ -204,28 +204,28 @@ const main_prototype = global.Object.create(global.Object, {
             ) {
                 switch (keypair[0]) {
                     case "Title":
-                        config.info.title = keypair[1];
+                        config["info"]["title"] = keypair[1];
                         return;
                     case "Original Script":
-                        config.info.author = keypair[1];
+                        config["info"]["author"] = keypair[1];
                         return;
                     case "Original Translation":
-                        config.info.translator = keypair[1];
+                        config["info"]["translator"] = keypair[1];
                         return;
                     case "Original Editing":
-                        config.info.editor = keypair[1];
+                        config["info"]["editor"] = keypair[1];
                         return;
                     case "Original Timing":
-                        config.info.timing = keypair[1];
+                        config["info"]["timing"] = keypair[1];
                         return;
                     case "Synch Point":
                         //TODO: figgure out the format for this timestamp.
                         return;
                     case "Script Updated By":
-                        config.info.updater = keypair[1];
+                        config["info"]["updater"] = keypair[1];
                         return;
                     case "Update Details":
-                        config.info.update_description = keypair[1];
+                        config["info"]["update_description"] = keypair[1];
                         return;
                     case "ScriptType":
                         var version = keypair[1].match(
@@ -235,49 +235,61 @@ const main_prototype = global.Object.create(global.Object, {
                         console.info(
                             "Sub Station Alpha Version: " + version[0]
                         );
-                        config.info.version = parseFloat(version[1]);
-                        if (config.info.version < 4) {
+                        config["info"]["version"] = parseFloat(version[1]);
+                        if (config["info"]["version"] < 4) {
                             console.warn(
                                 "Warning: Support for SSA versions prior to SSA v4 is not garunteed."
                             );
-                        } else if (config.info.version > 4)
+                        } else if (config["info"]["version"] > 4)
                             console.warn(
                                 "Warning: Some subtitle features may not be supported"
                             );
-                        config.info.is_ass = version[2] == "+";
+                        config["info"]["is_ass"] = version[2] == "+";
                         console.info(
-                            "Advanced Sub Station Alpha: " + config.info.is_ass
+                            "Advanced Sub Station Alpha: " +
+                                config["info"]["is_ass"]
                         );
                         return;
                     case "Collisions":
                         var collisionMode = keypair[1].toLowerCase();
                         if (collisionMode == "normal") {
-                            config.renderer.default_collision_mode = 0;
+                            config["renderer"]["default_collision_mode"] = 0;
                             return;
                         }
                         if (collisionMode == "reverse") {
-                            config.renderer.default_collision_mode = 1;
+                            config["renderer"]["default_collision_mode"] = 1;
                             return;
                         }
                         console.warn(
                             "Warning: Unrecognized collision mode, defaulting to normal collisions."
                         );
-                        config.renderer.default_collision_mode = 0;
+                        config["renderer"]["default_collision_mode"] = 0;
                         return;
                     case "PlayResY":
-                        config.renderer.resolution_y = parseInt(keypair[1], 10);
+                        config["renderer"]["resolution_y"] = parseInt(
+                            keypair[1],
+                            10
+                        );
                         return;
                     case "PlayResX":
-                        config.renderer.resolution_x = parseInt(keypair[1], 10);
+                        config["renderer"]["resolution_x"] = parseInt(
+                            keypair[1],
+                            10
+                        );
                         return;
                     case "PlayDepth":
-                        config.renderer.bit_depth = parseInt(keypair[1], 10);
+                        config["renderer"]["bit_depth"] = parseInt(
+                            keypair[1],
+                            10
+                        );
                         return;
                     case "Timer":
-                        config.renderer.playback_speed = parseFloat(keypair[1]);
+                        config["renderer"]["playback_speed"] = parseFloat(
+                            keypair[1]
+                        );
                         return;
                     case "WrapStyle":
-                        config.renderer.default_wrap_style = parseInt(
+                        config["renderer"]["default_wrap_style"] = parseInt(
                             keypair[1],
                             10
                         );
@@ -295,25 +307,26 @@ const main_prototype = global.Object.create(global.Object, {
                 /** Array<string> */ keypair,
                 /** Object */ config
             ) {
-                if (config.info.version < 4) {
+                if (config["info"]["version"] < 4) {
                     console.warn(
                         'Warning: The "v4 Styles" heading is only available in SSA v4 and Higher and will be ignored as the script version is: ' +
-                            (config.info.is_ass ? "ASS" : "SSA") +
+                            (config["info"]["is_ass"] ? "ASS" : "SSA") +
                             " v" +
-                            Math.floor(config.info.version)
+                            Math.floor(config["info"]["version"])
                     );
                     return;
                 }
-                if (config.info.is_ass)
+                if (config["info"]["is_ass"])
                     throw 'Depricated: The "v4 Styles" heading is unsupported in Advanced Substation Alpha Subtitles.';
-                config.parser.style_format =
-                    config.parser.style_format || default_ssa_style_format;
+                config["parser"]["style_format"] =
+                    config["parser"]["style_format"] ||
+                    default_ssa_style_format;
                 var arr = keypair[1].split(",").map(function (a) {
                     return a.trim();
                 });
                 switch (keypair[0]) {
                     case "Format":
-                        config.parser.style_format = arr;
+                        config["parser"]["style_format"] = arr;
                         return;
                     case "Style":
                         this._parseOldStyle(arr, config);
@@ -331,25 +344,26 @@ const main_prototype = global.Object.create(global.Object, {
                 /** Array<string> */ keypair,
                 /** Object */ config
             ) {
-                if (config.info.version < 4) {
+                if (config["info"]["version"] < 4) {
                     console.warn(
                         'Warning: The "v4+ Styles" heading is only available in ASS v4 and Higher and will be ignored as the script version is: ' +
-                            (config.info.is_ass ? "ASS" : "SSA") +
+                            (config["info"]["is_ass"] ? "ASS" : "SSA") +
                             " v" +
-                            Math.floor(config.info.version)
+                            Math.floor(config["info"]["version"])
                     );
                     return;
                 }
-                if (!config.info.is_ass)
+                if (!config["info"]["is_ass"])
                     throw 'Error: The "v4+ Styles" heading is unsupported in Substation Alpha Subtitles.';
-                config.parser.style_format =
-                    config.parser.style_format || default_ass_style_format;
+                config["parser"]["style_format"] =
+                    config["parser"]["style_format"] ||
+                    default_ass_style_format;
                 var arr = keypair[1].split(",").map(function (a) {
                     return a.trim();
                 });
                 switch (keypair[0]) {
                     case "Format":
-                        config.parser.style_format = arr;
+                        config["parser"]["style_format"] = arr;
                         return;
                     case "Style":
                         this._parseStyle(arr, config);
@@ -367,12 +381,14 @@ const main_prototype = global.Object.create(global.Object, {
                 /** Array<string> */ keypair,
                 /** Object */ config
             ) {
-                if (config.info.is_ass)
-                    config.parser.event_format =
-                        config.parser.event_format || default_ass_event_format;
+                if (config["info"]["is_ass"])
+                    config["parser"]["event_format"] =
+                        config["parser"]["event_format"] ||
+                        default_ass_event_format;
                 else
-                    config.parser.event_format =
-                        config.parser.event_format || default_ssa_event_format;
+                    config["parser"]["event_format"] =
+                        config["parser"]["event_format"] ||
+                        default_ssa_event_format;
                 var arr = keypair[1].split(",").map(function (a) {
                     return a.trim();
                 });
@@ -380,7 +396,7 @@ const main_prototype = global.Object.create(global.Object, {
                     case "Format":
                         if (arr[arr.length - 1] !== "Text") {
                             throw "Invalid event tag format";
-                        } else config.parser.event_format = arr;
+                        } else config["parser"]["event_format"] = arr;
                         return;
                     case "Dialogue":
                         this._parseDialogue(arr, config);
@@ -448,10 +464,11 @@ const main_prototype = global.Object.create(global.Object, {
             var tmp, tmp2, tmp3, tmp4;
             for (
                 var i = 0;
-                i < values.length && i < config.parser.style_format.length;
+                i < values.length &&
+                i < config["parser"]["style_format"].length;
                 i++
             ) {
-                var key = config.parser.style_format.length[i];
+                var key = config["parser"]["style_format"][i];
                 var value = values[i];
                 switch (key) {
                     case "Name":
@@ -566,10 +583,11 @@ const main_prototype = global.Object.create(global.Object, {
             var tmp;
             for (
                 var i = 0;
-                i < values.length && i < config.parser.style_format.length;
+                i < values.length &&
+                i < config["parser"]["style_format"].length;
                 i++
             ) {
-                var key = config.parser.style_format.length[i];
+                var key = config["parser"]["style_format"][i];
                 var value = values[i];
                 switch (key) {
                     case "Name":
@@ -693,7 +711,7 @@ const main_prototype = global.Object.create(global.Object, {
             var event;
             var match;
             //We don't have override tags in SSA
-            if (this._config.info.is_ass) {
+            if (this._config["info"]["is_ass"]) {
                 for (var i = 0; i < events.length; i++) {
                     event = events[i];
                     match = /^([^{}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
@@ -1786,7 +1804,7 @@ const main_prototype = global.Object.create(global.Object, {
             var tmp;
             for (var i = 0; i < values.length; i++) {
                 //Handle each key's value.
-                var key = config.parser.event_format[i];
+                var key = config["parser"]["event_format"][i];
                 var value = values[i];
                 switch (key) {
                     case "Style":
@@ -1843,7 +1861,11 @@ const main_prototype = global.Object.create(global.Object, {
             //Split the event into sub-events for the various style override tags.
             events = this._parseDialogueText(events);
             //concatinate the resulting events.
-            config.renderer.events = config.renderer.events.concat(events);
+            config["renderer"]["events"] =
+                typeof config["renderer"]["events"] == "undefined" ||
+                config["renderer"]["events"] == null
+                    ? events
+                    : config["renderer"]["events"].concat(events);
         },
         writable: false
     },
