@@ -18,6 +18,7 @@ global.String.prototype.regexLastIndexOf = function (searchValue, fromIndex) {};
  * @return {string} result.
  */
 global.String.prototype.allReplace = function (obj) {};
+
 /**
  * Get an Element's position.
  * @param {Element} element the element to locate.

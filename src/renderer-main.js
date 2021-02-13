@@ -23,7 +23,7 @@ sabre.import("scheduler.min.js");
 sabre.import("canvas-2d-text-renderer.min.js");
 
 /**
- * @fileoverview canvas/webgl subtitle renderer code.
+ * @fileoverview webgl subtitle compositing code.
  */
 const renderer_prototype = global.Object.create(Object, {
     //BEGIN MODULE VARIABLES
@@ -40,14 +40,20 @@ const renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    //END MODULE VARIABLES
+    //BEGIN LOCAL VARIABLES
+
     _compositingCanvas: {
         /** @type{?HTMLCanvasElement} */
         value: null,
         writable: true
     },
 
-    //END MODULE VARIABLES
-    //BEGIN LOCAL VARIABLES
+    _gl: {
+        /** @type{?WebGL2RenderingContext} */
+        value: null,
+        writable: false
+    },
 
     _lastTime: {
         /**
@@ -65,12 +71,21 @@ const renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _lastOutput: {
+        /**
+         * @type {?string}
+         */
+        value: null,
+        writable: true
+    },
+
     //END LOCAL VARIABLES
     //BEGIN LOCAL FUNCTIONS
 
     _hashEvents: {
         /**
          * Hashes a list of subtitle events.
+         * @private
          * @param {Array<SSASubtitleEvent>} events list of subtitle events to hash.
          * @returns {number} The Hash of the events.
          */
@@ -116,6 +131,53 @@ const renderer_prototype = global.Object.create(Object, {
             this._scheduler.setEvents(
                 /** @type {Array<SSASubtitleEvent>} */ (config.events)
             );
+            const options = Object.freeze({
+                "alpha": true,
+                "desynchronized": true,
+                "antialias": true,
+                "powerPreference": "high-performance",
+                "premultipliedAlpha": true
+            });
+            if (typeof global.OffscreenCanvas == "undefined") {
+                this._compositingCanvas = global.document.createElement(
+                    "canvas"
+                );
+                this._compositingCanvas.width = config.renderer["resolution_x"];
+                this._compositingCanvas.height =
+                    config.renderer["resolution_y"];
+            } else {
+                this._compositingCanvas = new global.OffscreenCanvas(
+                    config.renderer["resolution_x"],
+                    config.renderer["resolution_y"]
+                );
+            }
+            this._gl = this._compositingCanvas.getContext("webgl2", options);
+            this._gl.viewport(
+                0,
+                0,
+                config.renderer["resolution_x"],
+                config.renderer["resolution_y"]
+            );
+        },
+        writable: false
+    },
+
+    "updateViewport": {
+        /**
+         * Update the size of the compositing canvas and base rendering scale.
+         * @param {number} width the new width of the output.
+         * @param {number} height the new height of the output.
+         * @returns {void}
+         */
+        value: function (width, height) {
+            this._compositingCanvas.width = width;
+            this._compositingCanvas.height = height;
+            this._gl.viewport(
+                0,
+                0,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"]
+            );
         },
         writable: false
     },
@@ -144,11 +206,20 @@ const renderer_prototype = global.Object.create(Object, {
         },
         writable: false
     },
+
     "getDisplayUri": {
+        /**
+         * Get the frame output.
+         * @returns {string} The ObjectURL of the display output.
+         */
         value: function () {
-            return global.URL.createObjectURL(
+            let output = global.URL.createObjectURL(
                 this._compositingCanvas.toBlobHD()
             );
+            if (this._lastOutput != null)
+                global.URL.revokeObjectURL(this._lastOutput);
+            this._lastOutput = output;
+            return output;
         },
         writable: false
     }

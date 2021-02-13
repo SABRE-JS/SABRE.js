@@ -523,18 +523,18 @@ const main_prototype = global.Object.create(global.Object, {
                         tmp = global.parseInt(value);
                         if (isNaN(tmp) || tmp > 11)
                             throw "Invalid alignment type in style.";
-                        tmp2 = depricated_align & 0x03;
-                        tmp3 = (depricated_align >>> 2) & 0x03;
+                        tmp2 = tmp & 0x03;
+                        tmp3 = (tmp >>> 2) & 0x03;
                         tmp4 = tmp2;
                         switch (tmp3) {
                             case 1:
-                                align += 3;
+                                tmp4 += 3;
                             case 2:
-                                align += 3;
-                                style.setAlignment(align);
+                                tmp4 += 3;
+                                style.setAlignment(tmp4);
                                 break;
                             case 0:
-                                style.setAlignment(align);
+                                style.setAlignment(tmp4);
                                 break;
                             default:
                                 throw "Invalid alignment type in style.";
@@ -1719,7 +1719,6 @@ const main_prototype = global.Object.create(global.Object, {
          * @param {function(SSAStyleDefinition):void} setStyle
          * @param {SSAStyleOverride} old_overrides
          * @param {string} tags
-         * @private
          */
         value: function (timeInfo, setStyle, old_overrides, tags) {
             //Regex for separating override tags.
@@ -1767,7 +1766,7 @@ const main_prototype = global.Object.create(global.Object, {
                         //Remove whitespace from beginning and end of all parameters.
                         params = params.map((str) => str.trim());
                         //Handle the override tag.
-                        let result = this._overrideTags.tag_handlers[i].call(
+                        let result = this._overrideTags[i].tag_handler.call(
                             this,
                             timeInfo,
                             setStyle,
@@ -1792,7 +1791,6 @@ const main_prototype = global.Object.create(global.Object, {
          * @private
          * @param {string} values
          * @param {Object} config
-         * @private
          */
         value: function (values, config) {
             //Create a new event for the line.
@@ -1876,7 +1874,6 @@ const main_prototype = global.Object.create(global.Object, {
          * @private
          * @param {string} internalName filename for encoded font.
          * @returns {Object} Info on the font.
-         * @private
          */
         value: function (internalName) {
             var fontNameData = /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff|woff2)$/.exec(
