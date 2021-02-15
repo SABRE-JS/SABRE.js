@@ -1,3 +1,5 @@
+![SABRE.js](sabre.svg)
+
 # SABRE.js: Substation Alpha suBtitles REnderer
 
 A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer.
