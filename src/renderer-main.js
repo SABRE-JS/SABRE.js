@@ -90,8 +90,8 @@ const renderer_prototype = global.Object.create(Object, {
          * @returns {number} The Hash of the events.
          */
         value: function (events) {
-            var str_rep = JSON.stringify(events);
-            var hash = 0,
+            let str_rep = JSON.stringify(events);
+            let hash = 0,
                 i,
                 chr;
             if (str_rep.length === 0) return hash;
@@ -191,7 +191,7 @@ const renderer_prototype = global.Object.create(Object, {
         value: function (time) {
             if (time === this._lastTime) return;
             this._lastTime = time;
-            var events = /** @type {Array<SSASubtitleEvent>} */ (this._scheduler.getVisibleAtTime(
+            let events = /** @type {Array<SSASubtitleEvent>} */ (this._scheduler.getVisibleAtTime(
                 time
             ));
             events = events.sort(function (
@@ -200,9 +200,35 @@ const renderer_prototype = global.Object.create(Object, {
             ) {
                 return a.getLayer() - b.getLayer();
             });
-            var currentHash = this._hashEvents(events);
+            let currentHash = this._hashEvents(events);
             if (currentHash === this._lastHash) return;
             this._lastHash = currentHash;
+            this._gl.clear(
+                this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
+            );
+            for (let pass = 0; pass < 3; pass++) {
+                //One pass for background, one for outline and one for text.
+                for (let i = 0; i < events.length; i++) {
+                    let currentLayer = events[i].getLayer();
+                    let layerStart = i;
+                    let layerEnd = i;
+                    {
+                        //Find beginning and end of layer.
+                        while (
+                            layerStart >= 0 &&
+                            events[layerStart].getLayer() == currentLayer
+                        )
+                            layerStart--;
+                        while (
+                            layerEnd < events.length &&
+                            events[layerEnd].getLayer() == currentLayer
+                        )
+                            layerEnd++;
+                        layerStart++;
+                        layerEnd--;
+                    }
+                }
+            }
         },
         writable: false
     },
@@ -228,7 +254,7 @@ const renderer_prototype = global.Object.create(Object, {
 });
 
 sabre["Renderer"] = function () {
-    var renderer = global.Object.create(renderer_prototype);
+    let renderer = global.Object.create(renderer_prototype);
     renderer.init();
     return renderer;
 };

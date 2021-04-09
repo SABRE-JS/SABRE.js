@@ -5,7 +5,7 @@ sabre.import("color.min.js");
 sabre.import("style.min.js");
 sabre.import("style-override.min.js");
 sabre["SSASubtitleEvent"] = function () {
-    var obj = {
+    let obj = {
         layer: 0,
         start: 0,
         end: 0,

@@ -15,3 +15,12 @@ sabre["KaraokeModes"] = Object.freeze({
     "COLOR_SWEEP": 2,
     "OUTLINE_TOGGLE": 3
 });
+/**
+ * Defines passes.
+ * @enum {number}
+ */
+sabre["RenderPasses"] = Object.freeze({
+    "BACKGROUND": 0,
+    "OUTLINE": 1,
+    "FILL": 2
+});

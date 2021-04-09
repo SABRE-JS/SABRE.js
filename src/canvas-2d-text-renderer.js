@@ -8,28 +8,18 @@
 /**
  * @fileoverview advance stubstation alpha subtitle text renderer.
  */
-
-/**
- * @typedef {{
- *              fillColor:SSAColor,
- *              strokeColor:SSAColor,
- *              wipeColor:SSAColor,
- *              outline:number,
- *              boxBlur:number,
- *              spacing:number,
- *              fontSize:number,
- *              scaleX:number,
- *              scaleY:number,
- *              fontName:!string,
- *              bold:(boolean|number),
- *              italic:boolean,
- *              strikeout:boolean,
- *              wipeEnabled:boolean,
- *              wipePercent:number,
- *              stroke:boolean
- *          }}
- */
-var TextRenderingProperties; // eslint-disable-line no-unused-vars
+//@include [util.js]
+//@include [global-constants.js]
+//@include [color.js]
+//@include [style.js]
+//@include [style-override.js]
+//@include [subtitle-event.js]
+sabre.import("util.min.js");
+sabre.import("global-constants.min.js");
+sabre.import("color.min.js");
+sabre.import("style.min.js");
+sabre.import("style-override.min.js");
+sabre.import("subtitle-event.min.js");
 
 const lineSpacing = 1.2;
 
@@ -136,7 +126,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
     _getBlurKernelValueForPosition: {
         value: function (center_value, x, y, dim, intgr) {
             if (intgr == null) intgr = false;
-            var value = Math.max(
+            let value = Math.max(
                 center_value -
                     Math.sqrt(
                         Math.pow(x - (dim - 1) / 2, 2) +
@@ -152,8 +142,8 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
 
     _getBlurMatrixUrl: {
         /**
-         * Generates a box-blur URL.
-         * @param {number} blur_count Number of times to apply box-blur.
+         * Generates a edge-blur URL.
+         * @param {number} blur_count Number of times to apply edge-blur.
          * @returns {string} the resulting URL.
          */
         value: function (blur_count) {
@@ -161,22 +151,22 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
                 typeof this._blur_urls[blur_count] === "undefined" ||
                 this._blur_urls[blur_count] == null
             ) {
-                var filterdom;
-                var doctype = global.document.implementation.createDocumentType(
+                let filterdom;
+                let doctype = global.document.implementation.createDocumentType(
                     "svg",
                     "-//W3C//DTD SVG 1.1//EN",
                     "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"
                 );
-                var filter_doc = (filterdom = global.document.implementation.createDocument(
+                let filter_doc = (filterdom = global.document.implementation.createDocument(
                     "http://www.w3.org/2000/svg",
                     "svg",
                     doctype
                 )).documentElement;
-                var defs = filterdom.createElementNS(
+                let defs = filterdom.createElementNS(
                     "http://www.w3.org/2000/svg",
                     "defs"
                 );
-                var filter = filterdom.createElementNS(
+                let filter = filterdom.createElementNS(
                     "http://www.w3.org/2000/svg",
                     "filter"
                 );
@@ -188,9 +178,9 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
                 filter.setAttribute("y", "0");
                 filter.setAttribute("width", global.screen.width);
                 filter.setAttribute("height", global.screen.height);
-                var filters_count = 0;
+                let filters_count = 0;
                 while (blur_count > 0) {
-                    var blur = filterdom.createElementNS(
+                    let blur = filterdom.createElementNS(
                         "http://www.w3.org/2000/svg",
                         "feConvolveMatrix"
                     );
@@ -202,9 +192,9 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
                             "in",
                             "filterStep" + (filters_count - 1)
                         );
-                    var blur_matrix = [];
-                    for (var i = 0; i < 5; i++)
-                        for (var j = 0; j < 5; j++)
+                    let blur_matrix = [];
+                    for (let i = 0; i < 5; i++)
+                        for (let j = 0; j < 5; j++)
                             blur_matrix[
                                 i * 5 + j
                             ] = this._getBlurKernelValueForPosition(
@@ -223,8 +213,8 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
                         );
                     filter.appendChild(blur);
                 }
-                var filterxml = this._serializer.serializeToString(filterdom);
-                var filterurl =
+                let filterxml = this._serializer.serializeToString(filterdom);
+                let filterurl =
                     "data:image/svg+xml;utf8," +
                     global.encodeURIComponent(filterxml) +
                     "#filter";
@@ -239,12 +229,15 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
     _setScale: {
         /**
          * Sets up the canvas to render to the correct scale.
-         * @param {TextRenderingProperties} props
+         * @param {SSAStyle} style
+         * @param {SSAStyleOverride} overrides
+         * @param {number} pass
          */
-        value: function (props) {
-            props.scaleX = props.scaleX <= 0 ? 1 : props.scaleX;
-            props.scaleY = props.scaleY <= 0 ? 1 : props.scaleY;
-            this._ctx.scale(props.scaleX, props.scaleY);
+        value: function (style, overrides, pass) {
+            this._ctx.scale(
+                overrides.getScaleX() ?? style.getScaleX(),
+                overrides.getScaleY() ?? style.getScaleY()
+            );
         },
         writable: false
     },
@@ -252,10 +245,16 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
     _setOutline: {
         /**
          * Set outline width to the correct size.
-         * @param {TextRenderingProperties} props
+         * @param {SSAStyle} style
+         * @param {SSAStyleOverride} overrides
+         * @param {number} pass
          */
-        value: function (props) {
-            this._ctx.lineWidth = props.outline * 2;
+        value: function (style, overrides, pass) {
+            //TODO: Figgure out a good way to do dimension specific line widths.
+            if (pass == sabre.RenderPasses.OUTLINE)
+                this._ctx.lineWidth =
+                    (overrides.getOutlineX() ?? style.getOutlineX()) +
+                    (overrides.getOutlineY() ?? style.getOutlineY()); //AVERAGE * 2 = SUM
         },
         writable: false
     },
@@ -263,32 +262,52 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
     _setFont: {
         /**
          * Set font settings for drawing.
-         * @param {TextRenderingProperties} props
+         * @param {SSAStyle} style
+         * @param {SSAStyleOverride} overrides
+         * @param {number} pass
          */
-        value: function (props) {
-            var font =
-                props.fontSize * this._pixelsPerDpt +
+        value: function (style, overrides, pass) {
+            let fontSize =
+                (overrides.getFontSize() ?? style.getFontSize()) +
+                overrides.getFontSizeMod();
+            let fontName = overrides.getFontName() ?? style.getFontName();
+            let fontWeight = overrides.getWeight() ?? style.getWeight();
+            let fontItalicized = overrides.getItalic() ?? style.getItalic();
+            let font =
+                fontSize * this._pixelsPerDpt +
                 "px '" +
-                props.fontName +
+                fontName +
                 "', 'Arial', 'Open Sans'";
-            if (props.bold === true) font = "bold " + font;
-            else if (props.bold > 0) font = props.bold + " " + font;
-            if (props.italic) font = "italic " + font;
+            font = fontWeight + " " + font;
+            if (fontItalicized) font = "italic " + font;
             this._ctx.font = font;
         },
         writable: false
     },
 
-    _setBoxBlur: {
+    _setEdgeBlur: {
         /**
          * Set box blur radius, gaussian blur is handled in the compositing step instead of here for performance reasons.
-         * @param {TextRenderingProperties} props
+         * @param {SSAStyle} style
+         * @param {SSAStyleOverride} overrides
+         * @param {number} pass
          */
-        value: function (props) {
-            if (props.boxBlur > 0) {
+        value: function (style, overrides, pass) {
+            let iterations = overrides.getEdgeBlur ?? 0;
+            if (iterations > 0) {
                 this._ctx.filter =
-                    "url('" + this._getBlurMatrixUrl(props.boxBlur) + "')";
+                    "url('" + this._getBlurMatrixUrl(iterations) + "')";
             } else this._ctx.filter = "none";
+        },
+        writable: false
+    },
+
+    _disableEdgeBlur: {
+        /**
+         * disables edge blur for passes where it is invalid.
+         */
+        value: function () {
+            this._ctx.filter = "none";
         },
         writable: false
     },
@@ -300,18 +319,32 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
          */
     },
 
-    _handleProperties: {
+    _handleStyling: {
         /**
-         * Sets up the canvas to render according to the properties specified.
-         * @param {TextRenderingProperties} props
+         * Sets up the canvas to render according to specified styles.
+         * @param {SSAStyle} style
+         * @param {SSAStyleOverride} overrides
+         * @param {number} pass
          */
-        value: function (props) {
+        value: function (style, overrides, pass) {
             this._ctx.resetTransform();
-            this._setScale(props);
-            this._setOutline(props);
-            this._setFont(props);
-            this._setColors(props);
-            this._setBoxBlur(props);
+            this._setScale(style, overrides, pass);
+            this._setOutline(style, overrides, pass);
+            this._setFont(style, overrides, pass);
+            this._setColors(style, overrides, pass);
+            {
+                let borderStyle = style.getBorderStyle();
+                let outlineActive =
+                    (overrides.getOutlineX() ?? style.getOutlineX()) > 0 ||
+                    (overrides.getOutlineY() ?? style.getOutlineY()) > 0;
+                if (
+                    pass == sabre.RenderPasses.OUTLINE ||
+                    (pass != sabre.RenderPasses.BACKGROUND &&
+                        (borderStyle != 1 || !outlineActive))
+                )
+                    this._setEdgeBlur(style, overrides, pass);
+                else this._disableEdgeBlur();
+            }
             //TODO: Strikeout/Strikethrough
             this._ctx.textAlign = "left";
             this._ctx.textBaseline = "middle";
@@ -321,25 +354,39 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
         writable: false
     },
 
-    "renderText": {
-        value: function (text, properties) {
+    "renderEvent": {
+        /**
+         * Render an event.
+         * @param {SSASubtitleEvent} event
+         * @param {number} pass
+         */
+        value: function (event, pass) {
             if (!this._initialized) this._init();
-            this._offsetX = this._offsetY = 0;
-            var i, letter_offset;
-            this._handleProperties(properties);
 
-            //calculate size of text
-            this._width = 0;
-            if (global.isNaN(properties.spacing)) {
-                this._width =
-                    this._ctx.measureText(text).width * properties.scaleX;
-            } else {
-                for (i = 0; i < text.length; i++)
-                    this._width += this._ctx.measureText(text[i]).width;
-                this._width += properties.spacing * (text.length - 1);
+            let text = event.getText();
+            let style = event.getStyle();
+            let overrides = event.getOverrides();
+
+            this._offsetX = this._offsetY = 0;
+
+            this._handleStyling(style, overrides, pass);
+
+            //calculate size of text without scaling.
+            {
+                let spacing = overrides.getSpacing() ?? style.getSpacing();
+                let fontSize =
+                    (overrides.getFontSize() ?? style.getFontSize()) +
+                    overrides.getFontSizeMod();
+                if (spacing == 0) {
+                    this._width = this._ctx.measureText(text).width;
+                } else {
+                    this._width = 0;
+                    for (let i = 0; i < text.length; i++)
+                        this._width += this._ctx.measureText(text[i]).width;
+                    this._width += spacing * (text.length - 1);
+                }
+                this._height = fontSize * this._pixelsPerDpt * lineSpacing;
             }
-            this._height =
-                properties.fontSize * this._pixelsPerDpt * lineSpacing;
 
             //pad for box blur
             if (properties.boxBlur > 0) {
@@ -356,25 +403,34 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
             }
 
             this._offsetY += this._height / 2;
-            this._offsetX *= properties.scaleX;
-            this._offsetY *= properties.scaleY;
-            this._width *= properties.scaleX;
-            this._height *= properties.scaleY;
-            this._canvas.width = this._width;
-            this._canvas.height = this._height;
-            this._handleProperties(properties); //To workaround a bug.
+
+            let offsetXUnscaled = this._offsetX;
+            let offsetYUnscaled = this._offsetY;
+            {
+                let scaleX = overrides.getScaleX() ?? style.getScaleX();
+                let scaleY = overrides.getScaleY() ?? style.getScaleY();
+                this._offsetX *= scaleX;
+                this._offsetY *= scaleY;
+                this._width *= scaleX;
+                this._height *= scaleY;
+                this._canvas.width = this._width;
+                this._canvas.height = this._height;
+                this._handleStyling(style, overrides, pass); //To workaround a bug.
+            }
 
             //reset the composite operation
             this._ctx.globalCompositeOperation = "source-over";
             //draw the text
-            var offsetXtemp = this._offsetX / properties.scaleX;
-            var offsetYtemp = this._offsetY / properties.scaleY;
             if (properties.stroke) {
                 if (global.isNaN(properties.spacing)) {
-                    this._ctx.strokeText(text, offsetXtemp, offsetYtemp);
+                    this._ctx.strokeText(
+                        text,
+                        offsetXUnscaled,
+                        offsetYUnscaled
+                    );
                     this._ctx.globalCompositeOperation = "destination-out";
                     this._ctx.filter = "none";
-                    this._ctx.fillText(text, offsetXtemp, offsetYtemp);
+                    this._ctx.fillText(text, offsetXUnscaled, offsetYUnscaled);
                 } else {
                     letter_offset = 0;
                     for (i = 0; i < text.length; i++) {

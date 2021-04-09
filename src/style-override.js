@@ -44,7 +44,7 @@ sabre["SSAStyleOverride"] = function () {
         weight: null,
         wrapStyle: 0
     });
-    var obj = Object.assign({}, template);
+    let obj = Object.assign({}, template);
     return Object.create(Object, {
         "toJSON": {
             value: function () {
@@ -629,7 +629,7 @@ sabre["SSAStyleOverride"] = function () {
 
         "clone": {
             value: function () {
-                var new_override = new sabre["SSAStyleOverride"]();
+                let new_override = new sabre["SSAStyleOverride"]();
                 new_override._cloneHelper(obj);
                 return new_override;
             },

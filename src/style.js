@@ -2,7 +2,7 @@
 sabre.import("color.min.js");
 
 sabre["SSAStyleDefinition"] = function () {
-    var obj = {
+    let obj = {
         name: "Default",
         fontName: "Arial",
         fontSize: 18,

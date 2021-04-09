@@ -27,10 +27,10 @@ sabre["ShaderPrototype"] = Object.create(Object, {
 
     _isUnchanged: {
         value: function (property) {
-            var val = property.val;
-            var cval = property.cval;
-            var i;
-            var unchanged = true;
+            let val = property.val;
+            let cval = property.cval;
+            let i;
+            let unchanged = true;
             if (val === cval) return true;
             if (val instanceof Array && cval instanceof Array) {
                 if (val.length != cval.length) return false;
@@ -46,7 +46,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
 
     "load": {
         value: function (vertexUrl, fragmentUrl, expire) {
-            var xmlhttp = null;
+            let xmlhttp = null;
             if (
                 typeof global.localStorage === "undefined" ||
                 typeof expire === "undefined" ||
@@ -78,8 +78,8 @@ sabre["ShaderPrototype"] = Object.create(Object, {
                 }
                 return;
             }
-            var storageNameVertex = "shader.js|vrtx|" + vertexUrl;
-            var storageNameFragment = "shader.js|frag|" + fragmentUrl;
+            let storageNameVertex = "shader.js|vrtx|" + vertexUrl;
+            let storageNameFragment = "shader.js|frag|" + fragmentUrl;
             if (
                 window.localStorage.getItem(storageNameVertex) === null ||
                 parseInt(
@@ -190,11 +190,11 @@ sabre["ShaderPrototype"] = Object.create(Object, {
     "bindShader": {
         value: function (gl) {
             gl.useProgram(this._shader);
-            var props = this._keys.keys(this._keys);
-            var key = null;
-            var uniform = null;
-            var type = null;
-            for (var i = 0; i < props.length; i++) {
+            let props = this._keys.keys(this._keys);
+            let key = null;
+            let uniform = null;
+            let type = null;
+            for (let i = 0; i < props.length; i++) {
                 key = props[i];
                 if (this._isUnchanged(this._keys[key])) continue;
                 uniform = gl.getUniformLocation(this._shader, key);
@@ -325,7 +325,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
             if (typeof version == "undefined" || version == null) {
                 version = "100";
             }
-            var shaderProgram;
+            let shaderProgram;
             this._shader = shaderProgram = gl.createProgram();
 
             this._vert = this._compile(
@@ -363,7 +363,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
 
     _compile: {
         value: function (gl, source, defines, type, version) {
-            var shaderHeader = "";
+            let shaderHeader = "";
             if (version && version != "100") {
                 shaderHeader += "#version " + version + " es\n";
             }
@@ -375,8 +375,8 @@ sabre["ShaderPrototype"] = Object.create(Object, {
             shaderHeader += "precision highp int;\n";
             shaderHeader += "#endif\n";
             if (defines != null) {
-                var define_names = Object.keys(defines);
-                for (var i = 0; i < define_names.length; i++) {
+                let define_names = Object.keys(defines);
+                for (let i = 0; i < define_names.length; i++) {
                     if (defines[define_names[i]] == true)
                         shaderHeader += "#define " + define_names[i] + "\n";
                     else if (defines[define_names[i]])
@@ -389,7 +389,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
                 }
             }
 
-            var shader = gl.createShader(type);
+            let shader = gl.createShader(type);
 
             gl.shaderSource(shader, shaderHeader + source);
             gl.compileShader(shader);

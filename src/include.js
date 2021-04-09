@@ -6,13 +6,13 @@
  |- import - async inclusion of ecmascript, ecmascript may finish loading well after function returns, behaves like include when in a webworker
  |- include - synchronous inclusion of ecmascript, ecmascript is garunteed to be loaded as soon as control of the thread is returned to the browser.
  */
-var includelog = Object.create(Object, {});
-var scriptpath = null;
-(function () {
-    var scripts = global.document.getElementsByTagName("script");
-    var curscript = new global.URL(scripts[scripts.length - 1].src);
+let includelog = Object.create(Object, {});
+let scriptpath = null;
+{
+    let scripts = global.document.getElementsByTagName("script");
+    let curscript = new global.URL(scripts[scripts.length - 1].src);
     scriptpath = curscript.pathname.match(/^(.*\/).*?$/)[1];
-})();
+}
 /**
  * includes a ecmascript file asynchronously.
  * @param {string} scriptUrl The URL or URI of the script.
@@ -42,8 +42,8 @@ sabre["import"] = function (scriptUrl, callback) {
         includelog[scriptUrl] = true;
         return;
     }
-    var head = global.document.head;
-    var scriptImport = global.document.createElement("script");
+    let head = global.document.head;
+    let scriptImport = global.document.createElement("script");
     scriptImport.setAttribute("type", "application/ecmascript");
     scriptImport.setAttribute("src", scriptpath + scriptUrl);
     scriptImport.setAttribute("async", "");
@@ -83,8 +83,8 @@ sabre["include"] = function (scriptUrl, callback) {
         includelog[scriptUrl] = true;
         return;
     }
-    var head = global.document.head;
-    var scriptImport = global.document.createElement("script");
+    let head = global.document.head;
+    let scriptImport = global.document.createElement("script");
     scriptImport.setAttribute("type", "application/ecmascript");
     scriptImport.setAttribute("src", scriptpath + scriptUrl);
     scriptImport.addEventListener("load", function () {

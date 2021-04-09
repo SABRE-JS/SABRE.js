@@ -6,7 +6,7 @@
  |-
  */
 sabre["SSAColor"] = function (r, g, b, a) {
-    var obj = {
+    let obj = {
         r: 0,
         g: 0,
         b: 0,
@@ -122,7 +122,7 @@ sabre["SSAColor"] = function (r, g, b, a) {
 };
 
 sabre["SSAOverrideColor"] = function (r, g, b, a) {
-    var obj = {
+    let obj = {
         r: null,
         g: null,
         b: null,
@@ -169,10 +169,10 @@ sabre["SSAOverrideColor"] = function (r, g, b, a) {
 
         "applyOverride": {
             value: function (color) {
-                var r = color.getR();
-                var g = color.getG();
-                var b = color.getB();
-                var a = color.getA();
+                let r = color.getR();
+                let g = color.getG();
+                let b = color.getB();
+                let a = color.getA();
 
                 if (obj.r != null) r = obj.r;
                 if (obj.g != null) g = obj.g;

@@ -52,7 +52,7 @@ const scheduler_prototype = global.Object.create(Object, {
          * @returns {!Array<?TreeNode>}
          */
         value: function (len) {
-            var arr = new Array(len);
+            let arr = new Array(len);
             arr.fill(null);
             return Object.seal(arr);
         },
@@ -66,12 +66,12 @@ const scheduler_prototype = global.Object.create(Object, {
          */
         value: function (eventsList) {
             eventsList = eventsList.slice();
-            var originalLen = eventsList.length;
+            let originalLen = eventsList.length;
             this._eventTree = this._constructFixedArray(2 * originalLen);
             eventsList.sort(this._eventListComparator);
-            var i;
+            let i;
             for (i = originalLen; i < 2 * originalLen; i++) {
-                var cur = eventsList[i - originalLen];
+                let cur = eventsList[i - originalLen];
                 this._eventTree[i] = {
                     events: [cur],
                     start: cur.getStart(),
@@ -79,8 +79,8 @@ const scheduler_prototype = global.Object.create(Object, {
                 };
             }
             for (i = originalLen - 1; i > 0; i--) {
-                var cur_a = this._eventTree[i * 2];
-                var cur_b = this._eventTree[i * 2 + 1];
+                let cur_a = this._eventTree[i * 2];
+                let cur_b = this._eventTree[i * 2 + 1];
                 this._eventTree[i] = {
                     events: cur_a.events.concat(cur_b.events),
                     start:
@@ -99,18 +99,18 @@ const scheduler_prototype = global.Object.create(Object, {
          * @returns {!Array<SSASubtitleEvent>} subtitle events onscreen.
          */
         value: function (time) {
-            var array = [];
-            var i = 1;
+            let array = [];
+            let i = 1;
             if (
                 time >= this._eventTree[1].start &&
                 time < this._eventTree[1].end
             ) {
-                var found = null;
+                let found = null;
                 do {
-                    var cur_a = this._eventTree[i * 2];
-                    var a_overlaps = cur_a.start <= time && cur_a.end > time;
-                    var cur_b = this._eventTree[i * 2 + 1];
-                    var b_overlaps = cur_b.start <= time && cur_b.end > time;
+                    let cur_a = this._eventTree[i * 2];
+                    let a_overlaps = cur_a.start <= time && cur_a.end > time;
+                    let cur_b = this._eventTree[i * 2 + 1];
+                    let b_overlaps = cur_b.start <= time && cur_b.end > time;
                     if (a_overlaps && b_overlaps) {
                         found = true;
                     } else if (a_overlaps) {

@@ -1,6 +1,10 @@
 var global = window;
 
-var external = {};
+window = null;
+
+global.sabre = {};
+
+var external = global.sabre;
 
 global.CanvasRenderingContext2D.prototype.resetTransform = function () {};
 /** @type {number} */
