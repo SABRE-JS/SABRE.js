@@ -293,7 +293,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
          * @param {number} pass
          */
         value: function (style, overrides, pass) {
-            let iterations = overrides.getEdgeBlur ?? 0;
+            let iterations = overrides.getEdgeBlur() ?? 0;
             if (iterations > 0) {
                 this._ctx.filter =
                     "url('" + this._getBlurMatrixUrl(iterations) + "')";
@@ -389,14 +389,14 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
             }
 
             //pad for box blur
-            if (properties.boxBlur > 0) {
+            if ((overrides.getEdgeBlur() ?? 0) > 0) {
                 this._width += global.Math.pow(2, properties.boxBlur) * 2;
                 this._height += global.Math.pow(2, properties.boxBlur) * 2;
                 this._offsetX += global.Math.pow(2, properties.boxBlur);
             }
 
             //pad for outline
-            if (properties.stroke) {
+            if (pass == sabre.RenderPasses.OUTLINE) {
                 this._width += properties.outline * 2;
                 this._height += properties.outline * 2;
                 this._offsetX += properties.outline;
@@ -421,7 +421,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
             //reset the composite operation
             this._ctx.globalCompositeOperation = "source-over";
             //draw the text
-            if (properties.stroke) {
+            if (pass == sabre.RenderPasses.OUTLINE) {
                 if (global.isNaN(properties.spacing)) {
                     this._ctx.strokeText(
                         text,
