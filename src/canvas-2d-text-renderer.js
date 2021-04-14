@@ -432,40 +432,44 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
                     this._ctx.filter = "none";
                     this._ctx.fillText(text, offsetXUnscaled, offsetYUnscaled);
                 } else {
-                    letter_offset = 0;
-                    for (i = 0; i < text.length; i++) {
+                    let letter_offset = 0;
+                    for (let i = 0; i < text.length; i++) {
                         this._ctx.strokeText(
                             text[i],
-                            offsetXtemp +
+                            offsetXUnscaled +
                                 (properties.spacing * i + letter_offset),
-                            offsetYtemp
+                            offsetYUnscaled
                         );
                         letter_offset += this._ctx.measureText(text[i]).width;
                     }
                     this._ctx.globalCompositeOperation = "destination-out";
                     this._ctx.filter = "none";
                     letter_offset = 0;
-                    for (i = 0; i < text.length; i++) {
+                    for (let i = 0; i < text.length; i++) {
                         this._ctx.fillText(
                             text[i],
-                            offsetXtemp +
+                            offsetXUnscaled +
                                 (properties.spacing * i + letter_offset),
-                            offsetYtemp
+                            offsetYUnscaled
                         );
                         letter_offset += this._ctx.measureText(text[i]).width;
                     }
                 }
             } else {
                 if (global.isNaN(properties.spacing))
-                    this._ctx.fillText(text, offsetXtemp, this._offsetYtemp);
+                    this._ctx.fillText(
+                        text,
+                        offsetXUnscaled,
+                        this._offsetYUnscaled
+                    );
                 else {
-                    letter_offset = 0;
-                    for (i = 0; i < text.length; i++) {
+                    let letter_offset = 0;
+                    for (let i = 0; i < text.length; i++) {
                         this._ctx.fillText(
                             text[i],
-                            offsetXtemp +
+                            offsetXUnscaled +
                                 (properties.spacing * i + letter_offset),
-                            offsetYtemp
+                            offsetYUnscaled
                         );
                         letter_offset += this._ctx.measureText(text[i]).width;
                     }

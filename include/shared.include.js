@@ -1,6 +1,9 @@
-var global = window;
+/**
+ * @type {Window}
+ */
+var global;
 
-window = null;
+//window = null;
 
 global.sabre = {};
 

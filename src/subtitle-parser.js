@@ -521,7 +521,7 @@ const main_prototype = global.Object.create(global.Object, {
                         else throw "Invalid shadow distance in style.";
                         break;
                     case "Alignment":
-                        tmp = global.parseInt(value);
+                        tmp = global.parseInt(value, 10);
                         if (isNaN(tmp) || tmp > 11)
                             throw "Invalid alignment type in style.";
                         tmp2 = tmp & 0x03;
