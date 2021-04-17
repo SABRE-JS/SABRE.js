@@ -44,7 +44,7 @@ const renderer_prototype = global.Object.create(Object, {
     //BEGIN LOCAL VARIABLES
 
     _compositingCanvas: {
-        /** @type{?HTMLCanvasElement} */
+        /** @type{?HTMLCanvasElement|?OffscreenCanvas} */
         value: null,
         writable: true
     },
@@ -170,8 +170,16 @@ const renderer_prototype = global.Object.create(Object, {
          * @returns {void}
          */
         value: function (width, height) {
+            /*
+            if (width-this._config.renderer["resolution_x"]>height-this._config.renderer["resolution_y"]){
+                //TODO: Text Scaling based on height
+            }else{
+                //TODO: Text Scaling based on width
+            }
+            */
             this._compositingCanvas.width = width;
             this._compositingCanvas.height = height;
+
             this._gl.viewport(
                 0,
                 0,

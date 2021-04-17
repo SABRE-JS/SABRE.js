@@ -43,7 +43,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Pixel to Dpt Ratio
          * @type {number}
          */
-        value: 1,
+        value: 72 / 96,
         writable: false
     },
 
@@ -59,7 +59,7 @@ const text_renderer_prototype = global.Object.create(Object, {
     _canvas: {
         /**
          * The canvas for the text renderer.
-         * @type {HTMLCanvasElement}
+         * @type {?HTMLCanvasElement|?OffscreenCanvas}
          */
         value: null,
         writable: true
@@ -115,9 +115,16 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Initializes the rendering canvas.
          */
         value: function () {
-            this._canvas = global.document.createElement("canvas");
-            this._height = this._width = 0;
-            this._ctx = this._canvas.getContext("2d", { "alpha": true });
+            if (typeof global.OffscreenCanvas == "undefined") {
+                this._canvas = global.document.createElement("canvas");
+                this._height = this._width = 0;
+            } else {
+                this._canvas = new global.OffscreenCanvas(0, 0);
+            }
+            this._ctx = this._canvas.getContext("2d", {
+                "alpha": true,
+                "desynchronized": true
+            });
             this._initialized = true;
         },
         writable: false
@@ -499,7 +506,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} dpi the DPI to use for rendering text.
          */
         value: function (dpi) {
-            this._pixelsPerDpt = dpi / 72;
+            this._pixelsPerDpt = dpi * (72 / 96);
         },
         writable: false
     },
