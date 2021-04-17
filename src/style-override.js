@@ -5,7 +5,17 @@
  |
  |-
  */
+/**
+ * @fileoverview This file defines the storage objects for style overrides.
+ */
 //@include [color.js]
+const jsonNaNFix = function (a) {
+    if (global.isNaN(a)) {
+        return '"NaN"';
+    }
+    return a;
+};
+
 sabre["SSAStyleOverride"] = function () {
     const template = Object.freeze({
         alignment: null,
@@ -48,7 +58,79 @@ sabre["SSAStyleOverride"] = function () {
     return Object.create(Object, {
         "toJSON": {
             value: function () {
-                return "";
+                return (
+                    "{a:" +
+                    JSON.stringify(obj.alignment) +
+                    ",bO:" +
+                    obj.baselineOffset +
+                    ",bI:" +
+                    obj.blurIterations +
+                    ",dM:" +
+                    obj.drawingMode +
+                    ",dS:" +
+                    obj.drawingScale +
+                    ",e:" +
+                    JSON.stringify(obj.encoding) +
+                    ",fN:" +
+                    JSON.stringify(obj.fontName) +
+                    ",fS:" +
+                    JSON.stringify(obj.fontSize) +
+                    ",fSM:" +
+                    obj.fontSizeMod +
+                    ",gB:" +
+                    obj.gblurValue +
+                    ",i:" +
+                    JSON.stringify(obj.italic) +
+                    ",kM:" +
+                    obj.karaokeMode +
+                    ",kS:" +
+                    jsonNaNFix(obj.karaokeStart) +
+                    ",kE:" +
+                    jsonNaNFix(obj.karaokeEnd) +
+                    ",m:" +
+                    JSON.stringify(obj.margins) +
+                    ",mo:" +
+                    JSON.stringify(obj.movement) +
+                    ",oX:" +
+                    JSON.stringify(obj.outlineX) +
+                    ",oY:" +
+                    JSON.stringify(obj.outlineY) +
+                    ",p:" +
+                    JSON.stringify(obj.position) +
+                    ",pC:" +
+                    JSON.stringify(obj.primaryColor) +
+                    ",sC:" +
+                    JSON.stringify(obj.secondaryColor) +
+                    ",tC:" +
+                    JSON.stringify(obj.tertiaryColor) +
+                    ",qC:" +
+                    JSON.stringify(obj.quaternaryColor) +
+                    ",r:" +
+                    JSON.stringify(obj.rotations) +
+                    ",sX:" +
+                    JSON.stringify(obj.scaleX) +
+                    ",sY:" +
+                    JSON.stringify(obj.scaleY) +
+                    ",shX:" +
+                    JSON.stringify(obj.shadowX) +
+                    ",shY:" +
+                    JSON.stringify(obj.shadowY) +
+                    ",sheX:" +
+                    obj.shearX +
+                    ",sheY:" +
+                    obj.shearY +
+                    ",sp:" +
+                    JSON.stringify(obj.spacing) +
+                    ",t:" +
+                    (obj.transition !== null) +
+                    ",u:" +
+                    JSON.stringify(obj.underline) +
+                    ",w:" +
+                    JSON.stringify(obj.weight) +
+                    ",wS:" +
+                    obj.wrapStyle +
+                    "}"
+                );
             },
             writable: false
         },

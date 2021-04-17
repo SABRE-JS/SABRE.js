@@ -23,7 +23,7 @@ sabre.import("subtitle-event.min.js");
 
 const lineSpacing = 1.2;
 
-sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
+const text_renderer_prototype = global.Object.create(Object, {
     _serializer: {
         value: new XMLSerializer(),
         writable: false
@@ -229,7 +229,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
     _setScale: {
         /**
          * Sets up the canvas to render to the correct scale.
-         * @param {SSAStyle} style
+         * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          * @param {number} pass
          */
@@ -245,7 +245,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
     _setOutline: {
         /**
          * Set outline width to the correct size.
-         * @param {SSAStyle} style
+         * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          * @param {number} pass
          */
@@ -262,7 +262,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
     _setFont: {
         /**
          * Set font settings for drawing.
-         * @param {SSAStyle} style
+         * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          * @param {number} pass
          */
@@ -288,7 +288,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
     _setEdgeBlur: {
         /**
          * Set box blur radius, gaussian blur is handled in the compositing step instead of here for performance reasons.
-         * @param {SSAStyle} style
+         * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          * @param {number} pass
          */
@@ -315,14 +315,18 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
     _setColors: {
         /**
          * Set the colors for the subtitle.
-         * @param {TextRenderingProperties} props
+         * @param {SSAStyleDefinition} style
+         * @param {SSAStyleOverride} overrides
+         * @param {number} pass
          */
+        value: function (style, overrides, pass) {},
+        writable: false
     },
 
     _handleStyling: {
         /**
          * Sets up the canvas to render according to specified styles.
-         * @param {SSAStyle} style
+         * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          * @param {number} pass
          */
@@ -390,16 +394,19 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
 
             //pad for box blur
             if ((overrides.getEdgeBlur() ?? 0) > 0) {
-                this._width += global.Math.pow(2, properties.boxBlur) * 2;
-                this._height += global.Math.pow(2, properties.boxBlur) * 2;
-                this._offsetX += global.Math.pow(2, properties.boxBlur);
+                let twoToEdgeBlur = global.Math.pow(2, overrides.getEdgeBlur());
+                this._width += twoToEdgeBlur * 2;
+                this._height += twoToEdgeBlur * 2;
+                this._offsetX += twoToEdgeBlur;
             }
 
             //pad for outline
             if (pass == sabre.RenderPasses.OUTLINE) {
-                this._width += properties.outline * 2;
-                this._height += properties.outline * 2;
-                this._offsetX += properties.outline;
+                let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
+                let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
+                this._width += outlineX * 2;
+                this._height += outlineY * 2;
+                this._offsetX += outlineX;
             }
 
             this._offsetY += this._height / 2;
@@ -421,57 +428,64 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
             //reset the composite operation
             this._ctx.globalCompositeOperation = "source-over";
             //draw the text
-            if (pass == sabre.RenderPasses.OUTLINE) {
-                if (global.isNaN(properties.spacing)) {
-                    this._ctx.strokeText(
-                        text,
-                        offsetXUnscaled,
-                        offsetYUnscaled
-                    );
-                    this._ctx.globalCompositeOperation = "destination-out";
-                    this._ctx.filter = "none";
-                    this._ctx.fillText(text, offsetXUnscaled, offsetYUnscaled);
-                } else {
-                    let letter_offset = 0;
-                    for (let i = 0; i < text.length; i++) {
+            {
+                let spacing = overrides.getSpacing() ?? style.getSpacing();
+                if (pass == sabre.RenderPasses.OUTLINE) {
+                    if (global.isNaN(spacing)) {
                         this._ctx.strokeText(
-                            text[i],
-                            offsetXUnscaled +
-                                (properties.spacing * i + letter_offset),
+                            text,
+                            offsetXUnscaled,
                             offsetYUnscaled
                         );
-                        letter_offset += this._ctx.measureText(text[i]).width;
-                    }
-                    this._ctx.globalCompositeOperation = "destination-out";
-                    this._ctx.filter = "none";
-                    letter_offset = 0;
-                    for (let i = 0; i < text.length; i++) {
+                        this._ctx.globalCompositeOperation = "destination-out";
+                        this._ctx.filter = "none";
                         this._ctx.fillText(
-                            text[i],
-                            offsetXUnscaled +
-                                (properties.spacing * i + letter_offset),
+                            text,
+                            offsetXUnscaled,
                             offsetYUnscaled
                         );
-                        letter_offset += this._ctx.measureText(text[i]).width;
+                    } else {
+                        let letter_offset = 0;
+                        for (let i = 0; i < text.length; i++) {
+                            this._ctx.strokeText(
+                                text[i],
+                                offsetXUnscaled + (spacing * i + letter_offset),
+                                offsetYUnscaled
+                            );
+                            letter_offset += this._ctx.measureText(text[i])
+                                .width;
+                        }
+                        this._ctx.globalCompositeOperation = "destination-out";
+                        this._ctx.filter = "none";
+                        letter_offset = 0;
+                        for (let i = 0; i < text.length; i++) {
+                            this._ctx.fillText(
+                                text[i],
+                                offsetXUnscaled + (spacing * i + letter_offset),
+                                offsetYUnscaled
+                            );
+                            letter_offset += this._ctx.measureText(text[i])
+                                .width;
+                        }
                     }
-                }
-            } else {
-                if (global.isNaN(properties.spacing))
-                    this._ctx.fillText(
-                        text,
-                        offsetXUnscaled,
-                        this._offsetYUnscaled
-                    );
-                else {
-                    let letter_offset = 0;
-                    for (let i = 0; i < text.length; i++) {
+                } else {
+                    if (global.isNaN(spacing))
                         this._ctx.fillText(
-                            text[i],
-                            offsetXUnscaled +
-                                (properties.spacing * i + letter_offset),
+                            text,
+                            offsetXUnscaled,
                             offsetYUnscaled
                         );
-                        letter_offset += this._ctx.measureText(text[i]).width;
+                    else {
+                        let letter_offset = 0;
+                        for (let i = 0; i < text.length; i++) {
+                            this._ctx.fillText(
+                                text[i],
+                                offsetXUnscaled + (spacing * i + letter_offset),
+                                offsetYUnscaled
+                            );
+                            letter_offset += this._ctx.measureText(text[i])
+                                .width;
+                        }
                     }
                 }
             }
@@ -519,3 +533,7 @@ sabre["canvas2d_text_renderer_prototype"] = global.Object.create(Object, {
         writable: true
     }
 });
+
+sabre["Canvas2DTextRenderer"] = function () {
+    return Object.create(text_renderer_prototype);
+};
