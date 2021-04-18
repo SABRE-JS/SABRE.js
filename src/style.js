@@ -13,13 +13,7 @@ sabre["SSAStyleDefinition"] = function () {
         weight: 200,
         scaleX: 1,
         scaleY: 1,
-        /**
-         *  This is an optimization
-         *  we make to avoid having to
-         *  manually space each character
-         *  for default spacing.
-         */
-        spacing: global.NaN,
+        spacing: 0,
         borderStyle: 1,
         outline: 2,
         shadow: 3,
@@ -58,7 +52,7 @@ sabre["SSAStyleDefinition"] = function () {
                     ",sy:" +
                     obj.scaleY +
                     ",sp:" +
-                    (global.isNaN(obj.spacing) ? 0 : obj.spacing) +
+                    obj.spacing +
                     ",an:" +
                     obj.angle +
                     ",bs:" +

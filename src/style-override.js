@@ -60,7 +60,7 @@ sabre["SSAStyleOverride"] = function () {
             value: function () {
                 return (
                     "{a:" +
-                    JSON.stringify(obj.alignment) +
+                    obj.alignment +
                     ",bO:" +
                     obj.baselineOffset +
                     ",bI:" +
@@ -70,7 +70,7 @@ sabre["SSAStyleOverride"] = function () {
                     ",dS:" +
                     obj.drawingScale +
                     ",e:" +
-                    JSON.stringify(obj.encoding) +
+                    obj.encoding +
                     ",fN:" +
                     JSON.stringify(obj.fontName) +
                     ",fS:" +
@@ -80,7 +80,7 @@ sabre["SSAStyleOverride"] = function () {
                     ",gB:" +
                     obj.gblurValue +
                     ",i:" +
-                    JSON.stringify(obj.italic) +
+                    obj.italic +
                     ",kM:" +
                     obj.karaokeMode +
                     ",kS:" +
@@ -92,9 +92,9 @@ sabre["SSAStyleOverride"] = function () {
                     ",mo:" +
                     JSON.stringify(obj.movement) +
                     ",oX:" +
-                    JSON.stringify(obj.outlineX) +
+                    obj.outlineX +
                     ",oY:" +
-                    JSON.stringify(obj.outlineY) +
+                    obj.outlineY +
                     ",p:" +
                     JSON.stringify(obj.position) +
                     ",pC:" +
@@ -108,25 +108,25 @@ sabre["SSAStyleOverride"] = function () {
                     ",r:" +
                     JSON.stringify(obj.rotations) +
                     ",sX:" +
-                    JSON.stringify(obj.scaleX) +
+                    obj.scaleX +
                     ",sY:" +
-                    JSON.stringify(obj.scaleY) +
+                    obj.scaleY +
                     ",shX:" +
-                    JSON.stringify(obj.shadowX) +
+                    obj.shadowX +
                     ",shY:" +
-                    JSON.stringify(obj.shadowY) +
+                    obj.shadowY +
                     ",sheX:" +
                     obj.shearX +
                     ",sheY:" +
                     obj.shearY +
                     ",sp:" +
-                    JSON.stringify(obj.spacing) +
+                    obj.spacing +
                     ",t:" +
                     (obj.transition !== null) +
                     ",u:" +
-                    JSON.stringify(obj.underline) +
+                    obj.underline +
                     ",w:" +
-                    JSON.stringify(obj.weight) +
+                    obj.weight +
                     ",wS:" +
                     obj.wrapStyle +
                     "}"

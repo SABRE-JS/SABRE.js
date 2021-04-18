@@ -388,7 +388,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                 let fontSize =
                     (overrides.getFontSize() ?? style.getFontSize()) +
                     overrides.getFontSizeMod();
-                if (spacing == 0) {
+                if (spacing === 0) {
                     this._width = this._ctx.measureText(text).width;
                 } else {
                     this._width = 0;
@@ -408,7 +408,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             }
 
             //pad for outline
-            if (pass == sabre.RenderPasses.OUTLINE) {
+            if (pass === sabre.RenderPasses.OUTLINE) {
                 let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
                 let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
                 this._width += outlineX * 2;
@@ -437,8 +437,8 @@ const text_renderer_prototype = global.Object.create(Object, {
             //draw the text
             {
                 let spacing = overrides.getSpacing() ?? style.getSpacing();
-                if (pass == sabre.RenderPasses.OUTLINE) {
-                    if (global.isNaN(spacing)) {
+                if (pass === sabre.RenderPasses.OUTLINE) {
+                    if (spacing === 0) {
                         this._ctx.strokeText(
                             text,
                             offsetXUnscaled,
@@ -476,7 +476,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                         }
                     }
                 } else {
-                    if (global.isNaN(spacing))
+                    if (spacing === 0)
                         this._ctx.fillText(
                             text,
                             offsetXUnscaled,
