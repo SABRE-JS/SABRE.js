@@ -172,6 +172,18 @@ if (typeof global.OffscreenCanvas != "undefined") {
 }
 
 /**
+ * Compare two strings for equality ignoring case.
+ * @param {string} a String 1 in comparison.
+ * @param {string} b string 2 in comparison.
+ * @return {boolean} Equal or not.
+ */
+sabre["stringEqualsCaseInsensitive"] = function (a, b) {
+    return typeof a === "string" && typeof b === "string"
+        ? a.localeCompare(b, undefined, { sensitivity: "accent" }) === 0
+        : a === b;
+};
+
+/**
  * Round number n to p places.
  * @param {number} n Number to round.
  * @param {number} p Number of places.

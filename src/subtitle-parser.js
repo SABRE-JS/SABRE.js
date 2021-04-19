@@ -18,6 +18,7 @@ sabre.import("color.min.js");
 sabre.import("style.min.js");
 sabre.import("style-override.min.js");
 sabre.import("subtitle-event.min.js");
+sabre.import("renderer-main.js");
 
 /**
  * @fileoverview subtitle parser code for Substation Alpha and Advanced Substation Alpha.
@@ -33,13 +34,16 @@ const gassert = function (complaint, test) {
 };
 //ONE TIME WARN DECLARATIONS
 const FOUND_DEPRICATED_COMMENT = new sabre.Complaint(
-    "Found a comment in the old depricated style."
+    "Encountered a comment in the old depricated style."
 );
 const INVALID_T_FUNCTION_TAG = new sabre.Complaint(
     "Encountered a parameterless or tagless \\t function tag, ignoring."
 );
 const MOVE_ENDS_BEFORE_IT_STARTS = new sabre.Complaint(
     "Encountered a move tag where the animation ends before it starts, ignoring."
+);
+const WRONG_CASE_IN_HEADING = new sabre.Complaint(
+    "Encounterd a heading which does not have its case consistent with the standard."
 );
 
 //Default style and dialogue formats
@@ -135,6 +139,15 @@ const main_prototype = global.Object.create(global.Object, {
     _renderer: {
         /**
          * Renderer instance.
+         * @private
+         */
+        value: null,
+        writable: true
+    },
+
+    _styles: {
+        /**
+         * Map of styles.
          * @private
          */
         value: null,
@@ -416,6 +429,28 @@ const main_prototype = global.Object.create(global.Object, {
         writable: false
     },
 
+    _parseTime: {
+        /**
+         * Parses a string into a time
+         * @param {string} timestring the string containing the time.
+         * @returns {number} time in seconds.
+         */
+        value: function (timestring) {
+            let array = timestring.split(":");
+            let time = 0;
+            for (let i = 0; i < array.length; i++) {
+                if (i != array.length) {
+                    time += parseInt(array[i], 10);
+                    time *= 60;
+                } else {
+                    time += parseFloat(array[i]);
+                }
+            }
+            return time;
+        },
+        writable: false
+    },
+
     _parseColor: {
         /**
          * Parses colors for styles.
@@ -568,6 +603,7 @@ const main_prototype = global.Object.create(global.Object, {
                         throw 'Unrecognized Style Entry "' + key + '"';
                 }
             }
+            this._styles[style.getName()] = style;
         },
         writable: false
     },
@@ -697,6 +733,7 @@ const main_prototype = global.Object.create(global.Object, {
                         throw 'Unrecognized Style Entry "' + key + '"';
                 }
             }
+            this._styles[style.getName()] = style;
         },
         writable: false
     },
@@ -733,7 +770,9 @@ const main_prototype = global.Object.create(global.Object, {
                             )
                         );
                         new_event.setText(match[3]);
-                        events = events.splice(i + 1, 0, new_event);
+                        for (let j = events.length - 1; j >= i + 1; j--)
+                            events[j + 1] = events[j];
+                        events[i + 1] = new_event;
                     }
                 }
             }
@@ -1025,6 +1064,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ignore_exterior: false,
                 regular_expression: /^([1-4])?c/,
                 /**
                  * Handles color settings.
@@ -1582,7 +1622,9 @@ const main_prototype = global.Object.create(global.Object, {
                     overrides.reset();
                     let styleName = parameters[0];
                     if (typeof styleName != "undefined" && styleName != "")
-                        setStyle(this._getStyle(styleName));
+                        setStyle(
+                            this._styles[styleName] ?? this._styles["Default"]
+                        );
                 }
             },
             {
@@ -1631,7 +1673,12 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {Array<?string>} parameters
                  * @private
                  */
-                function(timeInfo, setStyle, overrides, parameters) {
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
                     let lparameters = parameters;
                     let final_param;
                     let transitionStart = 0;
@@ -1733,8 +1780,8 @@ const main_prototype = global.Object.create(global.Object, {
             //For each override tag
             while ((pre_params = override_regex.exec(tags)) !== null) {
                 code = pre_params[0];
-                params = pre_params[2] || "";
-                post_params = pre_params[3] || "";
+                params = pre_params[2] ?? "";
+                post_params = pre_params[3] ?? "";
                 pre_params = pre_params[1];
                 let found = false;
                 //Search for a coresponding override tag supported by the parser.
@@ -1743,7 +1790,7 @@ const main_prototype = global.Object.create(global.Object, {
                     //Test for matching tag.
                     if (regex.test(pre_params)) {
                         found = true;
-                        let match = regex.match(pre_params);
+                        let match = pre_params.match(regex);
                         //Does the tag ignore parameters that are outside parenthesis?
                         if (!this._overrideTags[i].ignore_exterior) {
                             //No it does not ignore them.
@@ -1756,9 +1803,7 @@ const main_prototype = global.Object.create(global.Object, {
                             else post_params = [];
                             if (params != "") params = params.split(",");
                             else params = [];
-                            params = Array.prototype.slice
-                                .call(match, 1)
-                                .concat(params, pre_params, post_params);
+                            params = params.concat(pre_params, post_params);
                         } else {
                             //Yes it does ignore them.
                             if (params != "") params = params.split(",");
@@ -1797,7 +1842,7 @@ const main_prototype = global.Object.create(global.Object, {
             //Create a new event for the line.
             let event = new sabre.SSASubtitleEvent();
             //Preload the default style into the event.
-            let style = this._getStyle("Default");
+            let style = this._styles["Default"];
             //Create a new style override for the event.
             let event_overrides = new sabre.SSAStyleOverride();
             let tmp;
@@ -1808,7 +1853,7 @@ const main_prototype = global.Object.create(global.Object, {
                 switch (key) {
                     case "Style":
                         //Set the style to the specified one.
-                        style = this._getStyle(value);
+                        style = this._styles[value];
                         break;
                     case "Layer":
                         //Set the layer.
@@ -1931,15 +1976,38 @@ const main_prototype = global.Object.create(global.Object, {
                     //Check for the depricated comment style.
                     return; //Ignore depricated comments.
                 try {
+                    //Check to see if we can parse this heading.
                     if (typeof this._parser[this._heading] !== "undefined")
-                        //Check to see if we can parse this heading.
                         this._parser[this._heading].call(
                             // Parse the heading.
                             this,
                             keypair,
                             this._config
                         );
-                    else throw "Unknown Heading Error"; //Otherwise we error.
+                    else {
+                        //try to fix the heading case
+                        let headings = Object.keys(this._parser);
+                        let i = 0;
+                        for (; i < headings.length; i++) {
+                            if (
+                                sabre.stringEqualsCaseInsensitive(
+                                    this._heading,
+                                    headings[i]
+                                )
+                            ) {
+                                this._heading = headings[i];
+                                WRONG_CASE_IN_HEADING.grumble();
+                                this._parser[this._heading].call(
+                                    // Parse the heading.
+                                    this,
+                                    keypair,
+                                    this._config
+                                );
+                                break;
+                            }
+                        }
+                        if (i == headings.length) throw "Unknown Heading Error"; //Otherwise we error.
+                    }
                 } catch (e) {
                     throw (
                         "[" +
@@ -2001,6 +2069,10 @@ const main_prototype = global.Object.create(global.Object, {
          * @param {string} subsText the passed subtitle file contents.
          */
         value: function (subsText) {
+            //Create new default style.
+            let defaultStyle = new sabre.SSAStyleDefinition();
+            defaultStyle.setName("Default");
+            this._styles = { "Default": defaultStyle };
             this._config = { info: {}, parser: {}, renderer: {} };
             if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
                 //check for BOM

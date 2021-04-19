@@ -17,5 +17,5 @@ export CLOSURE_TYPE_INF_OPTION_NEW=--new_type_inf
 
 export CLOSURE_TYPE_INF=$CLOSURE_TYPE_INF_OPTION_OLD
 
-export CLOSURE_OUTPUT_WRAPPER_PREFIX="\"(function(global,external){var window=null;var self=null;var sabre=external.\$;%output%if(++sabre.\$==="
-export CLOSURE_OUTPUT_WRAPPER_SUFFIX="){external.\$=null;sabre.\$=null;sabre.init()}})(self,self.sabre=(self.sabre||{\$:{\$:0}}));\""
+export CLOSURE_OUTPUT_WRAPPER_PREFIX="\"(function(global,external){var window=null;var self=null;var sabre=external.\$;{%output%}if(++sabre.\$==="
+export CLOSURE_OUTPUT_WRAPPER_SUFFIX="){external.\$=null;sabre.\$=null}})(self,self.sabre=(self.sabre||{\$:{\$:0}}));\""

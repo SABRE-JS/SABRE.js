@@ -1,38 +1,4 @@
 /**
- * indexOf but regex.
- * @param {(string|RegExp)} searchValue value to search for.
- * @param {number=} fromIndex starting index.
- * @return {number} index.
- */
-global.String.prototype.regexIndexOf = function (searchValue, fromIndex) {};
-/**
- * lastIndexOf but regex.
- * @param {(string|RegExp)} searchValue value to search for.
- * @param {number=} fromIndex starting index.
- * @return {number} index.
- */
-global.String.prototype.regexLastIndexOf = function (searchValue, fromIndex) {};
-/**
- * perform all regex replaces in the object.
- * @param {Object<string,string>} obj replaces to perform.
- * @return {string} result.
- */
-global.String.prototype.allReplace = function (obj) {};
-
-/**
- * Get an Element's position.
- * @param {Element} element the element to locate.
- * @return {Array<number>} the x and y of the element;
- */
-sabre.getElementPos = function (element) {};
-
-/**
- * clones an object.
- * @param {Object} obj the object to clone
- * @return {Object} the cloned object.
- */
-sabre.cloneObject = function (obj) {};
-/**
  * Round number n to p places.
  * @param {number} n Number to round.
  * @param {number} p Number of places.
@@ -40,6 +6,16 @@ sabre.cloneObject = function (obj) {};
  */
 Math.roundTo = function (n, p) {
     return 0;
+};
+
+/**
+ * Compare two strings for equality ignoring case.
+ * @param {string} a String 1 in comparison.
+ * @param {string} b string 2 in comparison.
+ * @return {boolean} Equal or not.
+ */
+sabre.stringEqualsCaseInsensitive = function (a, b) {
+    return true;
 };
 
 /**
@@ -71,8 +47,3 @@ sabre.pixelRatio = 1.0;
 sabre.getBackingRatio = function (context) {
     return 1;
 };
-
-/**
- * On Animation Frame.
- */
-sabre.onFrame = function () {};
