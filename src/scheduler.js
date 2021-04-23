@@ -38,8 +38,7 @@ const scheduler_prototype = global.Object.create(Object, {
          * @returns {number}
          */
         value: function (/** SSASubtitleEvent */ a, /** SSASubtitleEvent */ b) {
-            if (a.getStart() == b.getStart())
-                return a.getEnd() - a.getStart() - (b.getEnd() - b.getStart());
+            if (a.getStart() == b.getStart()) return a.getEnd() - b.getEnd();
             return a.getStart() - b.getStart();
         },
         writable: false
@@ -66,16 +65,17 @@ const scheduler_prototype = global.Object.create(Object, {
          */
         value: function (eventsList) {
             eventsList = eventsList.slice();
+            eventsList.sort(this._eventListComparator);
             let originalLen = eventsList.length;
             this._eventTree = this._constructFixedArray(2 * originalLen);
-            eventsList.sort(this._eventListComparator);
             let i;
             for (i = originalLen; i < 2 * originalLen; i++) {
                 let cur = eventsList[i - originalLen];
                 this._eventTree[i] = {
                     events: [cur],
                     start: cur.getStart(),
-                    end: cur.getEnd
+                    end: cur.getEnd(),
+                    leaf: true
                 };
             }
             for (i = originalLen - 1; i > 0; i--) {
@@ -85,7 +85,8 @@ const scheduler_prototype = global.Object.create(Object, {
                     events: cur_a.events.concat(cur_b.events),
                     start:
                         cur_a.start < cur_b.start ? cur_a.start : cur_b.start,
-                    end: cur_b.end > cur_a.end ? cur_b.end : cur_b.end
+                    end: cur_b.end > cur_a.end ? cur_b.end : cur_a.end,
+                    leaf: false
                 };
             }
         },
@@ -100,28 +101,37 @@ const scheduler_prototype = global.Object.create(Object, {
          */
         value: function (time) {
             let array = [];
-            let i = 1;
             if (
                 time >= this._eventTree[1].start &&
                 time < this._eventTree[1].end
             ) {
-                let found = null;
+                let queue = [1];
+                let results = [];
                 do {
-                    let cur_a = this._eventTree[i * 2];
-                    let a_overlaps = cur_a.start <= time && cur_a.end > time;
-                    let cur_b = this._eventTree[i * 2 + 1];
-                    let b_overlaps = cur_b.start <= time && cur_b.end > time;
-                    if (a_overlaps && b_overlaps) {
-                        found = true;
-                    } else if (a_overlaps) {
-                        i = i * 2;
-                    } else if (b_overlaps) {
-                        i = i * 2 + 1;
-                    } else found = false;
-                } while (found == null && i < this._eventTree.length / 2);
-                if (found) {
-                    array = this._eventTree[i].events.slice();
-                }
+                    let found = 1;
+                    let i = queue.shift();
+                    while (found === 1 && !this._eventTree[i].leaf) {
+                        let cur_a = this._eventTree[i * 2];
+                        let cur_b = this._eventTree[i * 2 + 1];
+                        let a_overlaps =
+                            cur_a.start <= time && cur_a.end > time;
+                        let b_overlaps =
+                            cur_b.start <= time && cur_b.end > time;
+                        if (a_overlaps && b_overlaps) {
+                            found = 2;
+                            queue.push(i * 2);
+                            queue.push(i * 2 + 1);
+                        } else if (a_overlaps) {
+                            i = i * 2;
+                        } else if (b_overlaps) {
+                            i = i * 2 + 1;
+                        } else found = 0;
+                    }
+                    if (found === 1) {
+                        results.push(this._eventTree[i].events.slice());
+                    }
+                } while (queue.length > 0);
+                array = [].concat.apply([], results);
             }
             return array;
         },

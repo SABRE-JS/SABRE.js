@@ -439,7 +439,7 @@ const main_prototype = global.Object.create(global.Object, {
             let array = timestring.split(":");
             let time = 0;
             for (let i = 0; i < array.length; i++) {
-                if (i != array.length) {
+                if (i != array.length - 1) {
                     time += parseInt(array[i], 10);
                     time *= 60;
                 } else {
@@ -770,9 +770,9 @@ const main_prototype = global.Object.create(global.Object, {
                             )
                         );
                         new_event.setText(match[3]);
-                        for (let j = events.length - 1; j >= i + 1; j--)
-                            events[j + 1] = events[j];
-                        events[i + 1] = new_event;
+                        events = events
+                            .slice(0, i + 1)
+                            .concat([new_event], events.slice(i + 1));
                     }
                 }
             }
