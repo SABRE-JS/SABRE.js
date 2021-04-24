@@ -1517,6 +1517,28 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ignore_exterior: true,
+                regular_expression: /^org/,
+                /**
+                 * Handles setting rotation origin.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {Array<?string>} parameters
+                 * @private
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    let x = parseInt(parameters[0], 10);
+                    let y = parseInt(parameters[1], 10);
+                    overrides.setRotationOrigin(x, y);
+                }
+            },
+            {
                 ignore_exterior: false,
                 regular_expression: /^p/,
                 /**

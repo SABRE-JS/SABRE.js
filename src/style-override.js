@@ -42,6 +42,7 @@ sabre["SSAStyleOverride"] = function () {
         tertiaryColor: null,
         quaternaryColor: null,
         rotations: [],
+        rotationOrigin: null,
         scaleX: null,
         scaleY: null,
         shadowX: null,
@@ -107,6 +108,8 @@ sabre["SSAStyleOverride"] = function () {
                     JSON.stringify(obj.quaternaryColor) +
                     ",r:" +
                     JSON.stringify(obj.rotations) +
+                    ",rO:" +
+                    JSON.stringify(obj.rotationOrigin) +
                     ",sX:" +
                     obj.scaleX +
                     ",sY:" +
@@ -535,6 +538,20 @@ sabre["SSAStyleOverride"] = function () {
         "getRotations": {
             value: function () {
                 return obj.rotations.slice(0);
+            },
+            writable: false
+        },
+
+        "setRotationOrigin": {
+            value: function (/** number */ x, /** number */ y) {
+                obj.rotationOrigin = [x, y];
+            },
+            writable: false
+        },
+
+        "getRotationOrigin": {
+            value: function () {
+                return obj.rotationOrigin;
             },
             writable: false
         },
