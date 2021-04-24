@@ -1660,6 +1660,27 @@ const main_prototype = global.Object.create(global.Object, {
             },
             {
                 ignore_exterior: false,
+                regular_expression: /^s/,
+                /**
+                 * Handles strikethrough.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {Array<?string>} parameters
+                 * @private
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    parameters
+                ) {
+                    let value = parseInt(parameters[0], 10);
+                    overrides.setStrikeout(value > 0);
+                }
+            },
+            {
+                ignore_exterior: false,
                 regular_expression: /^([xy])?shad/,
                 /**
                  * Handles drop shadow.

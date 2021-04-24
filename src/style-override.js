@@ -50,6 +50,7 @@ sabre["SSAStyleOverride"] = function () {
         shearX: 0,
         shearY: 0,
         spacing: null,
+        strikeout: null,
         transition: null,
         underline: null,
         weight: null,
@@ -124,6 +125,8 @@ sabre["SSAStyleOverride"] = function () {
                     obj.shearY +
                     ",sp:" +
                     obj.spacing +
+                    ",st:" +
+                    obj.strikeout +
                     ",t:" +
                     (obj.transition !== null) +
                     ",u:" +
@@ -659,6 +662,20 @@ sabre["SSAStyleOverride"] = function () {
         "getSpacing": {
             value: function () {
                 return obj.spacing;
+            },
+            writable: false
+        },
+
+        "setStrikeout": {
+            value: function (/** boolean */ value) {
+                obj.strikeout = value;
+            },
+            writable: false
+        },
+
+        "getStrikeout": {
+            value: function () {
+                return obj.strikeout;
             },
             writable: false
         },
