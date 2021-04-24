@@ -82,7 +82,6 @@ const scheduler_prototype = global.Object.create(Object, {
                 let cur_a = this._eventTree[i * 2];
                 let cur_b = this._eventTree[i * 2 + 1];
                 this._eventTree[i] = {
-                    events: cur_a.events.concat(cur_b.events),
                     start:
                         cur_a.start < cur_b.start ? cur_a.start : cur_b.start,
                     end: cur_b.end > cur_a.end ? cur_b.end : cur_a.end,
