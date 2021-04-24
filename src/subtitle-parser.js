@@ -403,9 +403,17 @@ const main_prototype = global.Object.create(global.Object, {
                     config["parser"]["event_format"] =
                         config["parser"]["event_format"] ||
                         default_ssa_event_format;
-                let arr = keypair[1].split(",").map(function (a) {
-                    return a.trim();
-                });
+                let arr = keypair[1].split(",");
+                let str = "";
+                if (arr.length > config["parser"]["event_format"].length) {
+                    do {
+                        str = arr.pop() + str;
+                    } while (
+                        arr.length > config["parser"]["event_format"].length
+                    );
+                    arr[arr.length - 1] = arr[arr.length - 1] + str;
+                }
+                for (let i = 0; i < arr.length; i++) arr[i] = arr[i].trim();
                 switch (keypair[0]) {
                     case "Format":
                         if (arr[arr.length - 1] !== "Text") {
@@ -752,7 +760,7 @@ const main_prototype = global.Object.create(global.Object, {
             if (this._config["info"]["is_ass"]) {
                 for (let i = 0; i < events.length; i++) {
                     event = events[i];
-                    match = /^([^{}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
+                    match = /^([^\{\}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
                     if (match !== null) {
                         let new_event = this._cloneEventWithoutText(event);
                         event.setText(match[1]);
