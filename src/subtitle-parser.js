@@ -406,12 +406,13 @@ const main_prototype = global.Object.create(global.Object, {
                 let arr = keypair[1].split(",");
                 let str = "";
                 if (arr.length > config["parser"]["event_format"].length) {
-                    do {
-                        str = arr.pop() + str;
-                    } while (
+                    str = arr.pop() + str;
+                    while (
                         arr.length > config["parser"]["event_format"].length
-                    );
-                    arr[arr.length - 1] = arr[arr.length - 1] + str;
+                    ) {
+                        str = arr.pop() + "," + str;
+                    }
+                    arr[arr.length - 1] = arr[arr.length - 1] + "," + str;
                 }
                 for (let i = 0; i < arr.length; i++) arr[i] = arr[i].trim();
                 switch (keypair[0]) {
