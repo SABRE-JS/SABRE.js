@@ -12,7 +12,9 @@
  *              setStyle:function(SSAStyleDefinition):void,
  * 				getStyle:function():SSAStyleDefinition,
  *              setOverrides:function(SSAStyleOverride):void,
- *              getOverrides:function():SSAStyleOverride
+ *              getOverrides:function():SSAStyleOverride,
+ *              setLineOverrides:function(SSALineStyleOverride):void,
+ *              getLineOverrides:function():SSALineStyleOverride
  *          }}
  */
 var SSASubtitleEvent;

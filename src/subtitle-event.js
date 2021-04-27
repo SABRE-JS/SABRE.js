@@ -11,6 +11,7 @@ sabre["SSASubtitleEvent"] = function () {
         end: 0,
         style: null,
         overrides: null,
+        lineOverrides: null,
         text: null
     };
     return Object.create(Object, {
@@ -27,6 +28,8 @@ sabre["SSASubtitleEvent"] = function () {
                     JSON.stringify(obj.style) +
                     ",o:" +
                     JSON.stringify(obj.overrides) +
+                    ",lO:" +
+                    JSON.stringify(obj.lineOverrides) +
                     ",t:" +
                     JSON.stringify(obj.text) +
                     "}"
@@ -91,7 +94,7 @@ sabre["SSASubtitleEvent"] = function () {
         },
 
         "setStyle": {
-            value: function (style) {
+            value: function (/** SSAStyleDefinition */ style) {
                 obj.style = style;
             },
             writable: false
@@ -105,7 +108,7 @@ sabre["SSASubtitleEvent"] = function () {
         },
 
         "setOverrides": {
-            value: function (overrides) {
+            value: function (/** SSAStyleOverride */ overrides) {
                 obj.overrides = overrides;
             },
             writable: false
@@ -114,6 +117,20 @@ sabre["SSASubtitleEvent"] = function () {
         "getOverrides": {
             value: function () {
                 return obj.overrides;
+            },
+            writable: false
+        },
+
+        "setLineOverrides": {
+            value: function (/** SSALineStyleOverride */ line_overrides) {
+                obj.lineOverrides = line_overrides;
+            },
+            writable: false
+        },
+
+        "getLineOverrides": {
+            value: function () {
+                return obj.lineOverrides;
             },
             writable: false
         }

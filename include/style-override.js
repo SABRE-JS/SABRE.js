@@ -16,16 +16,13 @@
  *      getKaraokeStart:function():number,
  *      getKaraokeEnd:function():number,
  *      getMargins:function():Array<?number>,
- *      getMovement:function():?Array<number>,
  *      getOutlineX:function():?number,
  *      getOutlineY:function():?number,
- *      getPosition:function():?Array<number>,
  *      getPrimaryColor:function():?SSAOverrideColor,
  *      getSecondaryColor:function():?SSAOverrideColor,
  *      getTertiaryColor:function():?SSAOverrideColor,
  *      getQuaternaryColor:function():?SSAOverrideColor,
  *      getRotations:function():Array<Array<number>>,
- *      getRotationOrigin:function():?Array<number>,
  *      getScaleX:function():?number,
  *      getScaleY:function():?number,
  *      getShadowX:function():?number,
@@ -59,17 +56,14 @@
  *      setMarginLeft:function(number):void,
  *      setMarginRight:function(number):void,
  *      setMarginVertical:function(number):void,
- *      setMovement:function(number,number,number,number,number,number):void,
  *      setOutline:function(number):void,
  *      setOutlineX:function(number):void,
  *      setOutlineY:function(number):void,
- *      setPosition:function(number,number):void,
  *      setPrimaryColor:function(SSAOverrideColor):void,
  *      setSecondaryColor:function(SSAOverrideColor):void,
  *      setTertiaryColor:function(SSAOverrideColor):void,
  *      setQuaternaryColor:function(SSAOverrideColor):void,
  *      addRotation:function(number,number,number):void,
- *      setRotationOrigin:function(number,number):void,
  *      setScaleX:function(number):void,
  *      setScaleY:function(number):void,
  *      setShadowX:function(number):void,
@@ -90,6 +84,26 @@
 var SSAStyleOverride;
 
 /**
+ * @typedef {!{
+ *      toJSON:function():string,
+ *      getMovement:function():?Array<number>,
+ *      getPosition:function():?Array<number>,
+ *      getRotationOrigin:function():?Array<number>,
+ *      getFade:function():?Array<number>,
+ *      setMovement:function(number,number,number,number,number,number):void,
+ *      setPosition:function(number,number):void,
+ *      setRotationOrigin:function(number,number):void,
+ *      setFade:function(number,number,number,number,number,number,number):void
+ * }}
+ */
+var SSALineStyleOverride;
+
+/**
  * @type {function(new:SSAStyleOverride)}
  */
 sabre.SSAStyleOverride = function () {};
+
+/**
+ * @type {function(new:SSALineStyleOverride)}
+ */
+sabre.SSALineStyleOverride = function () {};

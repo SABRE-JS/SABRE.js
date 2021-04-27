@@ -199,6 +199,7 @@ const main_prototype = global.Object.create(global.Object, {
             new_event.setLayer(event.getLayer());
             new_event.setStyle(event.getStyle());
             new_event.setOverrides(event.getOverrides());
+            new_event.setLineOverrides(event.getLineOverrides());
             return new_event;
         },
         writable: false
@@ -775,6 +776,7 @@ const main_prototype = global.Object.create(global.Object, {
                                     new_event.setStyle(new_style);
                                 },
                                 event.getOverrides(),
+                                event.getLineOverrides(),
                                 match[2]
                             )
                         );
@@ -804,6 +806,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -811,6 +814,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let depricated_align = parseInt(parameters[0], 10);
@@ -848,6 +852,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -855,6 +860,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     if (
@@ -877,6 +883,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -884,6 +891,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let color_index = 1;
@@ -974,6 +982,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -981,6 +990,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let weight = parseInt(parameters[1], 10);
@@ -1002,6 +1012,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1009,6 +1020,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let blur_iterations = parseInt(parameters[0], 10);
@@ -1024,6 +1036,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1031,6 +1044,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let blur_value = parseFloat(parameters[0]);
@@ -1046,6 +1060,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1053,6 +1068,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let outline_width = parseFloat(parameters[1]);
@@ -1080,6 +1096,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1087,6 +1104,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let color_index = 1;
@@ -1219,13 +1237,14 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
-                ignore_exterior: false,
-                regular_expression: /^fa([xy])/,
+                ignore_exterior: true,
+                regular_expression: /^fade/,
                 /**
-                 * Handles shearing.
+                 * Handles advanced fade animation.
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1233,6 +1252,93 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
+                    parameters
+                ) {
+                    let a1 = parseInt(parameters[0], 10);
+                    let a2 = parseInt(parameters[1], 10);
+                    let a3 = parseInt(parameters[2], 10);
+                    let t1 = parseInt(parameters[3], 10);
+                    let t2 = parseInt(parameters[4], 10);
+                    let t3 = parseInt(parameters[5], 10);
+                    let t4 = parseInt(parameters[6], 10);
+                    if (
+                        isNaN(a1) ||
+                        isNaN(a2) ||
+                        isNaN(a3) ||
+                        isNaN(t1) ||
+                        isNaN(t2) ||
+                        isNaN(t3) ||
+                        isNaN(t4)
+                    )
+                        return;
+                    t1 = timeInfo.start + t1 / 1000;
+                    t2 = timeInfo.start + t2 / 1000;
+                    t3 = timeInfo.start + t3 / 1000;
+                    t4 = timeInfo.start + t4 / 1000;
+                    lineGlobalOverrides.setFade(
+                        (a1 & 0xff) / 255,
+                        (a2 & 0xff) / 255,
+                        (a3 & 0xff) / 255,
+                        t1,
+                        t2,
+                        t3,
+                        t4
+                    );
+                }
+            },
+            {
+                ignore_exterior: true,
+                regular_expression: /^fad/,
+                /**
+                 * Handles basic fade animation.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {Array<?string>} parameters
+                 * @private
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    lineGlobalOverrides,
+                    parameters
+                ) {
+                    let t1 = parseInt(parameters[0], 10);
+                    let t2 = parseInt(parameters[1], 10);
+                    if (isNaN(t1) || isNaN(t2)) return;
+                    t1 = timeInfo.start + t1 / 1000;
+                    t2 = timeInfo.end - t2 / 1000;
+                    lineGlobalOverrides.setFade(
+                        0,
+                        1,
+                        0,
+                        timeInfo.start,
+                        t1,
+                        t2,
+                        timeInfo.end
+                    );
+                }
+            },
+            {
+                ignore_exterior: false,
+                regular_expression: /^fa([xy])/,
+                /**
+                 * Handles shearing.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {Array<?string>} parameters
+                 * @private
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let factor = parseFloat(parameters[1]);
@@ -1254,6 +1360,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1261,6 +1368,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let encoding = parseInt(parameters[0], 10);
@@ -1275,6 +1383,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1282,6 +1391,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let fontName = parameters[0];
@@ -1298,6 +1408,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1305,6 +1416,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let rotation_axis = "z";
@@ -1336,6 +1448,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1343,6 +1456,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     if (
@@ -1369,6 +1483,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1376,6 +1491,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let is_x = parameters[0] == "x";
@@ -1393,6 +1509,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1400,6 +1517,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let value = parseFloat(parameters[0]);
@@ -1415,6 +1533,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1422,6 +1541,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let value = parameters[0] == "1";
@@ -1437,6 +1557,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1444,6 +1565,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let karaoke_tag = parameters[0];
@@ -1488,6 +1610,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1495,6 +1618,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let x1 = parseInt(parameters[0], 10);
@@ -1513,7 +1637,7 @@ const main_prototype = global.Object.create(global.Object, {
                         t2 = t2 / 1000 + timeInfo.start;
                     }
                     if (!gassert(MOVE_ENDS_BEFORE_IT_STARTS, t2 >= t1)) return;
-                    overrides.setMovement(x1, y1, x2, y2, t1, t2);
+                    lineGlobalOverrides.setMovement(x1, y1, x2, y2, t1, t2);
                 }
             },
             {
@@ -1524,6 +1648,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1531,11 +1656,12 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let x = parseInt(parameters[0], 10);
                     let y = parseInt(parameters[1], 10);
-                    overrides.setRotationOrigin(x, y);
+                    lineGlobalOverrides.setRotationOrigin(x, y);
                 }
             },
             {
@@ -1546,6 +1672,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1553,6 +1680,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let drawScale = parseFloat(parameters[0]);
@@ -1573,6 +1701,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1580,6 +1709,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let baselineOffset = parseFloat(parameters[0]);
@@ -1595,6 +1725,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1602,12 +1733,13 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let x = parseInt(parameters[0], 10);
                     let y = parseInt(parameters[1], 10);
                     if (isNaN(x) || isNaN(y)) return;
-                    overrides.setPosition(x, y);
+                    lineGlobalOverrides.setPosition(x, y);
                 }
             },
             {
@@ -1618,6 +1750,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1625,6 +1758,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let wrapStyle = parseInt(parameters[0], 10);
@@ -1641,6 +1775,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1648,6 +1783,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     overrides.reset();
@@ -1666,6 +1802,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1673,6 +1810,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let value = parseInt(parameters[0], 10);
@@ -1687,6 +1825,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1694,6 +1833,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let setting = parameters[0];
@@ -1722,6 +1862,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1729,6 +1870,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let lparameters = parameters;
@@ -1773,6 +1915,8 @@ const main_prototype = global.Object.create(global.Object, {
                         }
                     }
 
+                    //TODO: final_param = this._parseTransitionTags(final_param);
+
                     overrides.setTransition([
                         transitionStart,
                         transitionEnd,
@@ -1789,6 +1933,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {{start:number,end:number}} timeInfo
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
                  * @private
                  */
@@ -1796,6 +1941,7 @@ const main_prototype = global.Object.create(global.Object, {
                     timeInfo,
                     setStyle,
                     overrides,
+                    lineGlobalOverrides,
                     parameters
                 ) {
                     let value = parameters[0] == "1";
@@ -1818,13 +1964,21 @@ const main_prototype = global.Object.create(global.Object, {
          * @param {{start:number,end:number}} timeInfo
          * @param {function(SSAStyleDefinition):void} setStyle
          * @param {SSAStyleOverride} old_overrides
+         * @param {SSALineStyleOverride} line_overrides
          * @param {string} tags
          */
-        value: function (timeInfo, setStyle, old_overrides, tags) {
+        value: function (
+            timeInfo,
+            setStyle,
+            old_overrides,
+            line_overrides,
+            tags
+        ) {
             //Regex for separating override tags.
             const override_regex = /\\([^}{\\()]+)(?:\((.*?)\))?([^\\}{\\()]+)?/g;
             //clone the old overrides so we can change them without affecting the prior tag.
             let overrides = old_overrides.clone();
+            let lineGlobalOverrides = line_overrides;
             let pre_params = null;
             let params = null;
             let post_params = null;
@@ -1869,6 +2023,7 @@ const main_prototype = global.Object.create(global.Object, {
                             timeInfo,
                             setStyle,
                             overrides,
+                            lineGlobalOverrides,
                             params
                         );
                         if (typeof result !== "undefined") overrides = result;
@@ -1896,6 +2051,7 @@ const main_prototype = global.Object.create(global.Object, {
             //Preload the default style into the event.
             let style = this._styles["Default"];
             //Create a new style override for the event.
+            let line_overrides = new sabre.SSALineStyleOverride();
             let event_overrides = new sabre.SSAStyleOverride();
             let tmp;
             for (let i = 0; i < values.length; i++) {
@@ -1953,6 +2109,7 @@ const main_prototype = global.Object.create(global.Object, {
             //Set the event's style and style override properties.
             event.setStyle(style);
             event.setOverrides(event_overrides);
+            event.setLineOverrides(line_overrides);
             let events = [event];
             //Split the event into sub-events for the various style override tags.
             events = this._parseDialogueText(events);

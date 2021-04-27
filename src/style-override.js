@@ -91,14 +91,10 @@ sabre["SSAStyleOverride"] = function () {
                     jsonNaNFix(obj.karaokeEnd) +
                     ",m:" +
                     JSON.stringify(obj.margins) +
-                    ",mo:" +
-                    JSON.stringify(obj.movement) +
                     ",oX:" +
                     obj.outlineX +
                     ",oY:" +
                     obj.outlineY +
-                    ",p:" +
-                    JSON.stringify(obj.position) +
                     ",pC:" +
                     JSON.stringify(obj.primaryColor) +
                     ",sC:" +
@@ -109,8 +105,6 @@ sabre["SSAStyleOverride"] = function () {
                     JSON.stringify(obj.quaternaryColor) +
                     ",r:" +
                     JSON.stringify(obj.rotations) +
-                    ",rO:" +
-                    JSON.stringify(obj.rotationOrigin) +
                     ",sX:" +
                     obj.scaleX +
                     ",sY:" +
@@ -398,28 +392,6 @@ sabre["SSAStyleOverride"] = function () {
             writable: false
         },
 
-        "setMovement": {
-            value: function (
-                /** number */ x1,
-                /** number */ y1,
-                /** number */ x2,
-                /** number */ y2,
-                /** number */ t1,
-                /** number */ t2
-            ) {
-                obj.movement = [x1, y1, x2, y2, t1, t2];
-            },
-            writable: false
-        },
-
-        "getMovement": {
-            value: function () {
-                if (obj.movement != null) return obj.movement.slice(0);
-                return null;
-            },
-            writable: false
-        },
-
         "setOutline": {
             value: function (/** number */ outline) {
                 obj.outlineX = outline;
@@ -452,21 +424,6 @@ sabre["SSAStyleOverride"] = function () {
         "getOutlineY": {
             value: function () {
                 return obj.outlineY;
-            },
-            writable: false
-        },
-
-        "setPosition": {
-            value: function (/** number */ x, /** number */ y) {
-                obj.position = [x, y];
-            },
-            writable: false
-        },
-
-        "getPosition": {
-            value: function () {
-                if (obj.position != null) return obj.position.slice(0);
-                return null;
             },
             writable: false
         },
@@ -541,20 +498,6 @@ sabre["SSAStyleOverride"] = function () {
         "getRotations": {
             value: function () {
                 return obj.rotations.slice(0);
-            },
-            writable: false
-        },
-
-        "setRotationOrigin": {
-            value: function (/** number */ x, /** number */ y) {
-                obj.rotationOrigin = [x, y];
-            },
-            writable: false
-        },
-
-        "getRotationOrigin": {
-            value: function () {
-                return obj.rotationOrigin;
             },
             writable: false
         },
@@ -755,6 +698,108 @@ sabre["SSAStyleOverride"] = function () {
         _cloneHelper: {
             value: function (other) {
                 obj = Object.assign(obj, other);
+            },
+            writable: false
+        }
+    });
+};
+
+sabre["SSALineStyleOverride"] = function () {
+    const template = Object.freeze({
+        movement: null,
+        position: null,
+        rotationOrigin: null,
+        fade: null
+    });
+    let obj = Object.assign({}, template);
+    return Object.create(Object, {
+        "toJSON": {
+            value: function () {
+                return (
+                    "{mo:" +
+                    JSON.stringify(obj.movement) +
+                    ",p:" +
+                    JSON.stringify(obj.position) +
+                    ",rO:" +
+                    JSON.stringify(obj.rotationOrigin) +
+                    ",f:" +
+                    JSON.stringify(obj.fade) +
+                    "}"
+                );
+            },
+            writable: false
+        },
+
+        "setMovement": {
+            value: function (
+                /** number */ x1,
+                /** number */ y1,
+                /** number */ x2,
+                /** number */ y2,
+                /** number */ t1,
+                /** number */ t2
+            ) {
+                obj.movement = [x1, y1, x2, y2, t1, t2];
+            },
+            writable: false
+        },
+
+        "getMovement": {
+            value: function () {
+                if (obj.movement != null) return obj.movement.slice(0);
+                return null;
+            },
+            writable: false
+        },
+
+        "setPosition": {
+            value: function (/** number */ x, /** number */ y) {
+                obj.position = [x, y];
+            },
+            writable: false
+        },
+
+        "getPosition": {
+            value: function () {
+                if (obj.position != null) return obj.position.slice(0);
+                return null;
+            },
+            writable: false
+        },
+
+        "setRotationOrigin": {
+            value: function (/** number */ x, /** number */ y) {
+                obj.rotationOrigin = [x, y];
+            },
+            writable: false
+        },
+
+        "getRotationOrigin": {
+            value: function () {
+                return obj.rotationOrigin;
+            },
+            writable: false
+        },
+
+        "setFade": {
+            value: function (
+                /** number */ a1,
+                /** number */ a2,
+                /** number */ a3,
+                /** number */ t1,
+                /** number */ t2,
+                /** number */ t3,
+                /** number */ t4
+            ) {
+                obj.fade = [a1, a2, a3, t1, t2, t3, t4];
+            },
+            writable: false
+        },
+
+        "getFade": {
+            value: function () {
+                if (obj.fade != null) return obj.fade.slice(0);
+                return null;
             },
             writable: false
         }
