@@ -63,7 +63,7 @@
  *      setSecondaryColor:function(SSAOverrideColor):void,
  *      setTertiaryColor:function(SSAOverrideColor):void,
  *      setQuaternaryColor:function(SSAOverrideColor):void,
- *      addRotation:function(number,number,number):void,
+ *      setRotation:function(number,number,number):void,
  *      setScaleX:function(number):void,
  *      setScaleY:function(number):void,
  *      setShadowX:function(number):void,

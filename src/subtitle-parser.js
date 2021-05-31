@@ -281,19 +281,19 @@ const main_prototype = global.Object.create(global.Object, {
                         config["renderer"]["default_collision_mode"] = 0;
                         return;
                     case "PlayResY":
-                        config["renderer"]["resolution_y"] = parseInt(
+                        config["renderer"]["resolution_y"] = global.parseInt(
                             keypair[1],
                             10
                         );
                         return;
                     case "PlayResX":
-                        config["renderer"]["resolution_x"] = parseInt(
+                        config["renderer"]["resolution_x"] = global.parseInt(
                             keypair[1],
                             10
                         );
                         return;
                     case "PlayDepth":
-                        config["renderer"]["bit_depth"] = parseInt(
+                        config["renderer"]["bit_depth"] = global.parseInt(
                             keypair[1],
                             10
                         );
@@ -304,10 +304,9 @@ const main_prototype = global.Object.create(global.Object, {
                         );
                         return;
                     case "WrapStyle":
-                        config["renderer"]["default_wrap_style"] = parseInt(
-                            keypair[1],
-                            10
-                        );
+                        config["renderer"][
+                            "default_wrap_style"
+                        ] = global.parseInt(keypair[1], 10);
                         return;
                     default:
                         console.warn(
@@ -450,7 +449,7 @@ const main_prototype = global.Object.create(global.Object, {
             let time = 0;
             for (let i = 0; i < array.length; i++) {
                 if (i != array.length - 1) {
-                    time += parseInt(array[i], 10);
+                    time += global.parseInt(array[i], 10);
                     time *= 60;
                 } else {
                     time += parseFloat(array[i]);
@@ -470,7 +469,7 @@ const main_prototype = global.Object.create(global.Object, {
          * @private
          */
         value: function (style, color, colornum) {
-            let tmp = parseInt(this._cleanRawColor(color), 16);
+            let tmp = global.parseInt(this._cleanRawColor(color), 16);
             if (global.isNaN(tmp)) throw "Invalid color in style.";
             let r = (tmp & 0xff) / 255;
             tmp = tmp >> 8;
@@ -817,7 +816,7 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let depricated_align = parseInt(parameters[0], 10);
+                    let depricated_align = global.parseInt(parameters[0], 10);
                     if (isNaN(depricated_align)) return;
                     if (depricated_align > 11) {
                         console.error("Invalid Alignment in legacy \\a tag.");
@@ -869,7 +868,10 @@ const main_prototype = global.Object.create(global.Object, {
                     ) {
                         overrides.setAlignment(null);
                     } else {
-                        let alignment_value = parseInt(parameters[0], 10);
+                        let alignment_value = global.parseInt(
+                            parameters[0],
+                            10
+                        );
                         if (isNaN(alignment_value)) return;
                         overrides.setAlignment(alignment_value);
                     }
@@ -899,13 +901,16 @@ const main_prototype = global.Object.create(global.Object, {
                         typeof parameters[0] != "undefined" &&
                         parameters[0] != ""
                     )
-                        color_index = parseInt(parameters[0], 10);
+                        color_index = global.parseInt(parameters[0], 10);
                     let a = null;
                     if (
                         typeof parameters[1] != "undefined" &&
                         parameters[1] != ""
                     ) {
-                        a = parseInt(this._cleanRawColor(parameters[1]), 16);
+                        a = global.parseInt(
+                            this._cleanRawColor(parameters[1]),
+                            16
+                        );
                         if (isNaN(a)) return;
                         a = (a & 0xff) / 255;
                     }
@@ -993,7 +998,7 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let weight = parseInt(parameters[1], 10);
+                    let weight = global.parseInt(parameters[1], 10);
                     if (isNaN(weight)) return;
                     if (weight == 0) {
                         overrides.setWeight(400);
@@ -1023,7 +1028,7 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let blur_iterations = parseInt(parameters[0], 10);
+                    let blur_iterations = global.parseInt(parameters[0], 10);
                     if (isNaN(blur_iterations)) return;
                     overrides.setEdgeBlur(blur_iterations);
                 }
@@ -1112,13 +1117,13 @@ const main_prototype = global.Object.create(global.Object, {
                         typeof parameters[0] != "undefined" &&
                         parameters[0] != ""
                     )
-                        color_index = parseInt(parameters[0], 10);
+                        color_index = global.parseInt(parameters[0], 10);
                     let color;
                     if (
                         typeof parameters[1] != "undefined" &&
                         parameters[1] != ""
                     ) {
-                        let pcolor = parseInt(
+                        let pcolor = global.parseInt(
                             this._cleanRawColor(parameters[1]),
                             16
                         );
@@ -1238,6 +1243,46 @@ const main_prototype = global.Object.create(global.Object, {
             },
             {
                 ignore_exterior: true,
+                regular_expression: /^clip/,
+                /**
+                 * Handles text/drawing clipping.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {Array<?string>} parameters
+                 * @private
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    lineGlobalOverrides,
+                    parameters
+                ) {
+                    if (parameters.length == 0) return;
+                    var p1 = global.parseInt(parameters[0], 10);
+                    var p2 = global.parseInt(parameters[1], 10);
+                    if (global.isNaN(p1) || global.isNaN(p2)) {
+                        var scale = 1;
+                        if (!global.isNaN(p1)) {
+                            scale = p1;
+                        }
+                        var drawString = parameters[1];
+
+                        lineGlobalOverrides.setClip(scale, drawString);
+                    } else {
+                        var x1 = p1;
+                        var y1 = p2;
+                        var x2 = global.parseInt(parameters[2], 10);
+                        var y2 = global.parseInt(parameters[3], 10);
+
+                        lineGlobalOverrides.setClip(x1, y1, x2, y2);
+                    }
+                }
+            },
+            {
+                ignore_exterior: true,
                 regular_expression: /^fade/,
                 /**
                  * Handles advanced fade animation.
@@ -1255,13 +1300,13 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let a1 = parseInt(parameters[0], 10);
-                    let a2 = parseInt(parameters[1], 10);
-                    let a3 = parseInt(parameters[2], 10);
-                    let t1 = parseInt(parameters[3], 10);
-                    let t2 = parseInt(parameters[4], 10);
-                    let t3 = parseInt(parameters[5], 10);
-                    let t4 = parseInt(parameters[6], 10);
+                    let a1 = global.parseInt(parameters[0], 10);
+                    let a2 = global.parseInt(parameters[1], 10);
+                    let a3 = global.parseInt(parameters[2], 10);
+                    let t1 = global.parseInt(parameters[3], 10);
+                    let t2 = global.parseInt(parameters[4], 10);
+                    let t3 = global.parseInt(parameters[5], 10);
+                    let t4 = global.parseInt(parameters[6], 10);
                     if (
                         isNaN(a1) ||
                         isNaN(a2) ||
@@ -1306,8 +1351,8 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let t1 = parseInt(parameters[0], 10);
-                    let t2 = parseInt(parameters[1], 10);
+                    let t1 = global.parseInt(parameters[0], 10);
+                    let t2 = global.parseInt(parameters[1], 10);
                     if (isNaN(t1) || isNaN(t2)) return;
                     t1 = timeInfo.start + t1 / 1000;
                     t2 = timeInfo.end - t2 / 1000;
@@ -1371,7 +1416,7 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let encoding = parseInt(parameters[0], 10);
+                    let encoding = global.parseInt(parameters[0], 10);
                     overrides.setEncoding(encoding);
                 }
             },
@@ -1429,13 +1474,13 @@ const main_prototype = global.Object.create(global.Object, {
                     if (isNaN(value)) return;
                     switch (rotation_axis) {
                         case "x":
-                            overrides.addRotation(value, 0, 0);
+                            overrides.setRotation(value, 0, 0);
                             break;
                         case "y":
-                            overrides.addRotation(0, value, 0);
+                            overrides.setRotation(0, value, 0);
                             break;
                         default:
-                            overrides.addRotation(0, 0, value);
+                            overrides.setRotation(0, 0, value);
                             break;
                     }
                 }
@@ -1550,6 +1595,47 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ignore_exterior: true,
+                regular_expression: /^iclip/,
+                /**
+                 * Handles inverse text/drawing clipping.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {Array<?string>} parameters
+                 * @private
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    lineGlobalOverrides,
+                    parameters
+                ) {
+                    lineGlobalOverrides.setClipInverted(true);
+                    if (parameters.length == 0) return;
+                    var p1 = global.parseInt(parameters[0], 10);
+                    var p2 = global.parseInt(parameters[1], 10);
+                    if (global.isNaN(p1) || global.isNaN(p2)) {
+                        var scale = 1;
+                        if (!global.isNaN(p1)) {
+                            scale = p1;
+                        }
+                        var drawString = parameters[1];
+
+                        lineGlobalOverrides.setClip(scale, drawString);
+                    } else {
+                        var x1 = p1;
+                        var y1 = p2;
+                        var x2 = global.parseInt(parameters[2], 10);
+                        var y2 = global.parseInt(parameters[3], 10);
+
+                        lineGlobalOverrides.setClip(x1, y1, x2, y2);
+                    }
+                }
+            },
+            {
                 ignore_exterior: false,
                 regular_expression: /^([kK][fot]?)/,
                 /**
@@ -1621,14 +1707,14 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let x1 = parseInt(parameters[0], 10);
-                    let y1 = parseInt(parameters[1], 10);
-                    let x2 = parseInt(parameters[2], 10);
-                    let y2 = parseInt(parameters[3], 10);
+                    let x1 = global.parseInt(parameters[0], 10);
+                    let y1 = global.parseInt(parameters[1], 10);
+                    let x2 = global.parseInt(parameters[2], 10);
+                    let y2 = global.parseInt(parameters[3], 10);
                     if (isNaN(x1) || isNaN(x2) || isNaN(y1) || isNaN(y2))
                         return;
-                    let t1 = parseInt(parameters[0], 10);
-                    let t2 = parseInt(parameters[1], 10);
+                    let t1 = global.parseInt(parameters[0], 10);
+                    let t2 = global.parseInt(parameters[1], 10);
                     if (isNaN(t1) || isNaN(t2)) {
                         t1 = timeInfo.start;
                         t2 = timeInfo.end;
@@ -1659,8 +1745,8 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let x = parseInt(parameters[0], 10);
-                    let y = parseInt(parameters[1], 10);
+                    let x = global.parseInt(parameters[0], 10);
+                    let y = global.parseInt(parameters[1], 10);
                     lineGlobalOverrides.setRotationOrigin(x, y);
                 }
             },
@@ -1736,8 +1822,8 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let x = parseInt(parameters[0], 10);
-                    let y = parseInt(parameters[1], 10);
+                    let x = global.parseInt(parameters[0], 10);
+                    let y = global.parseInt(parameters[1], 10);
                     if (isNaN(x) || isNaN(y)) return;
                     lineGlobalOverrides.setPosition(x, y);
                 }
@@ -1761,7 +1847,7 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let wrapStyle = parseInt(parameters[0], 10);
+                    let wrapStyle = global.parseInt(parameters[0], 10);
                     if (isNaN(wrapStyle) || wrapStyle < 0 || wrapStyle > 3)
                         return;
                     overrides.setWrapStyle(wrapStyle);
@@ -1813,7 +1899,7 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let value = parseInt(parameters[0], 10);
+                    let value = global.parseInt(parameters[0], 10);
                     overrides.setStrikeout(value > 0);
                 }
             },
@@ -1915,7 +2001,7 @@ const main_prototype = global.Object.create(global.Object, {
                         }
                     }
 
-                    //TODO: final_param = this._parseTransitionTags(final_param);
+                    final_param = this._parseTransitionTags(final_param);
 
                     overrides.setTransition([
                         transitionStart,
@@ -2065,7 +2151,7 @@ const main_prototype = global.Object.create(global.Object, {
                         break;
                     case "Layer":
                         //Set the layer.
-                        tmp = parseInt(value, 10);
+                        tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp)) event.setLayer(tmp);
                         break;
                     case "Start":
@@ -2084,17 +2170,17 @@ const main_prototype = global.Object.create(global.Object, {
                         //event_overrides.setEffect(value); //TODO: How does this get handled...
                         break;
                     case "MarginL":
-                        tmp = parseInt(value, 10);
+                        tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp))
                             event_overrides.setMarginLeft(tmp);
                         break;
                     case "MarginR":
-                        tmp = parseInt(value, 10);
+                        tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp))
                             event_overrides.setMarginRight(tmp);
                         break;
                     case "MarginV":
-                        tmp = parseInt(value, 10);
+                        tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp))
                             event_overrides.setMarginVertical(tmp);
                         break;
@@ -2158,7 +2244,7 @@ const main_prototype = global.Object.create(global.Object, {
                 fontName: fontNameData[1],
                 isBold: fontNameData[2] === "B",
                 isItalic: fontNameData[3] === "I",
-                fontEncoding: parseInt(fontNameData[4], 10),
+                fontEncoding: global.parseInt(fontNameData[4], 10),
                 fontFormat: fontNameData[5]
             };
         },

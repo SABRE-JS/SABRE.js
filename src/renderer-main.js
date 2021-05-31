@@ -1,7 +1,7 @@
 /*
  |   renderer-main.js
  |----------------
- |  renderer-main.js is copyright Patrick Rhodes Martin 2014-2020.
+ |  renderer-main.js is copyright Patrick Rhodes Martin 2014-2021.
  |
  |-
  */

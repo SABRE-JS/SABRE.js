@@ -41,7 +41,7 @@ sabre["SSAStyleOverride"] = function () {
         secondaryColor: null,
         tertiaryColor: null,
         quaternaryColor: null,
-        rotations: [],
+        rotation: [0, 0, 0],
         rotationOrigin: null,
         scaleX: null,
         scaleY: null,
@@ -104,7 +104,7 @@ sabre["SSAStyleOverride"] = function () {
                     ",qC:" +
                     JSON.stringify(obj.quaternaryColor) +
                     ",r:" +
-                    JSON.stringify(obj.rotations) +
+                    JSON.stringify(obj.rotation) +
                     ",sX:" +
                     obj.scaleX +
                     ",sY:" +
@@ -484,20 +484,20 @@ sabre["SSAStyleOverride"] = function () {
             writable: false
         },
 
-        "addRotation": {
+        "setRotation": {
             value: function (
                 /** number */ x,
                 /** number */ y,
                 /** number */ z
             ) {
-                obj.rotations.push([x, y, z]);
+                obj.rotation = [x, y, z];
             },
             writable: false
         },
 
         "getRotations": {
             value: function () {
-                return obj.rotations.slice(0);
+                return obj.rotation.slice(0);
             },
             writable: false
         },
@@ -706,10 +706,160 @@ sabre["SSAStyleOverride"] = function () {
 
 sabre["SSALineStyleOverride"] = function () {
     const template = Object.freeze({
+        clip: null,
+        clipInverted: false,
         movement: null,
         position: null,
         rotationOrigin: null,
         fade: null
+    });
+    let obj = Object.assign({}, template);
+    return Object.create(Object, {
+        "toJSON": {
+            value: function () {
+                return (
+                    "{cl:" +
+                    JSON.stringify(obj.clip) +
+                    "cli:" +
+                    JSON.stringify(obj.clipInverted) +
+                    "mo:" +
+                    JSON.stringify(obj.movement) +
+                    ",p:" +
+                    JSON.stringify(obj.position) +
+                    ",rO:" +
+                    JSON.stringify(obj.rotationOrigin) +
+                    ",f:" +
+                    JSON.stringify(obj.fade) +
+                    "}"
+                );
+            },
+            writable: false
+        },
+
+        "setClip": {
+            value: function (a, b, c, d) {
+                if (typeof c == "undefined") {
+                    obj.clip = [a, b];
+                } else {
+                    obj.clip = [a, b, c, d];
+                }
+            },
+            writable: false
+        },
+
+        "getClip": {
+            value: function () {
+                if (obj.clip != null) return obj.clip.slice(0);
+                return null;
+            },
+            writable: false
+        },
+
+        "setClipInverted": {
+            value: function (bool) {
+                obj.clipInverted = bool;
+            },
+            writable: false
+        },
+
+        "getClipInverted": {
+            value: function () {
+                return obj.clipInverted;
+            },
+            writable: false
+        },
+
+        "setMovement": {
+            value: function (
+                /** number */ x1,
+                /** number */ y1,
+                /** number */ x2,
+                /** number */ y2,
+                /** number */ t1,
+                /** number */ t2
+            ) {
+                obj.movement = [x1, y1, x2, y2, t1, t2];
+            },
+            writable: false
+        },
+
+        "getMovement": {
+            value: function () {
+                if (obj.movement != null) return obj.movement.slice(0);
+                return null;
+            },
+            writable: false
+        },
+
+        "setPosition": {
+            value: function (/** number */ x, /** number */ y) {
+                obj.position = [x, y];
+            },
+            writable: false
+        },
+
+        "getPosition": {
+            value: function () {
+                if (obj.position != null) return obj.position.slice(0);
+                return null;
+            },
+            writable: false
+        },
+
+        "setRotationOrigin": {
+            value: function (/** number */ x, /** number */ y) {
+                obj.rotationOrigin = [x, y];
+            },
+            writable: false
+        },
+
+        "getRotationOrigin": {
+            value: function () {
+                return obj.rotationOrigin;
+            },
+            writable: false
+        },
+
+        "setFade": {
+            value: function (
+                /** number */ a1,
+                /** number */ a2,
+                /** number */ a3,
+                /** number */ t1,
+                /** number */ t2,
+                /** number */ t3,
+                /** number */ t4
+            ) {
+                obj.fade = [a1, a2, a3, t1, t2, t3, t4];
+            },
+            writable: false
+        },
+
+        "getFade": {
+            value: function () {
+                if (obj.fade != null) return obj.fade.slice(0);
+                return null;
+            },
+            writable: false
+        }
+    });
+};
+
+sabre["SSATransitionOverrideTarget"] = function () {
+    const template = Object.freeze({
+        fontSize: null,
+        spacing: null,
+        primaryColor: null,
+        secondaryColor: null,
+        tertiaryColor: null,
+        quaternaryColor: null,
+        scaleX: null,
+        scaleY: null,
+        rotation: [0, 0, 0],
+        outlineX: null,
+        outlineY: null,
+        shadowX: null,
+        shadowY: null
     });
     let obj = Object.assign({}, template);
     return Object.create(Object, {
