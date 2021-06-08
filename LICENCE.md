@@ -2,7 +2,7 @@
 
 If you wish to use a modified version of this project that is closed source, you must negotiate an agreement with Patrick Rhodes Martin that requires contributing to the development of SABRE.js via either code-contributions or monetary support for continued development. Otherwise this project is available under the GNU Affero GPL v3:
 
-## GNU Affero General Public License
+# GNU Affero General Public License
 
 _Version 3, 19 November 2007_
 _Copyright © 2007 Free Software Foundation, Inc. &lt;<http://fsf.org/>&gt;_
