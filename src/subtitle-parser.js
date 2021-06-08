@@ -163,7 +163,7 @@ const main_prototype = global.Object.create(global.Object, {
          */
         value: function (string, separator) {
             let j = string.indexOf(separator);
-            if (j == -1) return [string.trim()];
+            if (j === -1) return [string.trim()];
             return [string.slice(0, j), string.slice(j + 1).trim()];
         },
         writable: false
@@ -246,7 +246,7 @@ const main_prototype = global.Object.create(global.Object, {
                         let version = keypair[1].match(
                             /v([0-9]+(?:\.[0-9]+)?)(\+)?/
                         );
-                        if (version == null) throw "Malformed SSA version";
+                        if (version === null) throw "Malformed SSA version";
                         console.info(
                             "Sub Station Alpha Version: " + version[0]
                         );
@@ -259,7 +259,7 @@ const main_prototype = global.Object.create(global.Object, {
                             console.warn(
                                 "Warning: Some subtitle features may not be supported"
                             );
-                        config["info"]["is_ass"] = version[2] == "+";
+                        config["info"]["is_ass"] = version[2] === "+";
                         console.info(
                             "Advanced Sub Station Alpha: " +
                                 config["info"]["is_ass"]
@@ -267,11 +267,11 @@ const main_prototype = global.Object.create(global.Object, {
                         return;
                     case "Collisions":
                         let collisionMode = keypair[1].toLowerCase();
-                        if (collisionMode == "normal") {
+                        if (collisionMode === "normal") {
                             config["renderer"]["default_collision_mode"] = 0;
                             return;
                         }
-                        if (collisionMode == "reverse") {
+                        if (collisionMode === "reverse") {
                             config["renderer"]["default_collision_mode"] = 1;
                             return;
                         }
@@ -448,7 +448,7 @@ const main_prototype = global.Object.create(global.Object, {
             let array = timestring.split(":");
             let time = 0;
             for (let i = 0; i < array.length; i++) {
-                if (i != array.length - 1) {
+                if (i !== array.length - 1) {
                     time += global.parseInt(array[i], 10);
                     time *= 60;
                 } else {
@@ -863,8 +863,8 @@ const main_prototype = global.Object.create(global.Object, {
                     parameters
                 ) {
                     if (
-                        typeof parameters[0] == "undefined" ||
-                        parameters[0] == ""
+                        typeof parameters[0] === "undefined" ||
+                        parameters[0] === ""
                     ) {
                         overrides.setAlignment(null);
                     } else {
@@ -898,14 +898,14 @@ const main_prototype = global.Object.create(global.Object, {
                 ) {
                     let color_index = 1;
                     if (
-                        typeof parameters[0] != "undefined" &&
-                        parameters[0] != ""
+                        typeof parameters[0] !== "undefined" &&
+                        parameters[0] !== ""
                     )
                         color_index = global.parseInt(parameters[0], 10);
                     let a = null;
                     if (
-                        typeof parameters[1] != "undefined" &&
-                        parameters[1] != ""
+                        typeof parameters[1] !== "undefined" &&
+                        parameters[1] !== ""
                     ) {
                         a = global.parseInt(
                             this._cleanRawColor(parameters[1]),
@@ -918,7 +918,7 @@ const main_prototype = global.Object.create(global.Object, {
                     switch (color_index) {
                         case 1:
                             color = overrides.getPrimaryColor();
-                            if (color == null && a != null)
+                            if (color === null && a !== null)
                                 overrides.setPrimaryColor(
                                     new sabre.SSAOverrideColor(
                                         null,
@@ -927,13 +927,13 @@ const main_prototype = global.Object.create(global.Object, {
                                         a
                                     )
                                 );
-                            else if (color != null) {
+                            else if (color !== null) {
                                 color.setA(a);
                             }
                             break;
                         case 2:
                             color = overrides.getSecondaryColor();
-                            if (color == null && a != null)
+                            if (color === null && a !== null)
                                 overrides.setSecondaryColor(
                                     new sabre.SSAOverrideColor(
                                         null,
@@ -942,13 +942,13 @@ const main_prototype = global.Object.create(global.Object, {
                                         a
                                     )
                                 );
-                            else if (color != null) {
+                            else if (color !== null) {
                                 color.setA(a);
                             }
                             break;
                         case 3:
                             color = overrides.getTertiaryColor();
-                            if (color == null && a != null)
+                            if (color === null && a !== null)
                                 overrides.setTertiaryColor(
                                     new sabre.SSAOverrideColor(
                                         null,
@@ -957,13 +957,13 @@ const main_prototype = global.Object.create(global.Object, {
                                         a
                                     )
                                 );
-                            else if (color != null) {
+                            else if (color !== null) {
                                 color.setA(a);
                             }
                             break;
                         case 4:
                             color = overrides.getQuaternaryColor();
-                            if (color == null)
+                            if (color === null)
                                 overrides.setQuaternaryColor(
                                     new sabre.SSAOverrideColor(
                                         null,
@@ -972,7 +972,7 @@ const main_prototype = global.Object.create(global.Object, {
                                         a
                                     )
                                 );
-                            else if (color != null) {
+                            else if (color !== null) {
                                 color.setA(a);
                             }
                             break;
@@ -1000,9 +1000,9 @@ const main_prototype = global.Object.create(global.Object, {
                 ) {
                     let weight = global.parseInt(parameters[1], 10);
                     if (isNaN(weight)) return;
-                    if (weight == 0) {
+                    if (weight === 0) {
                         overrides.setWeight(400);
-                    } else if (weight == 1) {
+                    } else if (weight === 1) {
                         overrides.setWeight(700);
                     } else {
                         overrides.setWeight(weight);
@@ -1079,12 +1079,12 @@ const main_prototype = global.Object.create(global.Object, {
                     let outline_width = parseFloat(parameters[1]);
                     if (isNaN(outline_width)) return;
                     if (
-                        typeof parameters[0] == "undefined" ||
-                        parameters[0] == ""
+                        typeof parameters[0] === "undefined" ||
+                        parameters[0] === ""
                     ) {
                         // x and y outline width
                         overrides.setOutline(outline_width);
-                    } else if (parameters[0] == "x") {
+                    } else if (parameters[0] === "x") {
                         // x outline width
                         overrides.setOutlineX(outline_width);
                     } else {
@@ -1114,14 +1114,14 @@ const main_prototype = global.Object.create(global.Object, {
                 ) {
                     let color_index = 1;
                     if (
-                        typeof parameters[0] != "undefined" &&
-                        parameters[0] != ""
+                        typeof parameters[0] !== "undefined" &&
+                        parameters[0] !== ""
                     )
                         color_index = global.parseInt(parameters[0], 10);
                     let color;
                     if (
-                        typeof parameters[1] != "undefined" &&
-                        parameters[1] != ""
+                        typeof parameters[1] !== "undefined" &&
+                        parameters[1] !== ""
                     ) {
                         let pcolor = global.parseInt(
                             this._cleanRawColor(parameters[1]),
@@ -1136,7 +1136,7 @@ const main_prototype = global.Object.create(global.Object, {
                         switch (color_index) {
                             case 1:
                                 color = overrides.getPrimaryColor();
-                                if (color == null)
+                                if (color === null)
                                     overrides.setPrimaryColor(
                                         new sabre.SSAOverrideColor(
                                             r,
@@ -1153,7 +1153,7 @@ const main_prototype = global.Object.create(global.Object, {
                                 break;
                             case 2:
                                 color = overrides.getSecondaryColor();
-                                if (color == null)
+                                if (color === null)
                                     overrides.setSecondaryColor(
                                         new sabre.SSAOverrideColor(
                                             r,
@@ -1170,7 +1170,7 @@ const main_prototype = global.Object.create(global.Object, {
                                 break;
                             case 3:
                                 color = overrides.getTertiaryColor();
-                                if (color == null)
+                                if (color === null)
                                     overrides.setTertiaryColor(
                                         new sabre.SSAOverrideColor(
                                             r,
@@ -1187,7 +1187,7 @@ const main_prototype = global.Object.create(global.Object, {
                                 break;
                             case 4:
                                 color = overrides.getQuaternaryColor();
-                                if (color == null)
+                                if (color === null)
                                     overrides.setQuaternaryColor(
                                         new sabre.SSAOverrideColor(
                                             r,
@@ -1207,7 +1207,7 @@ const main_prototype = global.Object.create(global.Object, {
                         switch (color_index) {
                             case 1:
                                 color = overrides.getPrimaryColor();
-                                if (color != null) {
+                                if (color !== null) {
                                     color.setR(null);
                                     color.setG(null);
                                     color.setB(null);
@@ -1215,7 +1215,7 @@ const main_prototype = global.Object.create(global.Object, {
                                 break;
                             case 2:
                                 color = overrides.getSecondaryColor();
-                                if (color != null) {
+                                if (color !== null) {
                                     color.setR(null);
                                     color.setG(null);
                                     color.setB(null);
@@ -1223,7 +1223,7 @@ const main_prototype = global.Object.create(global.Object, {
                                 break;
                             case 3:
                                 color = overrides.getTertiaryColor();
-                                if (color != null) {
+                                if (color !== null) {
                                     color.setR(null);
                                     color.setG(null);
                                     color.setB(null);
@@ -1231,7 +1231,7 @@ const main_prototype = global.Object.create(global.Object, {
                                 break;
                             case 4:
                                 color = overrides.getQuaternaryColor();
-                                if (color != null) {
+                                if (color !== null) {
                                     color.setR(null);
                                     color.setG(null);
                                     color.setB(null);
@@ -1260,7 +1260,7 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    if (parameters.length == 0) return;
+                    if (parameters.length === 0) return;
                     var p1 = global.parseInt(parameters[0], 10);
                     var p2 = global.parseInt(parameters[1], 10);
                     if (global.isNaN(p1) || global.isNaN(p2)) {
@@ -1388,7 +1388,7 @@ const main_prototype = global.Object.create(global.Object, {
                 ) {
                     let factor = parseFloat(parameters[1]);
                     if (isNaN(factor)) return;
-                    if (parameters[0] == "x") {
+                    if (parameters[0] === "x") {
                         // x outline width
                         overrides.setShearX(factor);
                     } else {
@@ -1440,7 +1440,7 @@ const main_prototype = global.Object.create(global.Object, {
                     parameters
                 ) {
                     let fontName = parameters[0];
-                    if (fontName == null) return;
+                    if (fontName === null) return;
                     this._loadFont.call(null, fontName);
                     overrides.setFontName(/** string */ fontName);
                 }
@@ -1466,8 +1466,8 @@ const main_prototype = global.Object.create(global.Object, {
                 ) {
                     let rotation_axis = "z";
                     if (
-                        typeof parameters[0] != "undefined" &&
-                        parameters[0] != ""
+                        typeof parameters[0] !== "undefined" &&
+                        parameters[0] !== ""
                     )
                         rotation_axis = parameters[0];
                     let value = parseFloat(parameters[1]);
@@ -1505,10 +1505,10 @@ const main_prototype = global.Object.create(global.Object, {
                     parameters
                 ) {
                     if (
-                        typeof parameters[0] != "undefined" &&
-                        parameters[0] != ""
+                        typeof parameters[0] !== "undefined" &&
+                        parameters[0] !== ""
                     ) {
-                        let add_to = parameters[0] == "+";
+                        let add_to = parameters[0] === "+";
                         let font_size_modifier = parseFloat(parameters[1]);
                         if (add_to)
                             overrides.increaseFontSizeMod(font_size_modifier);
@@ -1539,7 +1539,7 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let is_x = parameters[0] == "x";
+                    let is_x = parameters[0] === "x";
                     let value = parseFloat(parameters[1]);
                     if (isNaN(value)) return;
                     if (is_x) overrides.setScaleX(value);
@@ -1589,8 +1589,8 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let value = parameters[0] == "1";
-                    if (parameters[0] != "0" && !value) return;
+                    let value = parameters[0] === "1";
+                    if (parameters[0] !== "0" && !value) return;
                     overrides.setItalic(value);
                 }
             },
@@ -1614,7 +1614,7 @@ const main_prototype = global.Object.create(global.Object, {
                     parameters
                 ) {
                     lineGlobalOverrides.setClipInverted(true);
-                    if (parameters.length == 0) return;
+                    if (parameters.length === 0) return;
                     var p1 = global.parseInt(parameters[0], 10);
                     var p2 = global.parseInt(parameters[1], 10);
                     if (global.isNaN(p1) || global.isNaN(p2)) {
@@ -1874,7 +1874,7 @@ const main_prototype = global.Object.create(global.Object, {
                 ) {
                     overrides.reset();
                     let styleName = parameters[0];
-                    if (typeof styleName != "undefined" && styleName != "")
+                    if (typeof styleName !== "undefined" && styleName !== "")
                         setStyle(
                             this._styles[styleName] ?? this._styles["Default"]
                         );
@@ -1923,7 +1923,7 @@ const main_prototype = global.Object.create(global.Object, {
                     parameters
                 ) {
                     let setting = parameters[0];
-                    if (typeof setting == "undefined" || setting == "")
+                    if (typeof setting === "undefined" || setting === "")
                         setting = null;
                     let value = parseFloat(parameters[1]);
                     if (isNaN(value)) return;
@@ -1969,7 +1969,9 @@ const main_prototype = global.Object.create(global.Object, {
                     let temp2;
                     if (global.isNaN(temp)) {
                         final_param = lparameters.join(",");
-                        if (!gassert(INVALID_T_FUNCTION_TAG, final_param != ""))
+                        if (
+                            !gassert(INVALID_T_FUNCTION_TAG, final_param !== "")
+                        )
                             return;
                     } else {
                         temp2 = parseFloat(lparameters[1]);
@@ -1984,7 +1986,7 @@ const main_prototype = global.Object.create(global.Object, {
                             if (
                                 !gassert(
                                     INVALID_T_FUNCTION_TAG,
-                                    final_param != ""
+                                    final_param !== ""
                                 )
                             )
                                 return;
@@ -1994,7 +1996,7 @@ const main_prototype = global.Object.create(global.Object, {
                             if (
                                 !gassert(
                                     INVALID_T_FUNCTION_TAG,
-                                    final_param != ""
+                                    final_param !== ""
                                 )
                             )
                                 return;
@@ -2030,10 +2032,10 @@ const main_prototype = global.Object.create(global.Object, {
                     lineGlobalOverrides,
                     parameters
                 ) {
-                    let value = parameters[0] == "1";
+                    let value = parameters[0] === "1";
                     if (
-                        typeof parameters[0] == "undefined" ||
-                        (parameters[0] != "0" && !value)
+                        typeof parameters[0] === "undefined" ||
+                        (parameters[0] !== "0" && !value)
                     )
                         return;
                     overrides.setUnderline(value);
@@ -2087,18 +2089,18 @@ const main_prototype = global.Object.create(global.Object, {
                         if (!this._overrideTags[i].ignore_exterior) {
                             //No it does not ignore them.
                             pre_params = pre_params.slice(match[0].length);
-                            if (pre_params != "")
+                            if (pre_params !== "")
                                 pre_params = pre_params.split(",");
                             else pre_params = [];
-                            if (post_params != "")
+                            if (post_params !== "")
                                 post_params = post_params.split(",");
                             else post_params = [];
-                            if (params != "") params = params.split(",");
+                            if (params !== "") params = params.split(",");
                             else params = [];
                             params = params.concat(pre_params, post_params);
                         } else {
                             //Yes it does ignore them.
-                            if (params != "") params = params.split(",");
+                            if (params !== "") params = params.split(",");
                             else params = [];
                         }
                         //Remove whitespace from beginning and end of all parameters.
@@ -2201,8 +2203,8 @@ const main_prototype = global.Object.create(global.Object, {
             events = this._parseDialogueText(events);
             //concatinate the resulting events.
             config["renderer"]["events"] =
-                typeof config["renderer"]["events"] == "undefined" ||
-                config["renderer"]["events"] == null
+                typeof config["renderer"]["events"] === "undefined" ||
+                config["renderer"]["events"] === null
                     ? events
                     : config["renderer"]["events"].concat(events);
         },
@@ -2220,11 +2222,11 @@ const main_prototype = global.Object.create(global.Object, {
             let fontNameData = /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff|woff2)$/.exec(
                 internalName
             );
-            if (fontNameData == null) {
+            if (fontNameData === null) {
                 fontNameData = /^(.*)\.(ttf|otf|woff|woff2)$/.exec(
                     internalName
                 );
-                if (fontNameData == null)
+                if (fontNameData === null)
                     return {
                         fontName: internalName,
                         isBold: false,
@@ -2258,12 +2260,12 @@ const main_prototype = global.Object.create(global.Object, {
          * @private
          */
         value: function (line) {
-            if (line[0] == "[" && line[line.length - 1] == "]") {
+            if (line[0] === "[" && line[line.length - 1] === "]") {
                 //If it's a heading line.
                 this._heading = line.slice(1, line.length - 1); //Set the current heading.
                 return;
             }
-            if (line[0] == ";") return; // this means the current line is just a comment so we just ignore it.
+            if (line[0] === ";") return; // this means the current line is just a comment so we just ignore it.
             let keypair = this._splitOnce(line, ":"); //Split line into it's key and value.
             if (keypair.length > 1) {
                 // ignore keys with no value.
@@ -2301,7 +2303,8 @@ const main_prototype = global.Object.create(global.Object, {
                                 break;
                             }
                         }
-                        if (i == headings.length) throw "Unknown Heading Error"; //Otherwise we error.
+                        if (i === headings.length)
+                            throw "Unknown Heading Error"; //Otherwise we error.
                     }
                 } catch (e) {
                     throw (
@@ -2375,7 +2378,7 @@ const main_prototype = global.Object.create(global.Object, {
             }
             let subs = subsText.split(/(?:\r?\n)|(?:\n\r?)/); //Split up all lines.
             console.info("Parsing Sub Station Alpha subtitle file...");
-            if (subs[0].trim() != "[Script Info]") {
+            if (subs[0].trim() !== "[Script Info]") {
                 throw "Invalid Sub Station Alpha script";
             }
             for (let i = 0; i < subs.length; i++) {

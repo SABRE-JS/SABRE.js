@@ -38,7 +38,7 @@ const scheduler_prototype = global.Object.create(Object, {
          * @returns {number}
          */
         value: function (/** SSASubtitleEvent */ a, /** SSASubtitleEvent */ b) {
-            if (a.getStart() == b.getStart()) return a.getEnd() - b.getEnd();
+            if (a.getStart() === b.getStart()) return a.getEnd() - b.getEnd();
             return a.getStart() - b.getStart();
         },
         writable: false

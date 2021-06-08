@@ -19,7 +19,7 @@ let scriptpath = null;
  * @param {function(boolean)=} callback Callback on success or failure.
  */
 sabre["import"] = function (scriptUrl, callback) {
-    if (typeof callback === "undefined" || callback == null)
+    if (typeof callback === "undefined" || callback === null)
         callback = function () {};
     if (
         !(typeof includelog[scriptUrl] === "undefined") &&
@@ -60,7 +60,7 @@ sabre["import"] = function (scriptUrl, callback) {
  * @param {function(boolean)=} callback Callback on success or failure.
  */
 sabre["include"] = function (scriptUrl, callback) {
-    if (typeof callback === "undefined" || callback == null)
+    if (typeof callback === "undefined" || callback === null)
         callback = function () {};
     if (
         !(typeof includelog[scriptUrl] === "undefined") &&

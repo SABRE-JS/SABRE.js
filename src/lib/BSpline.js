@@ -38,16 +38,16 @@ function BSpline(points, degree, copy) {
     }
     this.degree = degree;
     this.dimension = points[0].length;
-    if (degree == 2) {
+    if (degree === 2) {
         this.baseFunc = this.basisDeg2;
         this.baseFuncRangeInt = 2;
-    } else if (degree == 3) {
+    } else if (degree === 3) {
         this.baseFunc = this.basisDeg3;
         this.baseFuncRangeInt = 2;
-    } else if (degree == 4) {
+    } else if (degree === 4) {
         this.baseFunc = this.basisDeg4;
         this.baseFuncRangeInt = 3;
-    } else if (degree == 5) {
+    } else if (degree === 5) {
         this.baseFunc = this.basisDeg5;
         this.baseFuncRangeInt = 3;
     }
@@ -190,12 +190,12 @@ BSpline.prototype.getInterpol = function (seq, t) {
 
 BSpline.prototype["calcAt"] = function (t) {
     t = t * ((this.degree + 1) * 2 + this.points.length); //t must be in [0,1]
-    if (this.dimension == 2) {
+    if (this.dimension === 2) {
         return [
             this.getInterpol(this.seqAt(0), t),
             this.getInterpol(this.seqAt(1), t)
         ];
-    } else if (this.dimension == 3) {
+    } else if (this.dimension === 3) {
         return [
             this.getInterpol(this.seqAt(0), t),
             this.getInterpol(this.seqAt(1), t),

@@ -738,7 +738,7 @@ sabre["SSALineStyleOverride"] = function () {
 
         "setClip": {
             value: function (a, b, c, d) {
-                if (typeof c == "undefined") {
+                if (typeof c === "undefined") {
                     obj.clip = [a, b];
                 } else {
                     obj.clip = [a, b, c, d];
@@ -749,7 +749,7 @@ sabre["SSALineStyleOverride"] = function () {
 
         "getClip": {
             value: function () {
-                if (obj.clip != null) return obj.clip.slice(0);
+                if (obj.clip !== null) return obj.clip.slice(0);
                 return null;
             },
             writable: false
@@ -785,7 +785,7 @@ sabre["SSALineStyleOverride"] = function () {
 
         "getMovement": {
             value: function () {
-                if (obj.movement != null) return obj.movement.slice(0);
+                if (obj.movement !== null) return obj.movement.slice(0);
                 return null;
             },
             writable: false
@@ -800,7 +800,7 @@ sabre["SSALineStyleOverride"] = function () {
 
         "getPosition": {
             value: function () {
-                if (obj.position != null) return obj.position.slice(0);
+                if (obj.position !== null) return obj.position.slice(0);
                 return null;
             },
             writable: false
@@ -837,7 +837,7 @@ sabre["SSALineStyleOverride"] = function () {
 
         "getFade": {
             value: function () {
-                if (obj.fade != null) return obj.fade.slice(0);
+                if (obj.fade !== null) return obj.fade.slice(0);
                 return null;
             },
             writable: false
@@ -896,7 +896,7 @@ sabre["SSATransitionOverrideTarget"] = function () {
 
         "getMovement": {
             value: function () {
-                if (obj.movement != null) return obj.movement.slice(0);
+                if (obj.movement !== null) return obj.movement.slice(0);
                 return null;
             },
             writable: false
@@ -911,7 +911,7 @@ sabre["SSATransitionOverrideTarget"] = function () {
 
         "getPosition": {
             value: function () {
-                if (obj.position != null) return obj.position.slice(0);
+                if (obj.position !== null) return obj.position.slice(0);
                 return null;
             },
             writable: false
@@ -948,7 +948,7 @@ sabre["SSATransitionOverrideTarget"] = function () {
 
         "getFade": {
             value: function () {
-                if (obj.fade != null) return obj.fade.slice(0);
+                if (obj.fade !== null) return obj.fade.slice(0);
                 return null;
             },
             writable: false

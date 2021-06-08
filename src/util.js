@@ -86,7 +86,7 @@ const lehex = function (value) {
 //implement toBlob on systems that don't support it in a manner that avoids using costly dataurls
 const canvas2blob = function (callback /*, type, quality*/) {
     var tempCanvas = null;
-    if (typeof global.OffscreenCanvas == "undefined") {
+    if (typeof global.OffscreenCanvas === "undefined") {
         tempCanvas = global.document.createElement("canvas");
         tempCanvas.width = this.width;
         tempCanvas.height = this.height;
@@ -143,7 +143,7 @@ const canvas2blob = function (callback /*, type, quality*/) {
                     ((imgdata.height || this.height) - l) -
                 ((imgdata.width || this.width) - j) +
                 k;
-            if (imgdata.data.length == 0) {
+            if (imgdata.data.length === 0) {
                 longs[n] = 0x00000000;
                 continue;
             }
@@ -163,7 +163,7 @@ global.HTMLCanvasElement.prototype["toBlobHD"] =
     global.HTMLCanvasElement.prototype["toBlobHD"] ||
     global.HTMLCanvasElement.prototype["toBlob"];
 
-if (typeof global.OffscreenCanvas != "undefined") {
+if (typeof global.OffscreenCanvas !== "undefined") {
     global.OffscreenCanvas.prototype["toBlob"] =
         global.OffscreenCanvas.prototype["toBlob"] || canvas2blob;
     global.OffscreenCanvas.prototype["toBlobHD"] =

@@ -33,7 +33,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
             let unchanged = true;
             if (val === cval) return true;
             if (val instanceof Array && cval instanceof Array) {
-                if (val.length != cval.length) return false;
+                if (val.length !== cval.length) return false;
                 else
                     for (i = 0; i < val.length; i++)
                         unchanged = unchanged && val[i] === cval[i];
@@ -152,7 +152,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
 
     "addOption": {
         value: function (key, value, type) {
-            if (this._keys[key] == null) {
+            if (this._keys[key] === null) {
                 this._keys[key] = { val: value, datatype: type, cval: null };
                 return true;
             }
@@ -198,7 +198,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
                 key = props[i];
                 if (this._isUnchanged(this._keys[key])) continue;
                 uniform = gl.getUniformLocation(this._shader, key);
-                if ((uniform || null) != null) {
+                if ((uniform || null) !== null) {
                     type = this._keys[key].datatype;
                     switch (type) {
                         case "1f":
@@ -318,11 +318,11 @@ sabre["ShaderPrototype"] = Object.create(Object, {
 
     "compile": {
         value: function (gl, defines, err, version) {
-            if (typeof err == "undefined" || err == null) {
+            if (typeof err === "undefined" || err === null) {
                 err = defines;
                 defines = null;
             }
-            if (typeof version == "undefined" || version == null) {
+            if (typeof version === "undefined" || version === null) {
                 version = "100";
             }
             let shaderProgram;
@@ -364,7 +364,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
     _compile: {
         value: function (gl, source, defines, type, version) {
             let shaderHeader = "";
-            if (version && version != "100") {
+            if (version && version !== "100") {
                 shaderHeader += "#version " + version + " es\n";
             }
             shaderHeader += "#ifndef WEB_GL\n";
@@ -374,12 +374,12 @@ sabre["ShaderPrototype"] = Object.create(Object, {
             shaderHeader += "precision highp float;\n";
             shaderHeader += "precision highp int;\n";
             shaderHeader += "#endif\n";
-            if (defines != null) {
+            if (defines !== null) {
                 let define_names = Object.keys(defines);
                 for (let i = 0; i < define_names.length; i++) {
-                    if (defines[define_names[i]] == true)
+                    if (defines[define_names[i]] === true)
                         shaderHeader += "#define " + define_names[i] + "\n";
-                    else if (defines[define_names[i]])
+                    else if (defines[define_names[i]] !== null)
                         shaderHeader +=
                             "#define " +
                             define_names[i] +

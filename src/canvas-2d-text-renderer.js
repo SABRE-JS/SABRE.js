@@ -115,7 +115,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Initializes the rendering canvas.
          */
         value: function () {
-            if (typeof global.OffscreenCanvas == "undefined") {
+            if (typeof global.OffscreenCanvas === "undefined") {
                 this._canvas = global.document.createElement("canvas");
                 this._height = this._width = 0;
             } else {
@@ -132,7 +132,6 @@ const text_renderer_prototype = global.Object.create(Object, {
 
     _getBlurKernelValueForPosition: {
         value: function (center_value, x, y, dim, intgr) {
-            if (intgr == null) intgr = false;
             let value = Math.max(
                 center_value -
                     Math.sqrt(
@@ -156,7 +155,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         value: function (blur_count) {
             if (
                 typeof this._blur_urls[blur_count] === "undefined" ||
-                this._blur_urls[blur_count] == null
+                this._blur_urls[blur_count] === null
             ) {
                 let filterdom;
                 let doctype = global.document.implementation.createDocumentType(
@@ -192,7 +191,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                         "feConvolveMatrix"
                     );
                     blur.setAttribute("edgeMode", "none");
-                    if (filters_count++ == 0)
+                    if (filters_count++ === 0)
                         blur.setAttribute("in", "SourceGraphic");
                     else
                         blur.setAttribute(
@@ -258,7 +257,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          */
         value: function (style, overrides, pass) {
             //TODO: Figgure out a good way to do dimension specific line widths.
-            if (pass == sabre.RenderPasses.OUTLINE)
+            if (pass === sabre.RenderPasses.OUTLINE)
                 this._ctx.lineWidth =
                     (overrides.getOutlineX() ?? style.getOutlineX()) +
                     (overrides.getOutlineY() ?? style.getOutlineY()); //AVERAGE * 2 = SUM
@@ -349,9 +348,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                     (overrides.getOutlineX() ?? style.getOutlineX()) > 0 ||
                     (overrides.getOutlineY() ?? style.getOutlineY()) > 0;
                 if (
-                    pass == sabre.RenderPasses.OUTLINE ||
-                    (pass != sabre.RenderPasses.BACKGROUND &&
-                        (borderStyle != 1 || !outlineActive))
+                    pass === sabre.RenderPasses.OUTLINE ||
+                    (pass !== sabre.RenderPasses.BACKGROUND &&
+                        (borderStyle !== 1 || !outlineActive))
                 )
                     this._setEdgeBlur(style, overrides, pass);
                 else this._disableEdgeBlur();

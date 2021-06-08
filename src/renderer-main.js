@@ -138,7 +138,7 @@ const renderer_prototype = global.Object.create(Object, {
                 "powerPreference": "high-performance",
                 "premultipliedAlpha": true
             });
-            if (typeof global.OffscreenCanvas == "undefined") {
+            if (typeof global.OffscreenCanvas === "undefined") {
                 this._compositingCanvas = global.document.createElement(
                     "canvas"
                 );
@@ -224,12 +224,12 @@ const renderer_prototype = global.Object.create(Object, {
                         //Find beginning and end of layer.
                         while (
                             layerStart >= 0 &&
-                            events[layerStart].getLayer() == currentLayer
+                            events[layerStart].getLayer() === currentLayer
                         )
                             layerStart--;
                         while (
                             layerEnd < events.length &&
-                            events[layerEnd].getLayer() == currentLayer
+                            events[layerEnd].getLayer() === currentLayer
                         )
                             layerEnd++;
                         layerStart++;
@@ -250,7 +250,7 @@ const renderer_prototype = global.Object.create(Object, {
             let output = global.URL.createObjectURL(
                 this._compositingCanvas.toBlobHD()
             );
-            if (this._lastOutput != null)
+            if (this._lastOutput !== null)
                 global.URL.revokeObjectURL(this._lastOutput);
             this._lastOutput = output;
             return output;
