@@ -7,6 +7,7 @@
         "es6": true
     },
     "rules":{
+        "eqeqeq": ["error","always"],
         "no-unused-vars": "warn",
         "no-fallthrough": "off"
     },
