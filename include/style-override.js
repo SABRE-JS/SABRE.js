@@ -86,14 +86,18 @@ var SSAStyleOverride;
 /**
  * @typedef {!{
  *      toJSON:function():string,
+ *      getClip:function():?Array<number|string>,
+ *      getClipInverted:function():boolean,
+ *      getFade:function():?Array<number>,
  *      getMovement:function():?Array<number>,
  *      getPosition:function():?Array<number>,
  *      getRotationOrigin:function():?Array<number>,
- *      getFade:function():?Array<number>,
+ *      setClip:function(number,(number|string),number=,number=):void,
+ *      setClipInverted:function(boolean):void,
+ *      setFade:function(number,number,number,number,number,number,number):void,
  *      setMovement:function(number,number,number,number,number,number):void,
  *      setPosition:function(number,number):void,
- *      setRotationOrigin:function(number,number):void,
- *      setFade:function(number,number,number,number,number,number,number):void
+ *      setRotationOrigin:function(number,number):void
  * }}
  */
 var SSALineStyleOverride;

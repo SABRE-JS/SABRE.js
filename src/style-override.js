@@ -769,6 +769,29 @@ sabre["SSALineStyleOverride"] = function () {
             writable: false
         },
 
+        "setFade": {
+            value: function (
+                /** number */ a1,
+                /** number */ a2,
+                /** number */ a3,
+                /** number */ t1,
+                /** number */ t2,
+                /** number */ t3,
+                /** number */ t4
+            ) {
+                obj.fade = [a1, a2, a3, t1, t2, t3, t4];
+            },
+            writable: false
+        },
+
+        "getFade": {
+            value: function () {
+                if (obj.fade !== null) return obj.fade.slice(0);
+                return null;
+            },
+            writable: false
+        },
+
         "setMovement": {
             value: function (
                 /** number */ x1,
@@ -816,29 +839,6 @@ sabre["SSALineStyleOverride"] = function () {
         "getRotationOrigin": {
             value: function () {
                 return obj.rotationOrigin;
-            },
-            writable: false
-        },
-
-        "setFade": {
-            value: function (
-                /** number */ a1,
-                /** number */ a2,
-                /** number */ a3,
-                /** number */ t1,
-                /** number */ t2,
-                /** number */ t3,
-                /** number */ t4
-            ) {
-                obj.fade = [a1, a2, a3, t1, t2, t3, t4];
-            },
-            writable: false
-        },
-
-        "getFade": {
-            value: function () {
-                if (obj.fade !== null) return obj.fade.slice(0);
-                return null;
             },
             writable: false
         }

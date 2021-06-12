@@ -1269,8 +1269,11 @@ const main_prototype = global.Object.create(global.Object, {
                             scale = p1;
                         }
                         var drawString = parameters[1];
-
-                        lineGlobalOverrides.setClip(scale, drawString);
+                        if (drawString === null) return;
+                        lineGlobalOverrides.setClip(
+                            scale,
+                            /** @type {string} */ (drawString)
+                        );
                     } else {
                         var x1 = p1;
                         var y1 = p2;
@@ -1623,8 +1626,11 @@ const main_prototype = global.Object.create(global.Object, {
                             scale = p1;
                         }
                         var drawString = parameters[1];
-
-                        lineGlobalOverrides.setClip(scale, drawString);
+                        if (drawString === null) return;
+                        lineGlobalOverrides.setClip(
+                            scale,
+                            /** @type {string} */ (drawString)
+                        );
                     } else {
                         var x1 = p1;
                         var y1 = p2;
@@ -2003,7 +2009,8 @@ const main_prototype = global.Object.create(global.Object, {
                         }
                     }
 
-                    final_param = this._parseTransitionTags(final_param);
+                    //TODO: Implement transition tag parsing.
+                    //final_param = this._parseTransitionTags(final_param);
 
                     overrides.setTransition([
                         transitionStart,
