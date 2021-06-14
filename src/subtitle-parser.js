@@ -27,6 +27,7 @@ sabre.import("renderer-main.js");
  * Assert using grumbles.
  * @param {sabre.Complaint} complaint
  * @param {boolean} test
+ * @private
  */
 const gassert = function (complaint, test) {
     if (!test) complaint.grumble();
@@ -41,6 +42,9 @@ const INVALID_T_FUNCTION_TAG = new sabre.Complaint(
 );
 const MOVE_ENDS_BEFORE_IT_STARTS = new sabre.Complaint(
     "Encountered a move tag where the animation ends before it starts, ignoring."
+);
+const UNKNOWN_HEADING = new sabre.Complaint(
+    "Encounterd a heading which is non-standard, ignoring."
 );
 const WRONG_CASE_IN_HEADING = new sabre.Complaint(
     "Encounterd a heading which does not have its case consistent with the standard."
@@ -2312,8 +2316,7 @@ const main_prototype = global.Object.create(global.Object, {
                                 break;
                             }
                         }
-                        if (i === headings.length)
-                            throw "Unknown Heading Error"; //Otherwise we error.
+                        gassert(UNKNOWN_HEADING, i !== headings.length);
                     }
                 } catch (e) {
                     throw (
