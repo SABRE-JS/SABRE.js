@@ -242,7 +242,7 @@ const main_prototype = global.Object.create(global.Object, {
                     case "Update Details":
                         config["info"]["update_description"] = keypair[1];
                         return;
-                    case "ScriptType":
+                    case "ScriptType": {
                         let version = keypair[1].match(
                             /v([0-9]+(?:\.[0-9]+)?)(\+)?/
                         );
@@ -265,7 +265,8 @@ const main_prototype = global.Object.create(global.Object, {
                                 config["info"]["is_ass"]
                         );
                         return;
-                    case "Collisions":
+                    }
+                    case "Collisions": {
                         let collisionMode = keypair[1].toLowerCase();
                         if (collisionMode === "normal") {
                             config["renderer"]["default_collision_mode"] = 0;
@@ -280,6 +281,7 @@ const main_prototype = global.Object.create(global.Object, {
                         );
                         config["renderer"]["default_collision_mode"] = 0;
                         return;
+                    }
                     case "PlayResY":
                         config["renderer"]["resolution_y"] = global.parseInt(
                             keypair[1],
@@ -761,7 +763,7 @@ const main_prototype = global.Object.create(global.Object, {
             if (this._config["info"]["is_ass"]) {
                 for (let i = 0; i < events.length; i++) {
                     event = events[i];
-                    match = /^([^\{\}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
+                    match = /^([^{}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
                     if (match !== null) {
                         let new_event = this._cloneEventWithoutText(event);
                         event.setText(match[1]);
