@@ -763,33 +763,31 @@ const main_prototype = global.Object.create(global.Object, {
         value: function (events) {
             let event;
             let match;
-            //We don't have override tags in SSA
-            if (this._config["info"]["is_ass"]) {
-                for (let i = 0; i < events.length; i++) {
-                    event = events[i];
-                    match = /^([^{}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
-                    if (match !== null) {
-                        let new_event = this._cloneEventWithoutText(event);
-                        event.setText(match[1]);
-                        new_event.setOverrides(
-                            this._parseOverrides(
-                                {
-                                    start: event.getStart(),
-                                    end: event.getEnd()
-                                },
-                                function (new_style) {
-                                    new_event.setStyle(new_style);
-                                },
-                                event.getOverrides(),
-                                event.getLineOverrides(),
-                                match[2]
-                            )
-                        );
-                        new_event.setText(match[3]);
-                        events = events
-                            .slice(0, i + 1)
-                            .concat([new_event], events.slice(i + 1));
-                    }
+            for (let i = 0; i < events.length; i++) {
+                event = events[i];
+                match = /^([^{}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
+                if (match !== null) {
+                    let new_event = this._cloneEventWithoutText(event);
+                    event.setText(match[1]);
+                    new_event.setOverrides(
+                        this._parseOverrides(
+                            {
+                                start: event.getStart(),
+                                end: event.getEnd()
+                            },
+                            function (new_style) {
+                                new_event.setStyle(new_style);
+                            },
+                            event.getOverrides(),
+                            event.getLineOverrides(),
+                            match[2],
+                            this._config["info"]["is_ass"]
+                        )
+                    );
+                    new_event.setText(match[3]);
+                    events = events
+                        .slice(0, i + 1)
+                        .concat([new_event], events.slice(i + 1));
                 }
             }
             return events;
@@ -804,6 +802,7 @@ const main_prototype = global.Object.create(global.Object, {
          */
         value: Object.freeze([
             {
+                ass_only: false,
                 ignore_exterior: false,
                 regular_expression: /^a/,
                 /**
@@ -850,6 +849,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^an/,
                 /**
@@ -884,6 +884,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^([1-4])?a(?:lpha)?/,
                 /**
@@ -986,6 +987,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: false,
                 ignore_exterior: false,
                 regular_expression: /^b/,
                 /**
@@ -1016,6 +1018,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^be/,
                 /**
@@ -1040,6 +1043,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^blur/,
                 /**
@@ -1064,6 +1068,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^([xy])?bord/,
                 /**
@@ -1100,6 +1105,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: false,
                 ignore_exterior: false,
                 regular_expression: /^([1-4])?c/,
                 /**
@@ -1248,6 +1254,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: true,
                 regular_expression: /^clip/,
                 /**
@@ -1291,6 +1298,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: true,
                 regular_expression: /^fade/,
                 /**
@@ -1342,6 +1350,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: true,
                 regular_expression: /^fad/,
                 /**
@@ -1377,6 +1386,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^fa([xy])/,
                 /**
@@ -1407,6 +1417,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: false,
                 ignore_exterior: false,
                 regular_expression: /^fe/,
                 /**
@@ -1430,6 +1441,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: false,
                 ignore_exterior: false,
                 regular_expression: /^fn/,
                 /**
@@ -1455,6 +1467,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^fr([xyz])?/,
                 /**
@@ -1495,6 +1508,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: false,
                 ignore_exterior: false,
                 regular_expression: /^fs([+-])?/,
                 /**
@@ -1530,6 +1544,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^fsc([xy])/,
                 /**
@@ -1556,6 +1571,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^fsp/,
                 /**
@@ -1580,6 +1596,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: false,
                 ignore_exterior: false,
                 regular_expression: /^i/,
                 /**
@@ -1604,6 +1621,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: true,
                 regular_expression: /^iclip/,
                 /**
@@ -1648,6 +1666,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: false,
                 ignore_exterior: false,
                 regular_expression: /^([kK][fot]?)/,
                 /**
@@ -1701,6 +1720,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: true,
                 regular_expression: /^move/,
                 /**
@@ -1739,6 +1759,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: true,
                 regular_expression: /^org/,
                 /**
@@ -1763,6 +1784,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^p/,
                 /**
@@ -1816,6 +1838,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: true,
                 regular_expression: /^pos/,
                 /**
@@ -1841,6 +1864,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^q/,
                 /**
@@ -1866,6 +1890,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: false,
                 ignore_exterior: false,
                 regular_expression: /^r/,
                 /**
@@ -1893,6 +1918,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^s/,
                 /**
@@ -1916,6 +1942,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^([xy])?shad/,
                 /**
@@ -1953,6 +1980,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: true,
                 regular_expression: /^t/,
                 /**
@@ -2027,6 +2055,7 @@ const main_prototype = global.Object.create(global.Object, {
                 }
             },
             {
+                ass_only: true,
                 ignore_exterior: false,
                 regular_expression: /^u/,
                 /**
@@ -2067,13 +2096,15 @@ const main_prototype = global.Object.create(global.Object, {
          * @param {SSAStyleOverride} old_overrides
          * @param {SSALineStyleOverride} line_overrides
          * @param {string} tags
+         * @param {boolean} isAdvancedSubstation
          */
         value: function (
             timeInfo,
             setStyle,
             old_overrides,
             line_overrides,
-            tags
+            tags,
+            isAdvancedSubstation
         ) {
             //Regex for separating override tags.
             const override_regex = /\\([^}{\\()]+)(?:\((.*?)\))?([^\\}{\\()]+)?/g;
@@ -2093,6 +2124,9 @@ const main_prototype = global.Object.create(global.Object, {
                 let found = false;
                 //Search for a coresponding override tag supported by the parser.
                 for (let i = this._overrideTags.length - 1; i >= 0; i--) {
+                    //ignore Advanced Substation Alpha specific tags if we're parsing SSA.
+                    if (this._overrideTags[i].ass_only && !isAdvancedSubstation)
+                        continue;
                     let regex = this._overrideTags[i].regular_expression;
                     //Test for matching tag.
                     if (regex.test(pre_params)) {
