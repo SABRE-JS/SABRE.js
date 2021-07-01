@@ -21,9 +21,6 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 #### Functions
 
 <dl>
-<dt><a href="#gassert">gassert(complaint, test)</a></dt>
-<dd><p>Assert using grumbles.</p>
-</dd>
 <dt><a href="#loadSubtitles">loadSubtitles(subsText)</a></dt>
 <dd><p>Delegate method; see load.</p>
 </dd>
@@ -41,19 +38,6 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 <dt><a href="#TreeNode">TreeNode</a> : <code>Object</code></dt>
 <dd></dd>
 </dl>
-
-<a name="gassert"></a>
-
-#### gassert(complaint, test)
-
-Assert using grumbles.
-
-**Kind**: global function
-
-| Param     | Type                         |
-| --------- | ---------------------------- |
-| complaint | <code>sabre.Complaint</code> |
-| test      | <code>boolean</code>         |
 
 <a name="loadSubtitles"></a>
 
