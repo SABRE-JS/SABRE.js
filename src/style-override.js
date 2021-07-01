@@ -9,12 +9,6 @@
  * @fileoverview This file defines the storage objects for style overrides.
  */
 //@include [color.js]
-const jsonNaNFix = function (a) {
-    if (global.isNaN(a)) {
-        return '"NaN"';
-    }
-    return a;
-};
 
 sabre["SSAStyleOverride"] = function () {
     const template = Object.freeze({
@@ -60,77 +54,42 @@ sabre["SSAStyleOverride"] = function () {
     return Object.create(Object, {
         "toJSON": {
             value: function () {
-                return (
-                    "{a:" +
-                    obj.alignment +
-                    ",bO:" +
-                    obj.baselineOffset +
-                    ",bI:" +
-                    obj.blurIterations +
-                    ",dM:" +
-                    obj.drawingMode +
-                    ",dS:" +
-                    obj.drawingScale +
-                    ",e:" +
-                    obj.encoding +
-                    ",fN:" +
-                    JSON.stringify(obj.fontName) +
-                    ",fS:" +
-                    JSON.stringify(obj.fontSize) +
-                    ",fSM:" +
-                    obj.fontSizeMod +
-                    ",gB:" +
-                    obj.gblurValue +
-                    ",i:" +
-                    obj.italic +
-                    ",kM:" +
-                    obj.karaokeMode +
-                    ",kS:" +
-                    jsonNaNFix(obj.karaokeStart) +
-                    ",kE:" +
-                    jsonNaNFix(obj.karaokeEnd) +
-                    ",m:" +
-                    JSON.stringify(obj.margins) +
-                    ",oX:" +
-                    obj.outlineX +
-                    ",oY:" +
-                    obj.outlineY +
-                    ",pC:" +
-                    JSON.stringify(obj.primaryColor) +
-                    ",sC:" +
-                    JSON.stringify(obj.secondaryColor) +
-                    ",tC:" +
-                    JSON.stringify(obj.tertiaryColor) +
-                    ",qC:" +
-                    JSON.stringify(obj.quaternaryColor) +
-                    ",r:" +
-                    JSON.stringify(obj.rotation) +
-                    ",sX:" +
-                    obj.scaleX +
-                    ",sY:" +
-                    obj.scaleY +
-                    ",shX:" +
-                    obj.shadowX +
-                    ",shY:" +
-                    obj.shadowY +
-                    ",sheX:" +
-                    obj.shearX +
-                    ",sheY:" +
-                    obj.shearY +
-                    ",sp:" +
-                    obj.spacing +
-                    ",st:" +
-                    obj.strikeout +
-                    ",t:" +
-                    (obj.transition !== null) +
-                    ",u:" +
-                    obj.underline +
-                    ",w:" +
-                    obj.weight +
-                    ",wS:" +
-                    obj.wrapStyle +
-                    "}"
-                );
+                return {
+                    a: obj.alignment,
+                    bO: obj.baselineOffset,
+                    bI: obj.blurIterations,
+                    dM: obj.drawingMode,
+                    dS: obj.drawingScale,
+                    e: obj.encoding,
+                    fN: obj.fontName,
+                    fS: obj.fontSize,
+                    fSM: obj.fontSizeMod,
+                    gB: obj.gblurValue,
+                    i: obj.italic,
+                    kM: obj.karaokeMode,
+                    kS: obj.karaokeStart,
+                    kE: obj.karaokeEnd,
+                    m: obj.margins,
+                    oX: obj.outlineX,
+                    oY: obj.outlineY,
+                    pC: obj.primaryColor,
+                    sC: obj.secondaryColor,
+                    tC: obj.tertiaryColor,
+                    qC: obj.quaternaryColor,
+                    r: obj.rotation,
+                    sX: obj.scaleX,
+                    sY: obj.scaleY,
+                    shX: obj.shadowX,
+                    shY: obj.shadowY,
+                    sheX: obj.shearX,
+                    sheY: obj.shearY,
+                    sp: obj.spacing,
+                    st: obj.strikeout,
+                    t: obj.transition,
+                    u: obj.underline,
+                    w: obj.weight,
+                    wS: obj.wrapStyle
+                };
             },
             writable: false
         },
@@ -486,16 +445,20 @@ sabre["SSAStyleOverride"] = function () {
 
         "setRotation": {
             value: function (
-                /** number */ x,
-                /** number */ y,
-                /** number */ z
+                /** ?number */ x,
+                /** ?number */ y,
+                /** ?number */ z
             ) {
-                obj.rotation = [x, y, z];
+                obj.rotation = [
+                    x === null ? obj.rotation[0] : x,
+                    y === null ? obj.rotation[1] : y,
+                    z === null ? obj.rotation[2] : z
+                ];
             },
             writable: false
         },
 
-        "getRotations": {
+        "getRotation": {
             value: function () {
                 return obj.rotation.slice(0);
             },
@@ -624,7 +587,7 @@ sabre["SSAStyleOverride"] = function () {
         },
 
         "setTransition": {
-            value: function (/** Array<number|string> */ transition) {
+            value: function (/** Array<number|Object> */ transition) {
                 obj.transition = transition.slice(0);
             },
             writable: false
@@ -717,21 +680,14 @@ sabre["SSALineStyleOverride"] = function () {
     return Object.create(Object, {
         "toJSON": {
             value: function () {
-                return (
-                    "{cl:" +
-                    JSON.stringify(obj.clip) +
-                    "cli:" +
-                    JSON.stringify(obj.clipInverted) +
-                    "mo:" +
-                    JSON.stringify(obj.movement) +
-                    ",p:" +
-                    JSON.stringify(obj.position) +
-                    ",rO:" +
-                    JSON.stringify(obj.rotationOrigin) +
-                    ",f:" +
-                    JSON.stringify(obj.fade) +
-                    "}"
-                );
+                return {
+                    cl: obj.clip,
+                    cli: obj.clipInverted,
+                    mo: obj.movement,
+                    p: obj.position,
+                    rO: obj.rotationOrigin,
+                    f: obj.fade
+                };
             },
             writable: false
         },
@@ -845,58 +801,351 @@ sabre["SSALineStyleOverride"] = function () {
     });
 };
 
-sabre["SSATransitionOverrideTarget"] = function () {
+sabre["SSATransitionTargetOverride"] = function () {
     const template = Object.freeze({
+        blurIterations: null,
         fontSize: null,
-        spacing: null,
+        gblurValue: null,
+        outlineX: null,
+        outlineY: null,
         primaryColor: null,
         secondaryColor: null,
         tertiaryColor: null,
         quaternaryColor: null,
+        rotation: [null, null, null],
         scaleX: null,
         scaleY: null,
-        rotation: [0, 0, 0],
-        outlineX: null,
-        outlineY: null,
         shadowX: null,
-        shadowY: null
+        shadowY: null,
+        shearX: null,
+        shearY: null,
+        spacing: null
     });
     let obj = Object.assign({}, template);
     return Object.create(Object, {
         "toJSON": {
             value: function () {
-                return (
-                    "{mo:" +
-                    JSON.stringify(obj.movement) +
-                    ",p:" +
-                    JSON.stringify(obj.position) +
-                    ",rO:" +
-                    JSON.stringify(obj.rotationOrigin) +
-                    ",f:" +
-                    JSON.stringify(obj.fade) +
-                    "}"
-                );
+                return {
+                    bI: obj.blurIterations,
+                    fS: obj.fontSize,
+                    gB: obj.gblurValue,
+                    oX: obj.outlineX,
+                    oY: obj.outlineY,
+                    pC: obj.primaryColor,
+                    sC: obj.secondaryColor,
+                    tC: obj.tertiaryColor,
+                    qC: obj.quaternaryColor,
+                    r: obj.rotation,
+                    sX: obj.scaleX,
+                    sY: obj.scaleY,
+                    shX: obj.shadowX,
+                    shY: obj.shadowY,
+                    sheX: obj.shearX,
+                    sheY: obj.shearY,
+                    sp: obj.spacing
+                };
             },
             writable: false
         },
 
-        "setMovement": {
-            value: function (
-                /** number */ x1,
-                /** number */ y1,
-                /** number */ x2,
-                /** number */ y2,
-                /** number */ t1,
-                /** number */ t2
-            ) {
-                obj.movement = [x1, y1, x2, y2, t1, t2];
+        "setEdgeBlur": {
+            value: function (/** number */ blurIterations) {
+                obj.blurIterations = blurIterations;
             },
             writable: false
         },
 
-        "getMovement": {
+        "getEdgeBlur": {
             value: function () {
-                if (obj.movement !== null) return obj.movement.slice(0);
+                return obj.blurIterations;
+            },
+            writable: false
+        },
+
+        "setFontSize": {
+            value: function (/** number */ size) {
+                obj.fontSize = size;
+            },
+            writable: false
+        },
+
+        "getFontSize": {
+            value: function () {
+                return obj.fontSize;
+            },
+            writable: false
+        },
+
+        "setGaussianEdgeBlur": {
+            value: function (/** number */ blur_value) {
+                obj.gblurValue = blur_value;
+            },
+            writable: false
+        },
+
+        "getGaussianEdgeBlur": {
+            value: function () {
+                return obj.gblurValue;
+            },
+            writable: false
+        },
+
+        "setOutline": {
+            value: function (/** number */ outline) {
+                obj.outlineX = outline;
+                obj.outlineY = outline;
+            },
+            writable: false
+        },
+
+        "setOutlineX": {
+            value: function (/** number */ outline) {
+                obj.outlineX = outline;
+            },
+            writable: false
+        },
+
+        "setOutlineY": {
+            value: function (/** number */ outline) {
+                obj.outlineY = outline;
+            },
+            writable: false
+        },
+
+        "getOutlineX": {
+            value: function () {
+                return obj.outlineX;
+            },
+            writable: false
+        },
+
+        "getOutlineY": {
+            value: function () {
+                return obj.outlineY;
+            },
+            writable: false
+        },
+
+        "setPrimaryColor": {
+            value: function (/** SSAOverrideColor */ color) {
+                obj.primaryColor = color;
+            },
+            writable: false
+        },
+
+        "getPrimaryColor": {
+            value: function () {
+                return obj.primaryColor;
+            },
+            writable: false
+        },
+
+        "setSecondaryColor": {
+            value: function (/** SSAOverrideColor */ color) {
+                obj.secondaryColor = color;
+            },
+            writable: false
+        },
+
+        "getSecondaryColor": {
+            value: function () {
+                return obj.secondaryColor;
+            },
+            writable: false
+        },
+
+        "setTertiaryColor": {
+            value: function (/** SSAOverrideColor */ color) {
+                obj.tertiaryColor = color;
+            },
+            writable: false
+        },
+
+        "getTertiaryColor": {
+            value: function () {
+                return obj.tertiaryColor;
+            },
+            writable: false
+        },
+
+        "setQuaternaryColor": {
+            value: function (/** SSAOverrideColor */ color) {
+                obj.quaternaryColor = color;
+            },
+            writable: false
+        },
+
+        "getQuaternaryColor": {
+            value: function () {
+                return obj.quaternaryColor;
+            },
+            writable: false
+        },
+
+        "setRotation": {
+            value: function (
+                /** ?number */ x,
+                /** ?number */ y,
+                /** ?number */ z
+            ) {
+                obj.rotation = [
+                    x === null ? obj.rotation[0] : x,
+                    y === null ? obj.rotation[1] : y,
+                    z === null ? obj.rotation[2] : z
+                ];
+            },
+            writable: false
+        },
+
+        "getRotation": {
+            value: function () {
+                return obj.rotation.slice(0);
+            },
+            writable: false
+        },
+
+        "setScaleX": {
+            value: function (/** number */ scaleX) {
+                obj.scaleX = scaleX;
+            },
+            writable: false
+        },
+
+        "setScaleY": {
+            value: function (/** number */ scaleY) {
+                obj.scaleY = scaleY;
+            },
+            writable: false
+        },
+
+        "getScaleX": {
+            value: function () {
+                return obj.scaleX;
+            },
+            writable: false
+        },
+
+        "getScaleY": {
+            value: function () {
+                return obj.scaleY;
+            },
+            writable: false
+        },
+
+        "setShadowX": {
+            value: function (/** number */ shadowX) {
+                obj.shadowX = shadowX;
+            },
+            writable: false
+        },
+
+        "getShadowX": {
+            value: function () {
+                return obj.shadowX;
+            },
+            writable: false
+        },
+
+        "setShadowY": {
+            value: function (/** number */ shadowY) {
+                obj.shadowY = shadowY;
+            },
+            writable: false
+        },
+
+        "getShadowY": {
+            value: function () {
+                return obj.shadowY;
+            },
+            writable: false
+        },
+
+        "setShadow": {
+            value: function (/** number */ shadow) {
+                shadow = shadow / global.Math.sqrt(2);
+                obj.shadowX = shadow;
+                obj.shadowY = shadow;
+            },
+            writable: false
+        },
+
+        "setShearX": {
+            value: function (/** number */ shearX) {
+                obj.shearX = shearX;
+            },
+            writable: false
+        },
+
+        "setShearY": {
+            value: function (/** number */ shearY) {
+                obj.shearY = shearY;
+            },
+            writable: false
+        },
+
+        "getShearX": {
+            value: function () {
+                return obj.shearX;
+            },
+            writable: false
+        },
+
+        "getShearY": {
+            value: function () {
+                return obj.shearY;
+            },
+            writable: false
+        },
+
+        "setSpacing": {
+            value: function (/** number */ spacing) {
+                obj.spacing = spacing;
+            },
+            writable: true
+        },
+
+        "getSpacing": {
+            value: function () {
+                return obj.spacing;
+            },
+            writable: false
+        }
+    });
+};
+
+sabre["SSALineTransitionTargetOverride"] = function () {
+    const template = Object.freeze({
+        clip: null,
+        position: null,
+        rotationOrigin: null
+    });
+    let obj = Object.assign({}, template);
+    return Object.create(Object, {
+        "toJSON": {
+            value: function () {
+                return {
+                    cl: obj.clip,
+                    p: obj.position,
+                    rO: obj.rotationOrigin
+                };
+            },
+            writable: false
+        },
+
+        "setClip": {
+            value: function (a, b, c, d) {
+                if (typeof c === "undefined") {
+                    obj.clip = [a, b];
+                } else {
+                    obj.clip = [a, b, c, d];
+                }
+            },
+            writable: false
+        },
+
+        "getClip": {
+            value: function () {
+                if (obj.clip !== null) return obj.clip.slice(0);
                 return null;
             },
             writable: false
@@ -927,29 +1176,6 @@ sabre["SSATransitionOverrideTarget"] = function () {
         "getRotationOrigin": {
             value: function () {
                 return obj.rotationOrigin;
-            },
-            writable: false
-        },
-
-        "setFade": {
-            value: function (
-                /** number */ a1,
-                /** number */ a2,
-                /** number */ a3,
-                /** number */ t1,
-                /** number */ t2,
-                /** number */ t3,
-                /** number */ t4
-            ) {
-                obj.fade = [a1, a2, a3, t1, t2, t3, t4];
-            },
-            writable: false
-        },
-
-        "getFade": {
-            value: function () {
-                if (obj.fade !== null) return obj.fade.slice(0);
-                return null;
             },
             writable: false
         }

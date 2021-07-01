@@ -24,53 +24,30 @@ sabre["SSAStyleDefinition"] = function () {
     return Object.create(Object, {
         "toJSON": {
             value: function () {
-                return (
-                    "{n:" +
-                    JSON.stringify(obj.name) +
-                    ",fn:" +
-                    JSON.stringify(obj.fontName) +
-                    ",fs:" +
-                    obj.fontSize +
-                    ",pc:" +
-                    JSON.stringify(obj.primaryColor) +
-                    ",sc:" +
-                    JSON.stringify(obj.secondaryColor) +
-                    ",tc:" +
-                    JSON.stringify(obj.tertiaryColor) +
-                    ",qc:" +
-                    JSON.stringify(obj.quaternaryColor) +
-                    ",w:" +
-                    obj.weight +
-                    ",i:" +
-                    obj.italic +
-                    ",u:" +
-                    obj.underline +
-                    ",st:" +
-                    obj.strikeout +
-                    ",sx:" +
-                    obj.scaleX +
-                    ",sy:" +
-                    obj.scaleY +
-                    ",sp:" +
-                    obj.spacing +
-                    ",an:" +
-                    obj.angle +
-                    ",bs:" +
-                    obj.borderStyle +
-                    ",ox:" +
-                    obj.outlineX +
-                    ",oy:" +
-                    obj.outlineY +
-                    ",sh:" +
-                    obj.shadow +
-                    ",al:" +
-                    obj.alignment +
-                    ",m:" +
-                    JSON.stringify(obj.margins) +
-                    ",en:" +
-                    obj.encoding +
-                    "}"
-                );
+                return {
+                    n: obj.name,
+                    fn: obj.fontName,
+                    fs: obj.fontSize,
+                    pc: obj.primaryColor,
+                    sc: obj.secondaryColor,
+                    tc: obj.tertiaryColor,
+                    qc: obj.quaternaryColor,
+                    w: obj.weight,
+                    i: obj.italic,
+                    u: obj.underline,
+                    st: obj.strikeout,
+                    sx: obj.scaleX,
+                    sy: obj.scaleY,
+                    sp: obj.spacing,
+                    an: obj.angle,
+                    bs: obj.borderStyle,
+                    ox: obj.outlineX,
+                    oy: obj.outlineY,
+                    sh: obj.shadow,
+                    al: obj.alignment,
+                    m: obj.margins,
+                    en: obj.encoding
+                };
             },
             writable: false
         },

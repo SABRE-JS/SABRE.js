@@ -1496,13 +1496,13 @@ const main_prototype = global.Object.create(global.Object, {
                     if (isNaN(value)) return;
                     switch (rotation_axis) {
                         case "x":
-                            overrides.setRotation(value, 0, 0);
+                            overrides.setRotation(value, null, null);
                             break;
                         case "y":
-                            overrides.setRotation(0, value, 0);
+                            overrides.setRotation(null, value, null);
                             break;
                         default:
-                            overrides.setRotation(0, 0, value);
+                            overrides.setRotation(null, null, value);
                             break;
                     }
                 }
@@ -2107,7 +2107,7 @@ const main_prototype = global.Object.create(global.Object, {
             isAdvancedSubstation
         ) {
             //Regex for separating override tags.
-            const override_regex = /\\([^}{\\()]+)(?:\((.*?)\))?([^\\}{\\()]+)?/g;
+            const override_regex = /\\([^}{\\()]+)(?:\(([^)]+)\)?)?([^\\}{\\()]+)?/g;
             //clone the old overrides so we can change them without affecting the prior tag.
             let overrides = old_overrides.clone();
             let lineGlobalOverrides = line_overrides;

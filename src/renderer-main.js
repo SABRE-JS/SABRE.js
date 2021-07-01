@@ -21,10 +21,21 @@ sabre.import("subtitle-event.min.js");
 sabre.import("subtitle-parser.min.js");
 sabre.import("scheduler.min.js");
 sabre.import("canvas-2d-text-renderer.min.js");
-
 /**
  * @fileoverview webgl subtitle compositing code.
  */
+/**
+ * Fixes JSON
+ * @private
+ * @param {string} key the key of the field of the object.
+ * @param {*} value the value of the field of the object.
+ * @returns {*}
+ */
+const jsonFix = function (key, value) {
+    if (value === null) return "null";
+    else if (global.isNaN(a)) return "NaN";
+    return value;
+};
 const renderer_prototype = global.Object.create(Object, {
     //BEGIN MODULE VARIABLES
 
@@ -90,7 +101,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @returns {number} The Hash of the events.
          */
         value: function (events) {
-            let str_rep = JSON.stringify(events);
+            let str_rep = JSON.stringify(events, jsonFix);
             let hash = 0,
                 i,
                 chr;

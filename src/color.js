@@ -38,9 +38,7 @@ sabre["SSAColor"] = function (r, g, b, a) {
     return Object.create(Object, {
         "toJSON": {
             value: function () {
-                return (
-                    "[" + obj.r + "," + obj.g + "," + obj.b + "," + obj.a + "]"
-                );
+                return [obj.r, obj.g, obj.b, obj.a];
             },
             writable: false
         },
