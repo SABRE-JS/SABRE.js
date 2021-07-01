@@ -10,6 +10,7 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 /**
+ * @private
  * @typedef {!{
  * 				events:!Array<SSASubtitleEvent>,
  * 				start:number,

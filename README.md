@@ -32,13 +32,6 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 </dd>
 </dl>
 
-#### Typedefs
-
-<dl>
-<dt><a href="#TreeNode">TreeNode</a> : <code>Object</code></dt>
-<dd></dd>
-</dl>
-
 <a name="loadSubtitles"></a>
 
 #### loadSubtitles(subsText)
@@ -75,11 +68,5 @@ Delegate method; see frame.
 | Param | Type                |
 | ----- | ------------------- |
 | time  | <code>number</code> |
-
-<a name="TreeNode"></a>
-
-#### TreeNode : <code>Object</code>
-
-**Kind**: global typedef
 
 &copy; 2012-2021 Patrick "ILOVEPIE" Rhodes Martin.
