@@ -2107,7 +2107,7 @@ const main_prototype = global.Object.create(global.Object, {
             isAdvancedSubstation
         ) {
             //Regex for separating override tags.
-            const override_regex = /\\([^}{\\()]+)(?:\(([^)]+)\)?)?([^\\}{\\()]+)?/g;
+            const override_regex = /\\([^\\()]+)(?:\(([^)]*)\)?)?([^\\()]+)?/g;
             //clone the old overrides so we can change them without affecting the prior tag.
             let overrides = old_overrides.clone();
             let lineGlobalOverrides = line_overrides;
