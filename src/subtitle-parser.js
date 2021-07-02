@@ -2446,14 +2446,14 @@ external["SABRERenderer"] = function (loadFont) {
     parser.init(loadFont);
     return Object.freeze({
         /**
-         * Delegate method; see load.
+         * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
          * @param {string} subsText
          */
         "loadSubtitles": function (subsText) {
             parser.load(subsText);
         },
         /**
-         * Delegate method; see updateViewport.
+         * Updates the resolution/scale at which the subtitles are rendered (if the player is resized, for example).
          * @param {number} width
          * @param {number} height
          */
@@ -2461,7 +2461,7 @@ external["SABRERenderer"] = function (loadFont) {
             parser.updateViewport(width, height);
         },
         /**
-         * Delegate method; see frame.
+         * Fetches a rendered frame of subtitles as an object url.
          * @param {number} time
          * @returns {string}
          */

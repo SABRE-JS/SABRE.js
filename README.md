@@ -22,13 +22,13 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 
 <dl>
 <dt><a href="#loadSubtitles">loadSubtitles(subsText)</a></dt>
-<dd><p>Delegate method; see load.</p>
+<dd><p>Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.</p>
 </dd>
 <dt><a href="#setViewport">setViewport(width, height)</a></dt>
-<dd><p>Delegate method; see updateViewport.</p>
+<dd><p>Updates the resolution/scale at which the subtitles are rendered (if the player is resized, for example).</p>
 </dd>
 <dt><a href="#getFrame">getFrame(time)</a> ⇒ <code>string</code></dt>
-<dd><p>Delegate method; see frame.</p>
+<dd><p>Fetches a rendered frame of subtitles as an object url.</p>
 </dd>
 </dl>
 
@@ -36,7 +36,7 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 
 #### loadSubtitles(subsText)
 
-Delegate method; see load.
+Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
 
 **Kind**: global function
 
@@ -48,7 +48,7 @@ Delegate method; see load.
 
 #### setViewport(width, height)
 
-Delegate method; see updateViewport.
+Updates the resolution/scale at which the subtitles are rendered (if the player is resized, for example).
 
 **Kind**: global function
 
@@ -61,7 +61,7 @@ Delegate method; see updateViewport.
 
 #### getFrame(time) ⇒ <code>string</code>
 
-Delegate method; see frame.
+Fetches a rendered frame of subtitles as an object url.
 
 **Kind**: global function
 
