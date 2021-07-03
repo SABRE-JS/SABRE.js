@@ -33,7 +33,7 @@ sabre.import("canvas-2d-text-renderer.min.js");
  */
 const jsonFix = function (key, value) {
     if (value === null) return "null";
-    else if (global.isNaN(value)) return "NaN";
+    else if (typeof value === "number" && global.isNaN(value)) return "NaN";
     return value;
 };
 const renderer_prototype = global.Object.create(Object, {
@@ -210,9 +210,7 @@ const renderer_prototype = global.Object.create(Object, {
         value: function (time) {
             if (time === this._lastTime) return;
             this._lastTime = time;
-            let events = /** @type {Array<SSASubtitleEvent>} */ (this._scheduler.getVisibleAtTime(
-                time
-            ));
+            let events = this._scheduler.getVisibleAtTime(time);
             events = events.sort(function (
                 /** SSASubtitleEvent */ a,
                 /** SSASubtitleEvent */ b
@@ -245,6 +243,15 @@ const renderer_prototype = global.Object.create(Object, {
                             layerEnd++;
                         layerStart++;
                         layerEnd--;
+                    }
+                    let current_event = events[i];
+                    //TODO: Collisions
+                    if (!current_event.getOverrides().getDrawingMode()) {
+                        //TODO: Render Text
+                        //TODO: Composite Text into image.
+                    } else {
+                        //TODO: Render Vector Graphics.
+                        //TODO: Composite Graphics into image.
                     }
                 }
             }
