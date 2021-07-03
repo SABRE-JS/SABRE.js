@@ -948,14 +948,14 @@ sabre["SSAStyleOverride"] = function () {
 
         "setTransition": {
             value: function (/** Object */ transition) {
-                obj.transition = transition.slice(0);
+                obj.transition = transition;
             },
             writable: false
         },
 
         "getTransition": {
             value: function () {
-                return obj.transition.slice(0);
+                return obj.transition;
             },
             writable: false
         },
