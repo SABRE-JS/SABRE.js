@@ -204,6 +204,9 @@ const main_prototype = global.Object.create(global.Object, {
             new_event.setStyle(event.getStyle());
             new_event.setOverrides(event.getOverrides());
             new_event.setLineOverrides(event.getLineOverrides());
+            new_event.setLineTransitionTargetOverrides(
+                event.getLineTransitionTargetOverrides()
+            );
             return new_event;
         },
         writable: false
@@ -780,6 +783,7 @@ const main_prototype = global.Object.create(global.Object, {
                             },
                             event.getOverrides(),
                             event.getLineOverrides(),
+                            event.getLineTransitionTargetOverrides(),
                             match[2],
                             this._config["info"]["is_ass"]
                         )
@@ -811,7 +815,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -819,7 +826,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let depricated_align = global.parseInt(parameters[0], 10);
                     if (isNaN(depricated_align)) return;
@@ -858,7 +868,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -866,7 +879,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     if (
                         typeof parameters[0] === "undefined" ||
@@ -893,7 +909,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -901,7 +920,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let color_index = 1;
                     if (
@@ -924,63 +946,123 @@ const main_prototype = global.Object.create(global.Object, {
                     let color;
                     switch (color_index) {
                         case 1:
-                            color = overrides.getPrimaryColor();
-                            if (color === null && a !== null)
-                                overrides.setPrimaryColor(
-                                    new sabre.SSAOverrideColor(
-                                        null,
-                                        null,
-                                        null,
-                                        a
-                                    )
-                                );
-                            else if (color !== null) {
-                                color.setA(a);
+                            if (a !== null) {
+                                color = !isInTransition
+                                    ? overrides.getPrimaryColor()
+                                    : transitionTargetOverrides.getPrimaryColor();
+                                if (color === null) {
+                                    if (!isInTransition) {
+                                        overrides.setPrimaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                null,
+                                                null,
+                                                null,
+                                                a
+                                            )
+                                        );
+                                    } else {
+                                        transitionTargetOverrides.setPrimaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                null,
+                                                null,
+                                                null,
+                                                a
+                                            )
+                                        );
+                                    }
+                                } else {
+                                    color.setA(a);
+                                }
                             }
                             break;
                         case 2:
-                            color = overrides.getSecondaryColor();
-                            if (color === null && a !== null)
-                                overrides.setSecondaryColor(
-                                    new sabre.SSAOverrideColor(
-                                        null,
-                                        null,
-                                        null,
-                                        a
-                                    )
-                                );
-                            else if (color !== null) {
-                                color.setA(a);
+                            if (a !== null) {
+                                color = !isInTransition
+                                    ? overrides.getSecondaryColor()
+                                    : transitionTargetOverrides.getSecondaryColor();
+                                if (color === null) {
+                                    if (!isInTransition) {
+                                        overrides.setSecondaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                null,
+                                                null,
+                                                null,
+                                                a
+                                            )
+                                        );
+                                    } else {
+                                        transitionTargetOverrides.setSecondaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                null,
+                                                null,
+                                                null,
+                                                a
+                                            )
+                                        );
+                                    }
+                                } else {
+                                    color.setA(a);
+                                }
                             }
                             break;
                         case 3:
-                            color = overrides.getTertiaryColor();
-                            if (color === null && a !== null)
-                                overrides.setTertiaryColor(
-                                    new sabre.SSAOverrideColor(
-                                        null,
-                                        null,
-                                        null,
-                                        a
-                                    )
-                                );
-                            else if (color !== null) {
-                                color.setA(a);
+                            if (a !== null) {
+                                color = !isInTransition
+                                    ? overrides.getTertiaryColor()
+                                    : transitionTargetOverrides.getTertiaryColor();
+                                if (color === null) {
+                                    if (!isInTransition) {
+                                        overrides.setTertiaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                null,
+                                                null,
+                                                null,
+                                                a
+                                            )
+                                        );
+                                    } else {
+                                        transitionTargetOverrides.setTertiaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                null,
+                                                null,
+                                                null,
+                                                a
+                                            )
+                                        );
+                                    }
+                                } else {
+                                    color.setA(a);
+                                }
                             }
                             break;
                         case 4:
-                            color = overrides.getQuaternaryColor();
-                            if (color === null)
-                                overrides.setQuaternaryColor(
-                                    new sabre.SSAOverrideColor(
-                                        null,
-                                        null,
-                                        null,
-                                        a
-                                    )
-                                );
-                            else if (color !== null) {
-                                color.setA(a);
+                            if (a !== null) {
+                                color = !isInTransition
+                                    ? overrides.getQuaternaryColor()
+                                    : transitionTargetOverrides.getQuaternaryColor();
+                                if (color === null) {
+                                    if (!isInTransition) {
+                                        overrides.setQuaternaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                null,
+                                                null,
+                                                null,
+                                                a
+                                            )
+                                        );
+                                    } else {
+                                        transitionTargetOverrides.setQuaternaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                null,
+                                                null,
+                                                null,
+                                                a
+                                            )
+                                        );
+                                    }
+                                } else {
+                                    color.setA(a);
+                                }
                             }
                             break;
                     }
@@ -996,7 +1078,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1004,7 +1089,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let weight = global.parseInt(parameters[1], 10);
                     if (isNaN(weight)) return;
@@ -1027,7 +1115,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1035,11 +1126,18 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let blur_iterations = global.parseInt(parameters[0], 10);
                     if (isNaN(blur_iterations)) return;
-                    overrides.setEdgeBlur(blur_iterations);
+                    if (!isInTransition) {
+                        overrides.setEdgeBlur(blur_iterations);
+                    } else {
+                        transitionTargetOverrides.setEdgeBlur(blur_iterations);
+                    }
                 }
             },
             {
@@ -1052,7 +1150,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1060,11 +1161,20 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let blur_value = parseFloat(parameters[0]);
                     if (isNaN(blur_value)) return;
-                    overrides.setGaussianEdgeBlur(blur_value);
+                    if (!isInTransition) {
+                        overrides.setGaussianEdgeBlur(blur_value);
+                    } else {
+                        transitionTargetOverrides.setGaussianEdgeBlur(
+                            blur_value
+                        );
+                    }
                 }
             },
             {
@@ -1077,7 +1187,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1085,22 +1198,28 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let outline_width = parseFloat(parameters[1]);
+                    let overrideContainer = !isInTransition
+                        ? overrides
+                        : transitionTargetOverrides;
                     if (isNaN(outline_width)) return;
                     if (
                         typeof parameters[0] === "undefined" ||
                         parameters[0] === ""
                     ) {
                         // x and y outline width
-                        overrides.setOutline(outline_width);
+                        overrideContainer.setOutline(outline_width);
                     } else if (parameters[0] === "x") {
                         // x outline width
-                        overrides.setOutlineX(outline_width);
+                        overrideContainer.setOutlineX(outline_width);
                     } else {
                         // y outline width
-                        overrides.setOutlineY(outline_width);
+                        overrideContainer.setOutlineY(outline_width);
                     }
                 }
             },
@@ -1114,7 +1233,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1122,7 +1244,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let color_index = 1;
                     if (
@@ -1147,68 +1272,120 @@ const main_prototype = global.Object.create(global.Object, {
                         let b = (pcolor & 0xff) / 255;
                         switch (color_index) {
                             case 1:
-                                color = overrides.getPrimaryColor();
-                                if (color === null)
-                                    overrides.setPrimaryColor(
-                                        new sabre.SSAOverrideColor(
-                                            r,
-                                            g,
-                                            b,
-                                            null
-                                        )
-                                    );
-                                else {
+                                color = !isInTransition
+                                    ? overrides.getPrimaryColor()
+                                    : transitionTargetOverrides.getPrimaryColor();
+                                if (color === null) {
+                                    if (!isInTransition) {
+                                        overrides.setPrimaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                r,
+                                                g,
+                                                b,
+                                                null
+                                            )
+                                        );
+                                    } else {
+                                        transitionTargetOverrides.setPrimaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                r,
+                                                g,
+                                                b,
+                                                null
+                                            )
+                                        );
+                                    }
+                                } else {
                                     color.setR(r);
                                     color.setG(g);
                                     color.setB(b);
                                 }
                                 break;
                             case 2:
-                                color = overrides.getSecondaryColor();
-                                if (color === null)
-                                    overrides.setSecondaryColor(
-                                        new sabre.SSAOverrideColor(
-                                            r,
-                                            g,
-                                            b,
-                                            null
-                                        )
-                                    );
-                                else {
+                                color = !isInTransition
+                                    ? overrides.getSecondaryColor()
+                                    : transitionTargetOverrides.getSecondaryColor();
+                                if (color === null) {
+                                    if (!isInTransition) {
+                                        overrides.setSecondaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                r,
+                                                g,
+                                                b,
+                                                null
+                                            )
+                                        );
+                                    } else {
+                                        transitionTargetOverrides.setSecondaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                r,
+                                                g,
+                                                b,
+                                                null
+                                            )
+                                        );
+                                    }
+                                } else {
                                     color.setR(r);
                                     color.setG(g);
                                     color.setB(b);
                                 }
                                 break;
                             case 3:
-                                color = overrides.getTertiaryColor();
-                                if (color === null)
-                                    overrides.setTertiaryColor(
-                                        new sabre.SSAOverrideColor(
-                                            r,
-                                            g,
-                                            b,
-                                            null
-                                        )
-                                    );
-                                else {
+                                color = !isInTransition
+                                    ? overrides.getTertiaryColor()
+                                    : transitionTargetOverrides.getTertiaryColor();
+                                if (color === null) {
+                                    if (!isInTransition) {
+                                        overrides.setTertiaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                r,
+                                                g,
+                                                b,
+                                                null
+                                            )
+                                        );
+                                    } else {
+                                        transitionTargetOverrides.setTertiaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                r,
+                                                g,
+                                                b,
+                                                null
+                                            )
+                                        );
+                                    }
+                                } else {
                                     color.setR(r);
                                     color.setG(g);
                                     color.setB(b);
                                 }
                                 break;
                             case 4:
-                                color = overrides.getQuaternaryColor();
-                                if (color === null)
-                                    overrides.setQuaternaryColor(
-                                        new sabre.SSAOverrideColor(
-                                            r,
-                                            g,
-                                            b,
-                                            null
-                                        )
-                                    );
-                                else {
+                                color = !isInTransition
+                                    ? overrides.getQuaternaryColor()
+                                    : transitionTargetOverrides.getQuaternaryColor();
+                                if (color === null) {
+                                    if (!isInTransition) {
+                                        overrides.setQuaternaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                r,
+                                                g,
+                                                b,
+                                                null
+                                            )
+                                        );
+                                    } else {
+                                        transitionTargetOverrides.setQuaternaryColor(
+                                            new sabre.SSAOverrideColor(
+                                                r,
+                                                g,
+                                                b,
+                                                null
+                                            )
+                                        );
+                                    }
+                                } else {
                                     color.setR(r);
                                     color.setG(g);
                                     color.setB(b);
@@ -1218,7 +1395,9 @@ const main_prototype = global.Object.create(global.Object, {
                     } else {
                         switch (color_index) {
                             case 1:
-                                color = overrides.getPrimaryColor();
+                                color = !isInTransition
+                                    ? overrides.getPrimaryColor()
+                                    : transitionTargetOverrides.getPrimaryColor();
                                 if (color !== null) {
                                     color.setR(null);
                                     color.setG(null);
@@ -1226,7 +1405,9 @@ const main_prototype = global.Object.create(global.Object, {
                                 }
                                 break;
                             case 2:
-                                color = overrides.getSecondaryColor();
+                                color = !isInTransition
+                                    ? overrides.getSecondaryColor()
+                                    : transitionTargetOverrides.getSecondaryColor();
                                 if (color !== null) {
                                     color.setR(null);
                                     color.setG(null);
@@ -1234,7 +1415,9 @@ const main_prototype = global.Object.create(global.Object, {
                                 }
                                 break;
                             case 3:
-                                color = overrides.getTertiaryColor();
+                                color = !isInTransition
+                                    ? overrides.getTertiaryColor()
+                                    : transitionTargetOverrides.getTertiaryColor();
                                 if (color !== null) {
                                     color.setR(null);
                                     color.setG(null);
@@ -1242,7 +1425,9 @@ const main_prototype = global.Object.create(global.Object, {
                                 }
                                 break;
                             case 4:
-                                color = overrides.getQuaternaryColor();
+                                color = !isInTransition
+                                    ? overrides.getQuaternaryColor()
+                                    : transitionTargetOverrides.getQuaternaryColor();
                                 if (color !== null) {
                                     color.setR(null);
                                     color.setG(null);
@@ -1263,7 +1448,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1271,7 +1459,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     if (parameters.length === 0) return;
                     var p1 = global.parseInt(parameters[0], 10);
@@ -1293,7 +1484,16 @@ const main_prototype = global.Object.create(global.Object, {
                         var x2 = global.parseInt(parameters[2], 10);
                         var y2 = global.parseInt(parameters[3], 10);
 
-                        lineGlobalOverrides.setClip(x1, y1, x2, y2);
+                        if (!isInTransition) {
+                            lineGlobalOverrides.setClip(x1, y1, x2, y2);
+                        } else {
+                            lineGlobalTransitionTargetOverrides.setClip(
+                                x1,
+                                y1,
+                                x2,
+                                y2
+                            );
+                        }
                     }
                 }
             },
@@ -1307,7 +1507,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1315,7 +1518,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let a1 = global.parseInt(parameters[0], 10);
                     let a2 = global.parseInt(parameters[1], 10);
@@ -1359,7 +1565,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1367,7 +1576,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let t1 = global.parseInt(parameters[0], 10);
                     let t2 = global.parseInt(parameters[1], 10);
@@ -1395,7 +1607,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1403,16 +1618,22 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let factor = parseFloat(parameters[1]);
+                    let overrideContainer = !isInTransition
+                        ? overrides
+                        : transitionTargetOverrides;
                     if (isNaN(factor)) return;
                     if (parameters[0] === "x") {
                         // x outline width
-                        overrides.setShearX(factor);
+                        overrideContainer.setShearX(factor);
                     } else {
                         // y outline width
-                        overrides.setShearY(factor);
+                        overrideContainer.setShearY(factor);
                     }
                 }
             },
@@ -1426,7 +1647,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1434,7 +1658,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let encoding = global.parseInt(parameters[0], 10);
                     overrides.setEncoding(encoding);
@@ -1450,7 +1677,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1458,7 +1688,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let fontName = parameters[0];
                     if (fontName === null) return;
@@ -1476,7 +1709,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1484,7 +1720,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let rotation_axis = "z";
                     if (
@@ -1494,16 +1733,42 @@ const main_prototype = global.Object.create(global.Object, {
                         rotation_axis = parameters[0];
                     let value = parseFloat(parameters[1]);
                     if (isNaN(value)) return;
-                    switch (rotation_axis) {
-                        case "x":
-                            overrides.setRotation(value, null, null);
-                            break;
-                        case "y":
-                            overrides.setRotation(null, value, null);
-                            break;
-                        default:
-                            overrides.setRotation(null, null, value);
-                            break;
+                    if (!isInTransition) {
+                        switch (rotation_axis) {
+                            case "x":
+                                overrides.setRotation(value, null, null);
+                                break;
+                            case "y":
+                                overrides.setRotation(null, value, null);
+                                break;
+                            default:
+                                overrides.setRotation(null, null, value);
+                                break;
+                        }
+                    } else {
+                        switch (rotation_axis) {
+                            case "x":
+                                transitionTargetOverrides.setRotation(
+                                    value,
+                                    null,
+                                    null
+                                );
+                                break;
+                            case "y":
+                                transitionTargetOverrides.setRotation(
+                                    null,
+                                    value,
+                                    null
+                                );
+                                break;
+                            default:
+                                transitionTargetOverrides.setRotation(
+                                    null,
+                                    null,
+                                    value
+                                );
+                                break;
+                        }
                     }
                 }
             },
@@ -1518,6 +1783,7 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
                  * @private
                  */
                 tag_handler: function (
@@ -1525,7 +1791,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     if (
                         typeof parameters[0] !== "undefined" &&
@@ -1538,8 +1807,12 @@ const main_prototype = global.Object.create(global.Object, {
                         else overrides.decreaseFontSizeMod(font_size_modifier);
                     } else {
                         let font_size = parseFloat(parameters[1]);
-                        overrides.resetFontSizeMod();
-                        overrides.setFontSize(font_size);
+                        if (!isInTransition) {
+                            overrides.resetFontSizeMod();
+                            overrides.setFontSize(font_size);
+                        } else {
+                            transitionTargetOverrides.setFontSize(font_size);
+                        }
                     }
                 }
             },
@@ -1553,7 +1826,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1561,13 +1837,21 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let is_x = parameters[0] === "x";
                     let value = parseFloat(parameters[1]);
                     if (isNaN(value)) return;
-                    if (is_x) overrides.setScaleX(value);
-                    else overrides.setScaleY(value);
+                    if (!isInTransition) {
+                        if (is_x) overrides.setScaleX(value);
+                        else overrides.setScaleY(value);
+                    } else {
+                        if (is_x) transitionTargetOverrides.setScaleX(value);
+                        else transitionTargetOverrides.setScaleY(value);
+                    }
                 }
             },
             {
@@ -1580,7 +1864,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1588,11 +1875,18 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let value = parseFloat(parameters[0]);
                     if (isNaN(value)) return;
-                    overrides.setSpacing(value);
+                    if (!isInTransition) {
+                        overrides.setSpacing(value);
+                    } else {
+                        transitionTargetOverrides.setSpacing(value);
+                    }
                 }
             },
             {
@@ -1605,7 +1899,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1613,7 +1910,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let value = parameters[0] === "1";
                     if (parameters[0] !== "0" && !value) return;
@@ -1630,7 +1930,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1638,7 +1941,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     lineGlobalOverrides.setClipInverted(true);
                     if (parameters.length === 0) return;
@@ -1661,7 +1967,16 @@ const main_prototype = global.Object.create(global.Object, {
                         var x2 = global.parseInt(parameters[2], 10);
                         var y2 = global.parseInt(parameters[3], 10);
 
-                        lineGlobalOverrides.setClip(x1, y1, x2, y2);
+                        if (!isInTransition) {
+                            lineGlobalOverrides.setClip(x1, y1, x2, y2);
+                        } else {
+                            lineGlobalTransitionTargetOverrides.setClip(
+                                x1,
+                                y1,
+                                x2,
+                                y2
+                            );
+                        }
                     }
                 }
             },
@@ -1675,7 +1990,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1683,7 +2001,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let karaoke_tag = parameters[0];
                     let param = parseFloat(parameters[1]);
@@ -1729,7 +2050,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1737,7 +2061,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let x1 = global.parseInt(parameters[0], 10);
                     let y1 = global.parseInt(parameters[1], 10);
@@ -1768,7 +2095,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1776,7 +2106,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let x = global.parseInt(parameters[0], 10);
                     let y = global.parseInt(parameters[1], 10);
@@ -1793,7 +2126,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1801,7 +2137,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let drawScale = parseFloat(parameters[0]);
                     if (isNaN(drawScale)) return;
@@ -1822,7 +2161,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1830,7 +2172,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let baselineOffset = parseFloat(parameters[0]);
                     if (isNaN(baselineOffset)) return;
@@ -1847,7 +2192,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1855,7 +2203,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let x = global.parseInt(parameters[0], 10);
                     let y = global.parseInt(parameters[1], 10);
@@ -1873,7 +2224,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1881,7 +2235,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let wrapStyle = global.parseInt(parameters[0], 10);
                     if (isNaN(wrapStyle) || wrapStyle < 0 || wrapStyle > 3)
@@ -1899,7 +2256,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1907,7 +2267,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     overrides.reset();
                     let styleName = parameters[0];
@@ -1927,7 +2290,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1935,7 +2301,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let value = global.parseInt(parameters[0], 10);
                     overrides.setStrikeout(value > 0);
@@ -1951,7 +2320,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1959,23 +2331,40 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let setting = parameters[0];
                     if (typeof setting === "undefined" || setting === "")
                         setting = null;
                     let value = parseFloat(parameters[1]);
                     if (isNaN(value)) return;
-                    switch (setting) {
-                        case "x":
-                            overrides.setShadowX(value);
-                            break;
-                        case "y":
-                            overrides.setShadowY(value);
-                        default:
-                        case null:
-                            if (value < 0) return;
-                            overrides.setShadow(value);
+                    if (!isInTransition) {
+                        switch (setting) {
+                            case "x":
+                                overrides.setShadowX(value);
+                                break;
+                            case "y":
+                                overrides.setShadowY(value);
+                            default:
+                            case null:
+                                if (value < 0) return;
+                                overrides.setShadow(value);
+                        }
+                    } else {
+                        switch (setting) {
+                            case "x":
+                                transitionTargetOverrides.setShadowX(value);
+                                break;
+                            case "y":
+                                transitionTargetOverrides.setShadowY(value);
+                            default:
+                            case null:
+                                if (value < 0) return;
+                                transitionTargetOverrides.setShadow(value);
+                        }
                     }
                 }
             },
@@ -1989,7 +2378,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -1997,7 +2389,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let lparameters = parameters;
                     let final_param;
@@ -2044,14 +2439,20 @@ const main_prototype = global.Object.create(global.Object, {
                     }
 
                     //TODO: Implement transition tag parsing.
-                    //final_param = this._parseTransitionTags(final_param);
-
-                    overrides.setTransition([
-                        transitionStart,
-                        transitionEnd,
-                        acceleration,
+                    final_param = this._parseTransitionTags(
+                        timeInfo,
+                        setStyle,
+                        overrides,
+                        lineGlobalOverrides,
+                        lineGlobalTransitionTargetOverrides,
                         final_param
-                    ]);
+                    );
+
+                    final_param.setTransitionStart(transitionStart);
+                    final_param.setTransitionEnd(transitionEnd);
+                    final_param.setTransitionAcceleration(acceleration);
+
+                    overrides.setTransition(final_param);
                 }
             },
             {
@@ -2064,7 +2465,10 @@ const main_prototype = global.Object.create(global.Object, {
                  * @param {function(SSAStyleDefinition):void} setStyle
                  * @param {SSAStyleOverride} overrides
                  * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
                  * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
                  * @private
                  */
                 tag_handler: function (
@@ -2072,7 +2476,10 @@ const main_prototype = global.Object.create(global.Object, {
                     setStyle,
                     overrides,
                     lineGlobalOverrides,
-                    parameters
+                    lineGlobalTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides
                 ) {
                     let value = parameters[0] === "1";
                     if (
@@ -2095,6 +2502,7 @@ const main_prototype = global.Object.create(global.Object, {
          * @param {function(SSAStyleDefinition):void} setStyle
          * @param {SSAStyleOverride} old_overrides
          * @param {SSALineStyleOverride} line_overrides
+         * @param {SSALineTransitionTargetOverride} line_transition_target_overrides
          * @param {string} tags
          * @param {boolean} isAdvancedSubstation
          */
@@ -2103,6 +2511,7 @@ const main_prototype = global.Object.create(global.Object, {
             setStyle,
             old_overrides,
             line_overrides,
+            line_transition_target_overrides,
             tags,
             isAdvancedSubstation
         ) {
@@ -2111,6 +2520,7 @@ const main_prototype = global.Object.create(global.Object, {
             //clone the old overrides so we can change them without affecting the prior tag.
             let overrides = old_overrides.clone();
             let lineGlobalOverrides = line_overrides;
+            let lineGlobalTransitionTargetOverrides = line_transition_target_overrides;
             let pre_params = null;
             let params = null;
             let post_params = null;
@@ -2153,15 +2563,17 @@ const main_prototype = global.Object.create(global.Object, {
                         //Remove whitespace from beginning and end of all parameters.
                         params = params.map((str) => str.trim());
                         //Handle the override tag.
-                        let result = this._overrideTags[i].tag_handler.call(
+                        this._overrideTags[i].tag_handler.call(
                             this,
                             timeInfo,
                             setStyle,
                             overrides,
                             lineGlobalOverrides,
-                            params
+                            lineGlobalTransitionTargetOverrides,
+                            params,
+                            false,
+                            null
                         );
-                        if (typeof result !== "undefined") overrides = result;
                         break;
                     }
                 }
@@ -2169,6 +2581,92 @@ const main_prototype = global.Object.create(global.Object, {
                 if (!found) console.error("Unrecognized Override Tag: " + code);
             }
             return overrides;
+        },
+        writable: false
+    },
+
+    _parseTransitionTags: {
+        /**
+         * Parse override tags in a transition tag.
+         * @private
+         * @param {{start:number,end:number}} timeInfo
+         * @param {function(SSAStyleDefinition):void} setStyle
+         * @param {SSAStyleOverride} current_overrides
+         * @param {SSALineStyleOverride} line_overrides
+         * @param {SSALineTransitionTargetOverride} line_transition_target_overrides
+         * @param {string} tags
+         */
+        value: function (
+            timeInfo,
+            setStyle,
+            current_overrides,
+            line_overrides,
+            line_transition_target_overrides,
+            tags
+        ) {
+            //Regex for separating override tags.
+            const override_regex = /\\([^\\()]+)(?:\(([^)]*)\)?)?([^\\()]+)?/g;
+            let overrides = current_overrides;
+            let lineGlobalOverrides = line_overrides;
+            let lineGlobalTransitionTargetOverrides = line_transition_target_overrides;
+            let pre_params = null;
+            let params = null;
+            let post_params = null;
+            let code;
+            let transitionTarget = new sabre.SSATransitionTargetOverride();
+            //For each override tag
+            while ((pre_params = override_regex.exec(tags)) !== null) {
+                code = pre_params[0];
+                params = pre_params[2] ?? "";
+                post_params = pre_params[3] ?? "";
+                pre_params = pre_params[1];
+                let found = false;
+                //Search for a coresponding override tag supported by the parser.
+                for (let i = this._overrideTags.length - 1; i >= 0; i--) {
+                    let regex = this._overrideTags[i].regular_expression;
+                    //Test for matching tag.
+                    if (regex.test(pre_params)) {
+                        found = true;
+                        let match = pre_params.match(regex);
+                        //Does the tag ignore parameters that are outside parenthesis?
+                        if (!this._overrideTags[i].ignore_exterior) {
+                            //No it does not ignore them.
+                            pre_params = pre_params.slice(match[0].length);
+                            if (pre_params !== "")
+                                pre_params = pre_params.split(",");
+                            else pre_params = [];
+                            if (post_params !== "")
+                                post_params = post_params.split(",");
+                            else post_params = [];
+                            if (params !== "") params = params.split(",");
+                            else params = [];
+                            params = params.concat(pre_params, post_params);
+                        } else {
+                            //Yes it does ignore them.
+                            if (params !== "") params = params.split(",");
+                            else params = [];
+                        }
+                        //Remove whitespace from beginning and end of all parameters.
+                        params = params.map((str) => str.trim());
+                        //Handle the override tag.
+                        this._overrideTags[i].tag_handler.call(
+                            this,
+                            timeInfo,
+                            setStyle,
+                            overrides,
+                            lineGlobalOverrides,
+                            lineGlobalTransitionTargetOverrides,
+                            params,
+                            true,
+                            transitionTarget
+                        );
+                        break;
+                    }
+                }
+                //Error if we didn't find a matching tag.
+                if (!found) console.error("Unrecognized Override Tag: " + code);
+            }
+            return transitionTarget;
         },
         writable: false
     },
@@ -2186,6 +2684,7 @@ const main_prototype = global.Object.create(global.Object, {
             //Preload the default style into the event.
             let style = this._styles["Default"];
             //Create a new style override for the event.
+            let line_transition_target_overrides = new sabre.SSALineTransitionTargetOverride();
             let line_overrides = new sabre.SSALineStyleOverride();
             let event_overrides = new sabre.SSAStyleOverride();
             let tmp;
@@ -2245,6 +2744,9 @@ const main_prototype = global.Object.create(global.Object, {
             event.setStyle(style);
             event.setOverrides(event_overrides);
             event.setLineOverrides(line_overrides);
+            event.setLineTransitionTargetOverrides(
+                line_transition_target_overrides
+            );
             let events = [event];
             //Split the event into sub-events for the various style override tags.
             events = this._parseDialogueText(events);

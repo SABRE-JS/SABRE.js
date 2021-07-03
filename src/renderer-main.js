@@ -33,7 +33,7 @@ sabre.import("canvas-2d-text-renderer.min.js");
  */
 const jsonFix = function (key, value) {
     if (value === null) return "null";
-    else if (global.isNaN(a)) return "NaN";
+    else if (global.isNaN(value)) return "NaN";
     return value;
 };
 const renderer_prototype = global.Object.create(Object, {

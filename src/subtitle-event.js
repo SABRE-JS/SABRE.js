@@ -133,6 +133,22 @@ sabre["SSASubtitleEvent"] = function () {
                 return obj.lineOverrides;
             },
             writable: false
+        },
+
+        "setLineTransitionTargetOverrides": {
+            value: function (
+                /** SSALineTransitionTargetOverride */ line_overrides
+            ) {
+                obj.lineTransitionTargetOverrides = line_overrides;
+            },
+            writable: false
+        },
+
+        "getLineTransitionTargetOverrides": {
+            value: function () {
+                return obj.lineTransitionTargetOverrides;
+            },
+            writable: false
         }
     });
 };

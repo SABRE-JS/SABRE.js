@@ -1,5 +1,60 @@
 /**
  * @typedef {!{
+ *      getTransitionStart:function():number,
+ *      getTransitionEnd:function():number,
+ *      getTransitionAcceleration:function():number,
+ *      getEdgeBlur:function():?number,
+ *      getFontSize:function():?number,
+ *      getGaussianEdgeBlur:function():?number,
+ *      getOutlineX:function():?number,
+ *      getOutlineY:function():?number,
+ *      getPrimaryColor:function():?SSAOverrideColor,
+ *      getSecondaryColor:function():?SSAOverrideColor,
+ *      getTertiaryColor:function():?SSAOverrideColor,
+ *      getQuaternaryColor:function():?SSAOverrideColor,
+ *      getRotation:function():Array<?number>,
+ *      getScaleX:function():?number,
+ *      getScaleY:function():?number,
+ *      getShadowX:function():?number,
+ *      getShadowY:function():?number,
+ *      getShearX:function():?number,
+ *      getShearY:function():?number,
+ *      getSpacing:function():?number,
+ *      setTransitionStart:function(number):void,
+ *      setTransitionEnd:function(number):void,
+ *      setTransitionAcceleration:function(number):void,
+ *      setEdgeBlur:function(number):void,
+ *      setFontSize:function(number):void,
+ *      setGaussianEdgeBlur:function(number):void,
+ *      setOutline:function(number):void,
+ *      setOutlineX:function(number):void,
+ *      setOutlineY:function(number):void,
+ *      setPrimaryColor:function(SSAOverrideColor):void,
+ *      setSecondaryColor:function(SSAOverrideColor):void,
+ *      setTertiaryColor:function(SSAOverrideColor):void,
+ *      setQuaternaryColor:function(SSAOverrideColor):void,
+ *      setRotation:function(?number,?number,?number):void,
+ *      setScaleX:function(number):void,
+ *      setScaleY:function(number):void,
+ *      setShadowX:function(number):void,
+ *      setShadowY:function(number):void,
+ *      setShadow:function(number):void,
+ *      setShearX:function(number):void,
+ *      setShearY:function(number):void,
+ *      setSpacing:function(number):void
+ *  }}
+ */
+var SSATransitionTargetOverride;
+
+/**
+ * @typedef {!{
+ *      getClip:function():?Array<number>,
+ *      setClip:function(number,number,number,number):void,
+ *  }}
+ */
+var SSALineTransitionTargetOverride;
+/**
+ * @typedef {!{
  *      toJSON:function():string,
  *      getAlignment:function():?number,
  *      getBaselineOffset:function():number,
@@ -31,7 +86,7 @@
  *      getShearY:function():number,
  *      getSpacing:function():?number,
  *      getStrikeout:function():?boolean,
- *      getTransition:function():?Array<number|Object>,
+ *      getTransition:function():?SSATransitionTargetOverride,
  *      getUnderline:function():?boolean,
  *      getWeight:function():?number,
  *      getWrapStyle:function():number,
@@ -73,7 +128,7 @@
  *      setShearY:function(number):void,
  *      setSpacing:function(number):void,
  *      setStrikeout:function(boolean):void,
- *      setTransition:function(Array<number|Object>):void,
+ *      setTransition:function(SSATransitionTargetOverride):void,
  *      setUnderline:function(boolean):void,
  *      setWeight:function(number):void,
  *      setWrapStyle:function(number):void,
@@ -111,3 +166,13 @@ sabre.SSAStyleOverride = function () {};
  * @type {function(new:SSALineStyleOverride)}
  */
 sabre.SSALineStyleOverride = function () {};
+
+/**
+ * @type {function(new:SSATransitionTargetOverride)}
+ */
+sabre.SSATransitionTargetOverride = function () {};
+
+/**
+ * @type {function(new:SSALineTransitionTargetOverride)}
+ */
+sabre.SSALineTransitionTargetOverride = function () {};
