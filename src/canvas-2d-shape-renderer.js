@@ -1,7 +1,7 @@
 /*
- |   canvas-2d-text-renderer.js
+ |   canvas-2d-shape-renderer.js
  |----------------
- |  canvas-2d-text-renderer.js is copyright Patrick Rhodes Martin 2019.
+ |  canvas-2d-shape-renderer.js is copyright Patrick Rhodes Martin 2021.
  |
  |-
  */
@@ -14,16 +14,31 @@
 //@include [style.js]
 //@include [style-override.js]
 //@include [subtitle-event.js]
+//@include [lib/BSpline.js]
 sabre.import("util.min.js");
 sabre.import("global-constants.min.js");
 sabre.import("color.min.js");
 sabre.import("style.min.js");
 sabre.import("style-override.min.js");
 sabre.import("subtitle-event.min.js");
+sabre.import("lib/BSpline.min.js");
 
-const lineSpacing = 1.2;
+/**
+ * Expands bounds if a point is outside them.
+ * @param {Array<number>} max max bounds
+ * @param {Array<number>} min min bounds
+ * @param {number} x new point x
+ * @param {number} y new point y
+ * @private
+ */
+const expandBounds = function (max, min, x, y) {
+    if (x > max[0]) max[0] = x;
+    else if (x < min[0]) min[0] = x;
+    if (y > max[1]) max[1] = y;
+    else if (y < min[1]) min[1] = y;
+};
 
-const text_renderer_prototype = global.Object.create(Object, {
+const shape_renderer_prototype = global.Object.create(Object, {
     _serializer: {
         value: new XMLSerializer(),
         writable: false
@@ -242,8 +257,10 @@ const text_renderer_prototype = global.Object.create(Object, {
         value: function (style, overrides, pass) {
             this._ctx.scale(
                 (overrides.getScaleX() ?? style.getScaleX()) *
+                    overrides.getDrawingScale() *
                     this._pixelsPerDpt,
                 (overrides.getScaleY() ?? style.getScaleY()) *
+                    overrides.getDrawingScale() *
                     this._pixelsPerDpt
             );
         },
@@ -263,32 +280,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._ctx.lineWidth =
                     (overrides.getOutlineX() ?? style.getOutlineX()) +
                     (overrides.getOutlineY() ?? style.getOutlineY()); //AVERAGE * 2 = SUM
-        },
-        writable: false
-    },
-
-    _setFont: {
-        /**
-         * Set font settings for drawing.
-         * @param {SSAStyleDefinition} style
-         * @param {SSAStyleOverride} overrides
-         * @param {number} pass
-         */
-        value: function (style, overrides, pass) {
-            let fontSize =
-                (overrides.getFontSize() ?? style.getFontSize()) +
-                overrides.getFontSizeMod();
-            let fontName = overrides.getFontName() ?? style.getFontName();
-            let fontWeight = overrides.getWeight() ?? style.getWeight();
-            let fontItalicized = overrides.getItalic() ?? style.getItalic();
-            let font =
-                fontSize * this._pixelsPerDpt +
-                "px '" +
-                fontName +
-                "', 'Arial', 'Open Sans'";
-            font = fontWeight + " " + font;
-            if (fontItalicized) font = "italic " + font;
-            this._ctx.font = font;
         },
         writable: false
     },
@@ -342,7 +333,6 @@ const text_renderer_prototype = global.Object.create(Object, {
             this._ctx.resetTransform();
             this._setScale(style, overrides, pass);
             this._setOutline(style, overrides, pass);
-            this._setFont(style, overrides, pass);
             this._setColors(style, overrides, pass);
             {
                 let borderStyle = style.getBorderStyle();
@@ -357,11 +347,246 @@ const text_renderer_prototype = global.Object.create(Object, {
                     this._setEdgeBlur(style, overrides, pass);
                 else this._disableEdgeBlur();
             }
-            //TODO: Strikeout/Strikethrough
-            this._ctx.textAlign = "left";
-            this._ctx.textBaseline = "middle";
-            this._ctx.lineCap = "round";
-            this._ctx.lineJoin = "round";
+        },
+        writable: false
+    },
+
+    _calcSize: {
+        value: function (cmds, xoffset, yoffset, outline) {
+            //prep runtime stuff
+            const parseFloat = global.parseFloat;
+            const BSpline = sabre.BSpline;
+            //end prep
+            let uniquecommands = cmds.match(
+                /[mnlbspc](?: \-?\d+(?:\.\d+)? \-?\d+(?:\.\d+)?)*/gi
+            );
+            if (uniquecommands == null) return;
+            let min_coords = [
+                Number.POSITIVE_INFINITY,
+                Number.POSITIVE_INFINITY
+            ];
+            let max_coords = [
+                Number.NEGATIVE_INFINITY,
+                Number.NEGATIVE_INFINITY
+            ];
+            let spline_points = null;
+            let x = NaN,
+                y = NaN;
+            for (let i = 0; i < uniquecommands.length; i++) {
+                let cmdtype = uniquecommands[i][0];
+                let params = uniquecommands[i].substring(1).trim().split(" ");
+                let length;
+                switch (cmdtype) {
+                    case "b":
+                        length = 6;
+                        break;
+                    case "s":
+                        length = params.length;
+                        break;
+                    case "c":
+                        length = 0;
+                        break;
+                    default:
+                        length = 2;
+                }
+                for (
+                    let j = 0;
+                    j < (length == 0 ? 1 : params.length / length);
+                    j++
+                ) {
+                    let localparam = params.slice(j * length, (j + 1) * length);
+
+                    switch (cmdtype) {
+                        case "m":
+                        case "n":
+                            x = parseFloat(localparam[0]);
+                            y = parseFloat(localparam[1]);
+                            break;
+                        case "l":
+                            expandBounds(max_coords, min_coords, x, y);
+                            x = parseFloat(localparam[0]);
+                            y = parseFloat(localparam[1]);
+                            break;
+                        case "b":
+                            expandBounds(max_coords, min_coords, x, y);
+                            x = parseFloat(localparam[0]);
+                            y = parseFloat(localparam[1]);
+                            expandBounds(max_coords, min_coords, x, y);
+                            x = parseFloat(localparam[2]);
+                            y = parseFloat(localparam[3]);
+                            expandBounds(max_coords, min_coords, x, y);
+                            x = parseFloat(localparam[4]);
+                            y = parseFloat(localparam[5]);
+                            break;
+                        case "s":
+                            expandBounds(max_coords, min_coords, x, y);
+                            spline_points = spline_points || [];
+                            spline_points[0] = [x, y];
+                            let n = 1;
+                            for (let k = 0; k < localparam.length; k += 2) {
+                                spline_points[n++] = [
+                                    parseFloat(localparam[k]),
+                                    parseFloat(localparam[k + 1])
+                                ];
+                            }
+                            break;
+                        case "p":
+                            spline_points = spline_points || [];
+                            spline_points[spline_points.length] = [
+                                parseFloat(localparam[0]),
+                                parseFloat(localparam[1])
+                            ];
+                            break;
+                        case "c":
+                            let spline = new BSpline(spline_points, 3, true);
+                            for (let t = 0; t < 1; t += 0.001) {
+                                let point = spline.calcAt(t);
+                                expandBounds(
+                                    max_coords,
+                                    min_coords,
+                                    point[0],
+                                    point[1]
+                                );
+                            }
+                            spline_points = null;
+                            break;
+                    }
+                }
+            }
+
+            if (spline_points != null) {
+                let spline = new BSpline(spline_points, 3, true);
+                for (let t = 0; t < 1; t += 0.001) {
+                    let point = spline.calcAt(t);
+                    expandBounds(max_coords, min_coords, point[0], point[1]);
+                }
+            } else {
+                expandBounds(max_coords, min_coords, x, y);
+            }
+            this._offsetX = min_coords[0];
+            this._offsetY = min_coords[1];
+            this._width = min_coords[0] - max_coords[0];
+            this._height = max_coords[0] - min_coords[1];
+        },
+        writable: false
+    },
+
+    _drawShape: {
+        value: function (cmds, xoffset, yoffset, outline) {
+            //prep runtime stuff
+            const parseFloat = global.parseFloat;
+            const BSpline = sabre.BSpline;
+            //end prep
+            let uniquecommands = cmds.match(
+                /[mnlbspc](?: \-?\d+(?:\.\d+)? \-?\d+(?:\.\d+)?)*/gi
+            );
+            if (uniquecommands == null) return;
+            let spline_points = null;
+            let lastpos = [0, 0];
+            for (let i = 0; i < uniquecommands.length; i++) {
+                let cmdtype = uniquecommands[i][0];
+                let params = uniquecommands[i].substring(1).trim().split(" ");
+                let length;
+                switch (cmdtype) {
+                    case "b":
+                        length = 6;
+                        break;
+                    case "s":
+                        length = params.length;
+                        break;
+                    case "c":
+                        length = 0;
+                        break;
+                    default:
+                        length = 2;
+                }
+                for (
+                    let j = 0;
+                    j < (length == 0 ? 1 : params.length / length);
+                    j++
+                ) {
+                    let localparam = params.slice(j * length, (j + 1) * length);
+                    switch (cmdtype) {
+                        case "m":
+                            this._ctx.closePath();
+                            if (outline) this._ctx.stroke();
+                            else this._ctx.fill();
+
+                            this._ctx.beginPath();
+                        case "n":
+                            lastpos[0] = parseFloat(localparam[0]);
+                            lastpos[1] = parseFloat(localparam[1]);
+                            this._ctx.moveTo(
+                                xoffset + lastpos[0],
+                                yoffset + lastpos[1]
+                            );
+                            break;
+                        case "l":
+                            lastpos[0] = parseFloat(localparam[0]);
+                            lastpos[1] = parseFloat(localparam[1]);
+                            this._ctx.lineTo(
+                                xoffset + lastpos[0],
+                                yoffset + lastpos[1]
+                            );
+                            break;
+                        case "b":
+                            lastpos[0] = parseFloat(localparam[4]);
+                            lastpos[1] = parseFloat(localparam[5]);
+                            this._ctx.bezierCurveTo(
+                                xoffset + parseFloat(localparam[0]),
+                                yoffset + parseFloat(localparam[1]),
+                                xoffset + parseFloat(localparam[2]),
+                                yoffset + parseFloat(localparam[3]),
+                                xoffset + lastpos[0],
+                                yoffset + lastpos[1]
+                            );
+                            break;
+                        case "s":
+                            spline_points = spline_points || [];
+                            spline_points[0] = [lastpos[0], lastpos[1]];
+                            let n = 1;
+                            for (let k = 0; k < localparam.length; k += 2) {
+                                spline_points[n++] = [
+                                    parseFloat(localparam[k]),
+                                    parseFloat(localparam[k + 1])
+                                ];
+                            }
+                            break;
+                        case "p":
+                            spline_points = spline_points || [];
+                            spline_points[spline_points.length] = [
+                                parseFloat(localparam[0]),
+                                parseFloat(localparam[1])
+                            ];
+                            break;
+                        case "c":
+                            let spline = new BSpline(spline_points, 3, true);
+                            let point;
+                            for (let t = 0; t < 1; t += 0.001) {
+                                point = spline.calcAt(t);
+                                this._ctx.lineTo(
+                                    xoffset + point[0],
+                                    yoffset + point[1]
+                                );
+                            }
+                            lastpos[0] = point[0];
+                            lastpos[1] = point[1];
+                            spline_points = null;
+                            break;
+                    }
+                }
+            }
+
+            if (spline_points != null) {
+                let spline = new BSpline(spline_points, 3, true);
+                for (let t = 0; t < 1; t += 0.001) {
+                    let point = spline.calcAt(t);
+                    this._ctx.lineTo(xoffset + point[0], yoffset + point[1]);
+                }
+            }
+            this._ctx.closePath();
+            if (outline) this._ctx.stroke();
+            else this._ctx.fill();
         },
         writable: false
     },
@@ -375,7 +600,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         value: function (event, pass) {
             if (!this._initialized) this._init();
 
-            let text = event.getText();
+            let cmds = event.getText();
             let style = event.getStyle();
             let overrides = event.getOverrides();
 
@@ -383,22 +608,8 @@ const text_renderer_prototype = global.Object.create(Object, {
 
             this._handleStyling(style, overrides, pass);
 
-            //calculate size of text without scaling.
-            {
-                let spacing = overrides.getSpacing() ?? style.getSpacing();
-                let fontSize =
-                    (overrides.getFontSize() ?? style.getFontSize()) +
-                    overrides.getFontSizeMod();
-                if (spacing === 0) {
-                    this._width = this._ctx.measureText(text).width;
-                } else {
-                    this._width = 0;
-                    for (let i = 0; i < text.length; i++)
-                        this._width += this._ctx.measureText(text[i]).width;
-                    this._width += spacing * (text.length - 1);
-                }
-                this._height = fontSize * this._pixelsPerDpt * lineSpacing;
-            }
+            //calculate size of drawing without scaling.
+            this._calcSize(cmds);
 
             //pad for box blur
             if ((overrides.getEdgeBlur() ?? 0) > 0) {
@@ -424,9 +635,11 @@ const text_renderer_prototype = global.Object.create(Object, {
             {
                 let scaleX =
                     (overrides.getScaleX() ?? style.getScaleX()) *
+                    overrides.getDrawingScale() *
                     this._pixelsPerDpt;
                 let scaleY =
                     (overrides.getScaleY() ?? style.getScaleY()) *
+                    overrides.getDrawingScale() *
                     this._pixelsPerDpt;
                 this._offsetX *= scaleX;
                 this._offsetY *= scaleY;
@@ -443,62 +656,27 @@ const text_renderer_prototype = global.Object.create(Object, {
             {
                 let spacing = overrides.getSpacing() ?? style.getSpacing();
                 if (pass === sabre.RenderPasses.OUTLINE) {
-                    if (spacing === 0) {
-                        this._ctx.strokeText(
-                            text,
-                            offsetXUnscaled,
-                            offsetYUnscaled
-                        );
-                        this._ctx.globalCompositeOperation = "destination-out";
-                        this._ctx.filter = "none";
-                        this._ctx.fillText(
-                            text,
-                            offsetXUnscaled,
-                            offsetYUnscaled
-                        );
-                    } else {
-                        let letter_offset = 0;
-                        for (let i = 0; i < text.length; i++) {
-                            this._ctx.strokeText(
-                                text[i],
-                                offsetXUnscaled + (spacing * i + letter_offset),
-                                offsetYUnscaled
-                            );
-                            letter_offset += this._ctx.measureText(text[i])
-                                .width;
-                        }
-                        this._ctx.globalCompositeOperation = "destination-out";
-                        this._ctx.filter = "none";
-                        letter_offset = 0;
-                        for (let i = 0; i < text.length; i++) {
-                            this._ctx.fillText(
-                                text[i],
-                                offsetXUnscaled + (spacing * i + letter_offset),
-                                offsetYUnscaled
-                            );
-                            letter_offset += this._ctx.measureText(text[i])
-                                .width;
-                        }
-                    }
+                    this._drawShape(
+                        cmds,
+                        offsetXUnscaled,
+                        offsetYUnscaled,
+                        true
+                    );
+                    this._ctx.globalCompositeOperation = "destination-out";
+                    this._ctx.filter = "none";
+                    this._drawShape(
+                        cmds,
+                        offsetXUnscaled,
+                        offsetYUnscaled,
+                        false
+                    );
                 } else {
-                    if (spacing === 0)
-                        this._ctx.fillText(
-                            text,
-                            offsetXUnscaled,
-                            offsetYUnscaled
-                        );
-                    else {
-                        let letter_offset = 0;
-                        for (let i = 0; i < text.length; i++) {
-                            this._ctx.fillText(
-                                text[i],
-                                offsetXUnscaled + (spacing * i + letter_offset),
-                                offsetYUnscaled
-                            );
-                            letter_offset += this._ctx.measureText(text[i])
-                                .width;
-                        }
-                    }
+                    this._drawShape(
+                        cmds,
+                        offsetXUnscaled,
+                        offsetYUnscaled,
+                        false
+                    );
                 }
             }
         },
@@ -508,7 +686,7 @@ const text_renderer_prototype = global.Object.create(Object, {
     "setDPI": {
         /**
          * Sets the DPI for Rendering text
-         * @param {number} dpi the DPI to use for rendering text.
+         * @param {number} dpi the DPI to use for rendering shapes.
          */
         value: function (dpi) {
             this._pixelsPerDpt = dpi * (72 / 96);
@@ -546,6 +724,6 @@ const text_renderer_prototype = global.Object.create(Object, {
     }
 });
 
-sabre["Canvas2DTextRenderer"] = function () {
-    return Object.create(text_renderer_prototype);
+sabre["Canvas2DShapeRenderer"] = function () {
+    return Object.create(shape_renderer_prototype);
 };

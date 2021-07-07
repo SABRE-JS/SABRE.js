@@ -13,6 +13,7 @@
 //@include [subtitle-parser.js]
 //@include [scheduler.js]
 //@include [canvas-2d-text-renderer.js]
+//@include [canvas-2d-shape-renderer.js]
 sabre.import("util.min.js");
 sabre.import("color.min.js");
 sabre.import("style.min.js");
@@ -21,6 +22,7 @@ sabre.import("subtitle-event.min.js");
 sabre.import("subtitle-parser.min.js");
 sabre.import("scheduler.min.js");
 sabre.import("canvas-2d-text-renderer.min.js");
+sabre.import("canvas-2d-shape-renderer.min.js");
 /**
  * @fileoverview webgl subtitle compositing code.
  */
@@ -47,6 +49,12 @@ const renderer_prototype = global.Object.create(Object, {
 
     _textRenderer: {
         /** @type {?Canvas2DTextRenderer} */
+        value: null,
+        writable: true
+    },
+
+    _shapeRenderer: {
+        /** @type {?Canvas2DShapeRenderer} */
         value: null,
         writable: true
     },
@@ -127,6 +135,7 @@ const renderer_prototype = global.Object.create(Object, {
         value: function () {
             this._scheduler = new sabre.SubtitleScheduler();
             this._textRenderer = new sabre.Canvas2DTextRenderer();
+            this._shapeRenderer = new sabre.Canvas2DShapeRenderer();
         },
         writable: false
     },
@@ -247,10 +256,10 @@ const renderer_prototype = global.Object.create(Object, {
                     let current_event = events[i];
                     //TODO: Collisions
                     if (!current_event.getOverrides().getDrawingMode()) {
-                        //TODO: Render Text
+                        this._textRenderer.renderEvent(current_event, pass);
                         //TODO: Composite Text into image.
                     } else {
-                        //TODO: Render Vector Graphics.
+                        this._shapeRenderer.renderEvent(current_event, pass);
                         //TODO: Composite Graphics into image.
                     }
                 }
