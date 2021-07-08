@@ -360,7 +360,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
             let uniquecommands = cmds.match(
                 /[mnlbspc](?: \-?\d+(?:\.\d+)? \-?\d+(?:\.\d+)?)*/gi
             );
-            if (uniquecommands == null) return;
+            if (uniquecommands === null) return;
             let min_coords = [
                 Number.POSITIVE_INFINITY,
                 Number.POSITIVE_INFINITY
@@ -391,7 +391,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 }
                 for (
                     let j = 0;
-                    j < (length == 0 ? 1 : params.length / length);
+                    j < (length === 0 ? 1 : params.length / length);
                     j++
                 ) {
                     let localparam = params.slice(j * length, (j + 1) * length);
@@ -454,7 +454,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 }
             }
 
-            if (spline_points != null) {
+            if (spline_points !== null) {
                 let spline = new BSpline(spline_points, 3, true);
                 for (let t = 0; t < 1; t += 0.001) {
                     let point = spline.calcAt(t);
@@ -480,7 +480,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
             let uniquecommands = cmds.match(
                 /[mnlbspc](?: \-?\d+(?:\.\d+)? \-?\d+(?:\.\d+)?)*/gi
             );
-            if (uniquecommands == null) return;
+            if (uniquecommands === null) return;
             let spline_points = null;
             let lastpos = [0, 0];
             for (let i = 0; i < uniquecommands.length; i++) {
@@ -502,7 +502,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 }
                 for (
                     let j = 0;
-                    j < (length == 0 ? 1 : params.length / length);
+                    j < (length === 0 ? 1 : params.length / length);
                     j++
                 ) {
                     let localparam = params.slice(j * length, (j + 1) * length);
@@ -577,7 +577,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 }
             }
 
-            if (spline_points != null) {
+            if (spline_points !== null) {
                 let spline = new BSpline(spline_points, 3, true);
                 for (let t = 0; t < 1; t += 0.001) {
                     let point = spline.calcAt(t);
