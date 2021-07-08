@@ -419,15 +419,17 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             y = parseFloat(localparam[5]);
                             break;
                         case "s":
-                            expandBounds(max_coords, min_coords, x, y);
-                            spline_points = spline_points || [];
-                            spline_points[0] = [x, y];
-                            let n = 1;
-                            for (let k = 0; k < localparam.length; k += 2) {
-                                spline_points[n++] = [
-                                    parseFloat(localparam[k]),
-                                    parseFloat(localparam[k + 1])
-                                ];
+                            {
+                                expandBounds(max_coords, min_coords, x, y);
+                                spline_points = spline_points || [];
+                                spline_points[0] = [x, y];
+                                let n = 1;
+                                for (let k = 0; k < localparam.length; k += 2) {
+                                    spline_points[n++] = [
+                                        parseFloat(localparam[k]),
+                                        parseFloat(localparam[k + 1])
+                                    ];
+                                }
                             }
                             break;
                         case "p":
@@ -438,17 +440,23 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             ];
                             break;
                         case "c":
-                            let spline = new BSpline(spline_points, 3, true);
-                            for (let t = 0; t < 1; t += 0.001) {
-                                let point = spline.calcAt(t);
-                                expandBounds(
-                                    max_coords,
-                                    min_coords,
-                                    point[0],
-                                    point[1]
+                            {
+                                let spline = new BSpline(
+                                    spline_points,
+                                    3,
+                                    true
                                 );
+                                for (let t = 0; t < 1; t += 0.001) {
+                                    let point = spline.calcAt(t);
+                                    expandBounds(
+                                        max_coords,
+                                        min_coords,
+                                        point[0],
+                                        point[1]
+                                    );
+                                }
+                                spline_points = null;
                             }
-                            spline_points = null;
                             break;
                     }
                 }
@@ -542,14 +550,16 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             );
                             break;
                         case "s":
-                            spline_points = spline_points || [];
-                            spline_points[0] = [lastpos[0], lastpos[1]];
-                            let n = 1;
-                            for (let k = 0; k < localparam.length; k += 2) {
-                                spline_points[n++] = [
-                                    parseFloat(localparam[k]),
-                                    parseFloat(localparam[k + 1])
-                                ];
+                            {
+                                spline_points = spline_points || [];
+                                spline_points[0] = [lastpos[0], lastpos[1]];
+                                let n = 1;
+                                for (let k = 0; k < localparam.length; k += 2) {
+                                    spline_points[n++] = [
+                                        parseFloat(localparam[k]),
+                                        parseFloat(localparam[k + 1])
+                                    ];
+                                }
                             }
                             break;
                         case "p":
@@ -560,18 +570,24 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             ];
                             break;
                         case "c":
-                            let spline = new BSpline(spline_points, 3, true);
-                            let point;
-                            for (let t = 0; t < 1; t += 0.001) {
-                                point = spline.calcAt(t);
-                                this._ctx.lineTo(
-                                    xoffset + point[0],
-                                    yoffset + point[1]
+                            {
+                                let spline = new BSpline(
+                                    spline_points,
+                                    3,
+                                    true
                                 );
+                                let point;
+                                for (let t = 0; t < 1; t += 0.001) {
+                                    point = spline.calcAt(t);
+                                    this._ctx.lineTo(
+                                        xoffset + point[0],
+                                        yoffset + point[1]
+                                    );
+                                }
+                                lastpos[0] = point[0];
+                                lastpos[1] = point[1];
+                                spline_points = null;
                             }
-                            lastpos[0] = point[0];
-                            lastpos[1] = point[1];
-                            spline_points = null;
                             break;
                     }
                 }
