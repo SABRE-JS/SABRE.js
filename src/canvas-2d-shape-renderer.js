@@ -473,8 +473,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
             }
             this._offsetX = min_coords[0];
             this._offsetY = min_coords[1];
-            this._width = min_coords[0] - max_coords[0];
-            this._height = max_coords[0] - min_coords[1];
+            this._width = max_coords[0] - min_coords[0];
+            this._height = max_coords[1] - min_coords[1];
         },
         writable: false
     },

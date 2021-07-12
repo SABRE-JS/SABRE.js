@@ -17,23 +17,15 @@ sabre["SSASubtitleEvent"] = function () {
     return Object.create(Object, {
         "toJSON": {
             value: function () {
-                return (
-                    "{l:" +
-                    obj.layer +
-                    ",s:" +
-                    obj.start +
-                    ",e:" +
-                    obj.end +
-                    ",st:" +
-                    JSON.stringify(obj.style) +
-                    ",o:" +
-                    JSON.stringify(obj.overrides) +
-                    ",lO:" +
-                    JSON.stringify(obj.lineOverrides) +
-                    ",t:" +
-                    JSON.stringify(obj.text) +
-                    "}"
-                );
+                return {
+                    l: obj.layer,
+                    s: obj.start,
+                    e: obj.end,
+                    st: obj.style,
+                    o: obj.overrides,
+                    lO: obj.lineOverrides,
+                    t: obj.text
+                };
             },
             writable: false
         },
