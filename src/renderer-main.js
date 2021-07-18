@@ -124,6 +124,90 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _positionEvent: {
+        /**
+         * Positions the event.
+         * @private
+         * @param {SSASubtitleEvent} event the current event we're positioning.
+         * @param {{voffset:number,xoffset:number}} textAnchorOffset the offset from the anchor point of the text.
+         * @returns {{x:number,y:number,width:number,height:number}} the positioning info of the event.
+         */
+        value: function () {},
+        writable: false
+    },
+
+    _collideEvent: {
+        /**
+         * Collides two events.
+         * @private
+         * @param {number} index1 current event's index.
+         * @param {Array<number>} indexesForMatchingId1 indexes who's id matches the current event's id.
+         * @param {number} index2 the index of the event we're colliding with.
+         * @param {Array<number>} indexesForMatchingId2 indexes who's id matches the event we're colliding with's id.
+         * @param {Array<{x:number,y:number,width:number,height:number}>} positions position info of each event.
+         */
+        value: function (
+            index1,
+            indexesForMatchingId1,
+            index2,
+            indexesForMatchingId2,
+            positions
+        ) {}
+    },
+
+    _organizeEvents: {
+        /**
+         * Positions events onscreen and handles collisions.
+         * @private
+         * @param {Array<SSASubtitleEvent>} events list of onscreen subtitle events for this frame in order of layer.
+         * @returns {Array<{x:number,y:number,width:number,height:number}>} each event's position onscreen.
+         */
+        value: function (events) {
+            let result = new Array(events.length);
+            result.fill(null);
+            let resultsForId = {};
+            {
+                let lastId = -1;
+                let textAnchor;
+                for (let i = 0; i < events.length; i++) {
+                    let id = events[i].getId();
+                    resultsForId[id] = resultsForId[id] ?? [];
+                    resultsForId[id].push(i);
+                    if (id !== lastId) textAnchor = { voffset: 0, hoffset: 0 };
+                    result[i] = this._positionEvent(events[i], textAnchor);
+                    lastId = id;
+                }
+            }
+            for (let i = 0; i < events.length; i++) {
+                if (
+                    events[i].getLineOverrides().getPosition() !== null ||
+                    events[i].getLineOverrides().getMovement() !== null
+                )
+                    continue;
+                let id = events[i].getId();
+                for (let j = 0; j < events.length; j++) {
+                    if (events[j].getLayer() !== events[i].getLayer()) continue;
+                    let id2 = events[j].getId();
+                    if (id2 === id) continue;
+                    if (
+                        events[j].getLineOverrides().getPosition() !== null ||
+                        events[j].getLineOverrides().getMovement() !== null
+                    )
+                        continue;
+                    this._collideEvent(
+                        i,
+                        resultsForId[id],
+                        j,
+                        resultsForId[id2],
+                        result
+                    );
+                }
+            }
+            return result;
+        },
+        writable: false
+    },
+
     //END LOCAL FUNCTIONS
     //BEGIN PUBLIC FUNCTIONS
 
@@ -190,13 +274,6 @@ const renderer_prototype = global.Object.create(Object, {
          * @returns {void}
          */
         value: function (width, height) {
-            /*
-            if (width-this._config.renderer["resolution_x"]>height-this._config.renderer["resolution_y"]){
-                //TODO: Text Scaling based on height
-            }else{
-                //TODO: Text Scaling based on width
-            }
-            */
             this._compositingCanvas.width = width;
             this._compositingCanvas.height = height;
 
@@ -224,7 +301,9 @@ const renderer_prototype = global.Object.create(Object, {
                 /** SSASubtitleEvent */ a,
                 /** SSASubtitleEvent */ b
             ) {
-                return a.getLayer() - b.getLayer();
+                let ldiff = a.getLayer() - b.getLayer();
+                if (ldiff === 0) return a.getId() - b.getId();
+                else return ldiff;
             });
             let currentHash = this._hashEvents(events);
             if (currentHash === this._lastHash) return;
@@ -232,34 +311,16 @@ const renderer_prototype = global.Object.create(Object, {
             this._gl.clear(
                 this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
             );
+            let positions = this._organizeEvents(events);
             for (let pass = 0; pass < 3; pass++) {
                 //One pass for background, one for outline and one for text.
                 for (let i = 0; i < events.length; i++) {
-                    let currentLayer = events[i].getLayer();
-                    let layerStart = i;
-                    let layerEnd = i;
-                    {
-                        //Find beginning and end of layer.
-                        while (
-                            layerStart >= 0 &&
-                            events[layerStart].getLayer() === currentLayer
-                        )
-                            layerStart--;
-                        while (
-                            layerEnd < events.length &&
-                            events[layerEnd].getLayer() === currentLayer
-                        )
-                            layerEnd++;
-                        layerStart++;
-                        layerEnd--;
-                    }
-                    let current_event = events[i];
-                    //TODO: Collisions
-                    if (!current_event.getOverrides().getDrawingMode()) {
-                        this._textRenderer.renderEvent(current_event, pass);
+                    let currentEvent = events[i];
+                    if (!currentEvent.getOverrides().getDrawingMode()) {
+                        this._textRenderer.renderEvent(currentEvent, pass);
                         //TODO: Composite Text into image.
                     } else {
-                        this._shapeRenderer.renderEvent(current_event, pass);
+                        this._shapeRenderer.renderEvent(currentEvent, pass);
                         //TODO: Composite Graphics into image.
                     }
                 }

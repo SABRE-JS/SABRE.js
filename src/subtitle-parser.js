@@ -158,6 +158,15 @@ const main_prototype = global.Object.create(global.Object, {
         writable: true
     },
 
+    _lineCounter: {
+        /**
+         * Counter for generating lineIds.
+         * @private
+         */
+        value: 0,
+        writable: true
+    },
+
     _splitOnce: {
         /**
          * Splits a string once.
@@ -198,6 +207,7 @@ const main_prototype = global.Object.create(global.Object, {
          */
         value: function (event) {
             let new_event = new sabre.SSASubtitleEvent();
+            new_event.setId(event.getId());
             new_event.setStart(event.getStart());
             new_event.setEnd(event.getEnd());
             new_event.setLayer(event.getLayer());
@@ -2681,6 +2691,7 @@ const main_prototype = global.Object.create(global.Object, {
         value: function (values, config) {
             //Create a new event for the line.
             let event = new sabre.SSASubtitleEvent();
+            event.setId(this._lineCounter++);
             //Preload the default style into the event.
             let style = this._styles["Default"];
             //Create a new style override for the event.
@@ -2929,6 +2940,7 @@ const main_prototype = global.Object.create(global.Object, {
             if (subs[0].trim() !== "[Script Info]") {
                 throw "Invalid Sub Station Alpha script";
             }
+            this._lineCounter = 0;
             for (let i = 0; i < subs.length; i++) {
                 this._parse(subs[i]); //Parse individual lines of the file.
             }

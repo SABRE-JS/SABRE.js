@@ -6,6 +6,7 @@ sabre.import("style.min.js");
 sabre.import("style-override.min.js");
 sabre["SSASubtitleEvent"] = function () {
     let obj = {
+        id: NaN,
         layer: 0,
         start: 0,
         end: 0,
@@ -18,6 +19,7 @@ sabre["SSASubtitleEvent"] = function () {
         "toJSON": {
             value: function () {
                 return {
+                    id: obj.id,
                     l: obj.layer,
                     s: obj.start,
                     e: obj.end,
@@ -26,6 +28,20 @@ sabre["SSASubtitleEvent"] = function () {
                     lO: obj.lineOverrides,
                     t: obj.text
                 };
+            },
+            writable: false
+        },
+
+        "setId": {
+            value: function (/** number */ id) {
+                obj.id = idnum;
+            },
+            writable: false
+        },
+
+        "getId": {
+            value: function () {
+                return obj.id;
             },
             writable: false
         },
