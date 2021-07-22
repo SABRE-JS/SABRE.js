@@ -316,11 +316,22 @@ const renderer_prototype = global.Object.create(Object, {
                 //One pass for background, one for outline and one for text.
                 for (let i = 0; i < events.length; i++) {
                     let currentEvent = events[i];
+                    let relTime = time - currentEvent.getStart();
                     if (!currentEvent.getOverrides().getDrawingMode()) {
-                        this._textRenderer.renderEvent(currentEvent, pass);
+                        this._textRenderer.renderEvent(
+                            relTime,
+                            currentEvent,
+                            pass,
+                            false
+                        );
                         //TODO: Composite Text into image.
                     } else {
-                        this._shapeRenderer.renderEvent(currentEvent, pass);
+                        this._shapeRenderer.renderEvent(
+                            relTime,
+                            currentEvent,
+                            pass,
+                            false
+                        );
                         //TODO: Composite Graphics into image.
                     }
                 }

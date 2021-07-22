@@ -1,6 +1,8 @@
 /**
  * @typedef {!{
  *              toJSON:function():string,
+ *              setId:function(number):void,
+ *              getId:function():number,
  *              setStart:function(number):void,
  *              getStart:function():number,
  *              setEnd:function(number):void,

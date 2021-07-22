@@ -34,7 +34,7 @@ sabre["SSASubtitleEvent"] = function () {
 
         "setId": {
             value: function (/** number */ id) {
-                obj.id = idnum;
+                obj.id = id;
             },
             writable: false
         },
