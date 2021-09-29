@@ -198,12 +198,13 @@ const renderer_prototype = global.Object.create(Object, {
          * Positions the event.
          * @private
          * @param {number} time time of the current frame.
+         * @param {number} index the index of the event we're positioning.
          * @param {SSASubtitleEvent} event the current event we're positioning.
          * @param {{hoffset:number,voffset:number}} textAnchorOffset the offset from the anchor point of the text.
          * @returns {{x:number,y:number,width:number,height:number}} the positioning info of the event.
          */
-        value: function (time, event, textAnchor) {
-            let result = { x: 0, y: 0, width: 0, height: 0 };
+        value: function (time, index, event, textAnchor) {
+            let result = { x: 0, y: 0, width: 0, height: 0, index: index };
             let lineOverrides = event.getLineOverrides();
             if (!event.getOverrides().getDrawingMode()) {
                 this._textRenderer.renderEvent(
@@ -370,10 +371,10 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Collides two events.
          * @private
-         * @param {{x:number,y:number,width:number,height:number}} positionInfo1 current event's position info.
-         * @param {Array<{x:number,y:number,width:number,height:number}>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
-         * @param {{x:number,y:number,width:number,height:number}} positionInfo2 the position info of the event we're colliding with.
-         * @param {Array<{x:number,y:number,width:number,height:number}>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
+         * @param {{x:number,y:number,width:number,height:number,index:number}} positionInfo1 current event's position info.
+         * @param {Array<{x:number,y:number,width:number,height:number,index:number}>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
+         * @param {{x:number,y:number,width:number,height:number,index:number}} positionInfo2 the position info of the event we're colliding with.
+         * @param {Array<{x:number,y:number,width:number,height:number,index:number}>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
          * @returns {boolean} did we move something?
          */
         value: function (
@@ -398,17 +399,88 @@ const renderer_prototype = global.Object.create(Object, {
                     sabre.CollisionModes.NORMAL
                 ) {
                     if (overlap[1] < 0) {
-                        for (
-                            let i = 0;
-                            i < posInfosForMatchingId2.length;
-                            i++
-                        ) {
-                            posInfosForMatchingId2[i].y -= positionInfo1.height;
-                            posInfosForMatchingId;
+                        if (positionInfo1.index < positionInfo2.index) {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId2.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId2[i].y -=
+                                    posInfosForMatchingId1[i].height;
+                                posInfosForMatchingId2[i].y -= overlap[1];
+                            }
+                        } else {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId1.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId1[i] += overlap[1];
+                            }
                         }
-                    } else {
+                    } else if (overlap[1] > 0) {
+                        if (positionInfo1.index < positionInfo2.index) {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId2.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId2[i] += overlap[1];
+                            }
+                        } else {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId2.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId[i] -=
+                                    positionInfo2.height;
+                                posInfosForMatchingId1[i] -= overlap[1];
+                            }
+                        }
                     }
                 } else {
+                    if (overlap[1] > 0) {
+                        if (positionInfo1.index > positionInfo2.index) {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId2.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId2[i].y -=
+                                    posInfosForMatchingId1[i].height;
+                                posInfosForMatchingId2[i].y -= overlap[1];
+                            }
+                        } else {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId1.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId1[i] += overlap[1];
+                            }
+                        }
+                    } else if (overlap[1] < 0) {
+                        if (positionInfo1.index > positionInfo2.index) {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId2.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId2[i] += overlap[1];
+                            }
+                        } else {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId2.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId[i] -=
+                                    positionInfo2.height;
+                                posInfosForMatchingId1[i] -= overlap[1];
+                            }
+                        }
+                    }
                 }
                 return true;
             }
@@ -451,6 +523,7 @@ const renderer_prototype = global.Object.create(Object, {
                     }
                     result[i] = this._positionEvent(
                         time,
+                        i,
                         events[i],
                         textAnchor
                     );
