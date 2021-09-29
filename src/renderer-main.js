@@ -392,7 +392,7 @@ const renderer_prototype = global.Object.create(Object, {
                 positionInfo2.width,
                 positionInfo2.height
             );
-            if (overlap != null) {
+            if (overlap !== null) {
                 if (
                     this._config.renderer["default_collision_mode"] ===
                     sabre.CollisionModes.NORMAL
@@ -436,7 +436,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Array<SSASubtitleEvent>} events list of onscreen subtitle events for this frame in order of layer.
          * @returns {Array<{x:number,y:number,width:number,height:number,moveup:boolean}>} each event's position onscreen.
          */
-        value: function (events) {
+        value: function (time, events) {
             let result = new Array(events.length);
             let resultsForId = {};
             {
