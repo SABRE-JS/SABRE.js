@@ -6,7 +6,7 @@
  |-
  */
 /**
- * @fileoverview advance stubstation alpha subtitle text renderer.
+ * @fileoverview advanced stubstation alpha subtitles text renderer.
  */
 //@include [util.js]
 //@include [global-constants.js]
@@ -24,11 +24,6 @@ sabre.import("subtitle-event.min.js");
 const lineSpacing = 1.2;
 
 const text_renderer_prototype = global.Object.create(Object, {
-    _serializer: {
-        value: new XMLSerializer(),
-        writable: false
-    },
-
     _initialized: {
         /**
          * Is the text renderer initialized.
@@ -44,15 +39,6 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @type {number}
          */
         value: 72 / 96,
-        writable: false
-    },
-
-    _blur_urls: {
-        /**
-         * Blur URLS
-         * @type {Array<string>}
-         */
-        value: [],
         writable: false
     },
 
@@ -126,141 +112,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                 "desynchronized": true
             });
             this._initialized = true;
-        },
-        writable: false
-    },
-
-    _doTransition: {
-        /**
-         * Performs a transition on a override.
-         * @param {number} curtime current time relative to event start.
-         * @param {number} originalValue
-         * @param {?number} transitionValue
-         * @param {number} start
-         * @param {number} end
-         * @param {number} acceleration
-         */
-        value: function (
-            curtime,
-            originalValue,
-            transitionValue,
-            start,
-            end,
-            acceleration
-        ) {
-            if (transitionValue === null || curtime < start)
-                return originalValue;
-            if (curtime >= end) return transitionValue;
-            var percent = Math.max(
-                0,
-                Math.min(
-                    Math.pow((curtime - start) / (end - start), acceleration),
-                    1
-                )
-            );
-            return originalValue / percent + transitionValue * percent;
-        },
-        writable: false
-    },
-
-    _getBlurKernelValueForPosition: {
-        value: function (center_value, x, y, dim, intgr) {
-            let value = Math.max(
-                center_value -
-                    Math.sqrt(
-                        Math.pow(x - (dim - 1) / 2, 2) +
-                            Math.pow(y - (dim - 1) / 2, 2)
-                    ),
-                0
-            );
-            if (intgr) value = Math.floor(value);
-            return value;
-        },
-        writable: false
-    },
-
-    _getBlurMatrixUrl: {
-        /**
-         * Generates a edge-blur URL.
-         * @param {number} blur_count Number of times to apply edge-blur.
-         * @returns {string} the resulting URL.
-         */
-        value: function (blur_count) {
-            if (
-                typeof this._blur_urls[blur_count] === "undefined" ||
-                this._blur_urls[blur_count] === null
-            ) {
-                let filterdom;
-                let doctype = global.document.implementation.createDocumentType(
-                    "svg",
-                    "-//W3C//DTD SVG 1.1//EN",
-                    "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"
-                );
-                let filter_doc = (filterdom = global.document.implementation.createDocument(
-                    "http://www.w3.org/2000/svg",
-                    "svg",
-                    doctype
-                )).documentElement;
-                let defs = filterdom.createElementNS(
-                    "http://www.w3.org/2000/svg",
-                    "defs"
-                );
-                let filter = filterdom.createElementNS(
-                    "http://www.w3.org/2000/svg",
-                    "filter"
-                );
-                filter.setAttribute("id", "filter");
-                defs.appendChild(filter);
-                filter_doc.appendChild(defs);
-                filter.setAttribute("filterUnits", "userSpaceOnUse");
-                filter.setAttribute("x", "0");
-                filter.setAttribute("y", "0");
-                filter.setAttribute("width", global.screen.width);
-                filter.setAttribute("height", global.screen.height);
-                let filters_count = 0;
-                while (blur_count > 0) {
-                    let blur = filterdom.createElementNS(
-                        "http://www.w3.org/2000/svg",
-                        "feConvolveMatrix"
-                    );
-                    blur.setAttribute("edgeMode", "none");
-                    if (filters_count++ === 0)
-                        blur.setAttribute("in", "SourceGraphic");
-                    else
-                        blur.setAttribute(
-                            "in",
-                            "filterStep" + (filters_count - 1)
-                        );
-                    let blur_matrix = [];
-                    for (let i = 0; i < 5; i++)
-                        for (let j = 0; j < 5; j++)
-                            blur_matrix[
-                                i * 5 + j
-                            ] = this._getBlurKernelValueForPosition(
-                                4,
-                                j,
-                                i,
-                                5,
-                                false
-                            );
-                    blur.setAttribute("order", Math.sqrt(blur_matrix.length));
-                    blur.setAttribute("kernelMatrix", blur_matrix.join(", "));
-                    if (--blur_count > 0)
-                        blur.setAttribute(
-                            "result",
-                            "filterStep" + filters_count
-                        );
-                    filter.appendChild(blur);
-                }
-                let filterxml = this._serializer.serializeToString(filterdom);
-                let filterurl =
-                    "data:image/svg+xml;utf8," +
-                    global.encodeURIComponent(filterxml) +
-                    "#filter";
-                return (this._blur_urls[blur_count] = filterurl);
-            } else {
-                return this._blur_urls[blur_count];
-            }
         },
         writable: false
     },
@@ -443,67 +294,6 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    _calcEdgeBlur: {
-        /**
-         * Calc blur iterations, handing transitions.
-         * @param {number} time
-         * @param {SSAStyleDefinition} style
-         * @param {SSAStyleOverride} overrides
-         */
-        value: function (time, style, overrides) {
-            let transitionOverrides = overrides.getTransition();
-            let iterations = overrides.getEdgeBlur() ?? 0;
-            if (transitionOverrides !== null)
-                iterations = this._doTransition(
-                    time,
-                    iterations,
-                    transitionOverrides.getEdgeBlur(),
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
-                );
-            return iterations;
-        },
-        writable: false
-    },
-
-    _setEdgeBlur: {
-        /**
-         * Set box blur radius, gaussian blur is handled in the compositing step instead of here for performance reasons.
-         * @param {number} time
-         * @param {SSAStyleDefinition} style
-         * @param {SSAStyleOverride} overrides
-         * @param {SSALineStyleOverride} lineOverrides
-         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
-         * @param {number} pass
-         */
-        value: function (
-            time,
-            style,
-            overrides,
-            lineOverrides,
-            lineTransitionTargetOverrides,
-            pass
-        ) {
-            let iterations = this._calcEdgeBlur(time, style, overrides);
-            if (iterations > 0) {
-                this._ctx.filter =
-                    "url('" + this._getBlurMatrixUrl(iterations) + "')";
-            } else this._ctx.filter = "none";
-        },
-        writable: false
-    },
-
-    _disableEdgeBlur: {
-        /**
-         * disables edge blur for passes where it is invalid.
-         */
-        value: function () {
-            this._ctx.filter = "none";
-        },
-        writable: false
-    },
-
     _setColors: {
         /**
          * Set the colors for the subtitle.
@@ -600,25 +390,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                 lineTransitionTargetOverrides,
                 pass
             );
-            {
-                let borderStyle = style.getBorderStyle();
-                let outline = this._calcOutline(time, style, overrides);
-                let outlineActive = outline.x > 0 || outline.y > 0;
-                if (
-                    pass === sabre.RenderPasses.OUTLINE ||
-                    (pass !== sabre.RenderPasses.BACKGROUND &&
-                        (borderStyle !== 1 || !outlineActive))
-                )
-                    this._setEdgeBlur(
-                        time,
-                        style,
-                        overrides,
-                        lineOverrides,
-                        lineTransitionTargetOverrides,
-                        pass
-                    );
-                else this._disableEdgeBlur();
-            }
             //TODO: Strikeout/Strikethrough
             this._ctx.textAlign = "left";
             this._ctx.textBaseline = "middle";
@@ -636,7 +407,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} pass the pass we are on.
          * @param {boolean} dryRun is this a dry run for positioning.
          */
-        value: function (time, event, pass, dryRun) {
+        value: function (time, event, pass, textOffsets, maxWidth, dryRun) {
             if (!this._initialized) this._init();
 
             let text = event.getText();
@@ -656,8 +427,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                 pass
             );
 
-            //This is used in multiple places, so to avoid recalculation we put it in the function scope.
+            //These are used in multiple places, so to avoid recalculation we put it in the function scope.
             let spacing = this._calcSpacing(time, style, overrides);
+            let scale = this._calcScale(time, style, overrides);
 
             //calculate size of text without scaling.
             {
@@ -681,27 +453,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._offsetX += outline.x;
             }
 
-            //pad for box blur
-            {
-                let edgeBlurIterations = this._calcEdgeBlur(
-                    time,
-                    style,
-                    overrides
-                );
-                if (edgeBlurIterations > 0) {
-                    let twoToEdgeBlur = global.Math.pow(2, edgeBlurIterations);
-                    this._width += twoToEdgeBlur * 2;
-                    this._height += twoToEdgeBlur * 2;
-                    this._offsetX += twoToEdgeBlur;
-                }
-            }
-
-            this._offsetY += this._height / 2;
-
             let offsetXUnscaled = this._offsetX;
             let offsetYUnscaled = this._offsetY;
             {
-                let scale = this._calcScale(time, style, overrides);
                 this._offsetX *= scale.x;
                 this._offsetY *= scale.y;
                 this._width *= scale.x;

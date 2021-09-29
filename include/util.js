@@ -1,4 +1,44 @@
 /**
+ * Creates a new Complaint(one shot warning).
+ * @constructor
+ * @param {string} warning The warning to display.
+ */
+sabre.Complaint = function (warning) {};
+/**
+ * Call this to grumble.
+ */
+sabre.Complaint.prototype.grumble = function () {};
+/**
+ * Rest the Complaint.
+ */
+sabre.Complaint.prototype.reset = function () {};
+/**
+ * Reset all Complaint states.
+ */
+sabre.Complaint.resetAll = function () {};
+
+/**
+ * Performs a transition between two numbers given current time, start, end, and acceleration.
+ * @param {number} curtime current time relative to event start.
+ * @param {number} originalValue the original value.
+ * @param {?number} transitionValue the target value.
+ * @param {number} start start time of transition.
+ * @param {number} end end time of transition.
+ * @param {number} acceleration the acceleration value.
+ * @returns {number} the result of the transition.
+ */
+sabre.performTransition = function (
+    curtime,
+    originalValue,
+    transitionValue,
+    start,
+    end,
+    acceleration
+) {
+    return 1;
+};
+
+/**
  * Round number n to p places.
  * @param {number} n Number to round.
  * @param {number} p Number of places.
@@ -18,26 +58,6 @@ sabre.stringEqualsCaseInsensitive = function (a, b) {
     return true;
 };
 
-/**
- * Creates a new Complaint(one shot warning).
- * @constructor
- * @param {string} warning The warning to display.
- */
-sabre.Complaint = function (warning) {};
-/**
- * Call this to grumble.
- */
-sabre.Complaint.prototype.grumble = function () {};
-/**
- * Rest the Complaint.
- */
-sabre.Complaint.prototype.reset = function () {};
-/**
- * Reset all Complaint states.
- */
-sabre.Complaint.resetAll = function () {};
-
-sabre.kill = false;
 sabre.pixelRatio = 1.0;
 /**
  * Get Backing pixel ratio for a canvas context.

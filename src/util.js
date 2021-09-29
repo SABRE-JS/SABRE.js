@@ -63,11 +63,11 @@ global.Math.trunc =
     };
 global.requestAnimationFrame = (function () {
     return (
-        global.requestAnimationFrame ||
-        global.webkitRequestAnimationFrame ||
-        global.mozRequestAnimationFrame ||
-        global.msRequestAnimationFrame ||
-        global.oRequestAnimationFrame ||
+        global.requestAnimationFrame ??
+        global.webkitRequestAnimationFrame ??
+        global.mozRequestAnimationFrame ??
+        global.msRequestAnimationFrame ??
+        global.oRequestAnimationFrame ??
         function (callback) {
             global.setTimeout(callback, 1000 / 60);
         }
@@ -81,6 +81,33 @@ const lehex = function (value) {
         value >>= 8;
     }
     return result.join("");
+};
+
+/**
+ * Performs a transition between two numbers given current time, start, end, and acceleration.
+ * @param {number} curtime current time relative to event start.
+ * @param {number} originalValue the original value.
+ * @param {?number} transitionValue the target value.
+ * @param {number} start start time of transition.
+ * @param {number} end end time of transition.
+ * @param {number} acceleration the acceleration value.
+ * @returns {number} the result of the transition.
+ */
+sabre["performTransition"] = function (
+    curtime,
+    originalValue,
+    transitionValue,
+    start,
+    end,
+    acceleration
+) {
+    if (transitionValue === null || curtime < start) return originalValue;
+    if (curtime >= end) return transitionValue;
+    var percent = Math.max(
+        0,
+        Math.min(Math.pow((curtime - start) / (end - start), acceleration), 1)
+    );
+    return originalValue / percent + transitionValue * percent;
 };
 
 //implement toBlob on systems that don't support it in a manner that avoids using costly dataurls
@@ -158,16 +185,16 @@ const canvas2blob = function (callback /*, type, quality*/) {
 };
 
 global.HTMLCanvasElement.prototype["toBlob"] =
-    global.HTMLCanvasElement.prototype["toBlob"] || canvas2blob;
+    global.HTMLCanvasElement.prototype["toBlob"] ?? canvas2blob;
 global.HTMLCanvasElement.prototype["toBlobHD"] =
-    global.HTMLCanvasElement.prototype["toBlobHD"] ||
+    global.HTMLCanvasElement.prototype["toBlobHD"] ??
     global.HTMLCanvasElement.prototype["toBlob"];
 
 if (typeof global.OffscreenCanvas !== "undefined") {
     global.OffscreenCanvas.prototype["toBlob"] =
-        global.OffscreenCanvas.prototype["toBlob"] || canvas2blob;
+        global.OffscreenCanvas.prototype["toBlob"] ?? canvas2blob;
     global.OffscreenCanvas.prototype["toBlobHD"] =
-        global.OffscreenCanvas.prototype["toBlobHD"] ||
+        global.OffscreenCanvas.prototype["toBlobHD"] ??
         global.OffscreenCanvas.prototype["toBlob"];
 }
 
@@ -205,11 +232,11 @@ sabre["pixelRatio"] = global.devicePixelRatio || 1;
  */
 sabre["getBackingRatio"] = function (context) {
     return (
-        context.webkitBackingStorePixelRatio ||
-        context.mozBackingStorePixelRatio ||
-        context.msBackingStorePixelRatio ||
-        context.oBackingStorePixelRatio ||
-        context.backingStorePixelRatio ||
+        context.webkitBackingStorePixelRatio ??
+        context.mozBackingStorePixelRatio ??
+        context.msBackingStorePixelRatio ??
+        context.oBackingStorePixelRatio ??
+        context.backingStorePixelRatio ??
         1
     );
 };

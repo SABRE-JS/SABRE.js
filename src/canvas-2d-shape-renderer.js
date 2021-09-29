@@ -325,11 +325,21 @@ const shape_renderer_prototype = global.Object.create(Object, {
     _handleStyling: {
         /**
          * Sets up the canvas to render according to specified styles.
+         * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
+         * @param {SSALineStyleOverride} lineOverrides
+         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          */
-        value: function (style, overrides, pass) {
+        value: function (
+            time,
+            style,
+            overrides,
+            lineOverrides,
+            lineTransitionTargetOverrides,
+            pass
+        ) {
             this._ctx.resetTransform();
             this._setScale(style, overrides, pass);
             this._setOutline(style, overrides, pass);
@@ -610,19 +620,30 @@ const shape_renderer_prototype = global.Object.create(Object, {
     "renderEvent": {
         /**
          * Render an event.
-         * @param {SSASubtitleEvent} event
-         * @param {number} pass
+         * @param {number} time the time at which to render the subtitles.
+         * @param {SSASubtitleEvent} event the subtitle event to render
+         * @param {number} pass the pass we are on.
+         * @param {boolean} dryRun is this a dry run for positioning.
          */
-        value: function (event, pass) {
+        value: function (time, event, pass, dryRun) {
             if (!this._initialized) this._init();
 
             let cmds = event.getText();
             let style = event.getStyle();
             let overrides = event.getOverrides();
+            let lineOverrides = event.getLineOverrides();
+            let lineTransitionTargetOverrides = event.getLineTransitionTargetOverrides();
 
             this._offsetX = this._offsetY = 0;
 
-            this._handleStyling(style, overrides, pass);
+            this._handleStyling(
+                time,
+                style,
+                overrides,
+                lineOverrides,
+                lineTransitionTargetOverrides,
+                pass
+            );
 
             //calculate size of drawing without scaling.
             this._calcSize(cmds);
@@ -651,48 +672,56 @@ const shape_renderer_prototype = global.Object.create(Object, {
             {
                 let scaleX =
                     (overrides.getScaleX() ?? style.getScaleX()) *
-                    overrides.getDrawingScale() *
-                    this._pixelsPerDpt;
+                    overrides.getDrawingScale();
                 let scaleY =
                     (overrides.getScaleY() ?? style.getScaleY()) *
-                    overrides.getDrawingScale() *
-                    this._pixelsPerDpt;
+                    overrides.getDrawingScale();
                 this._offsetX *= scaleX;
                 this._offsetY *= scaleY;
                 this._width *= scaleX;
                 this._height *= scaleY;
-                this._canvas.width = this._width;
-                this._canvas.height = this._height;
-                this._handleStyling(style, overrides, pass); //To workaround a bug.
             }
 
-            //reset the composite operation
-            this._ctx.globalCompositeOperation = "source-over";
-            //draw the text
-            {
-                let spacing = overrides.getSpacing() ?? style.getSpacing();
-                if (pass === sabre.RenderPasses.OUTLINE) {
-                    this._drawShape(
-                        cmds,
-                        offsetXUnscaled,
-                        offsetYUnscaled,
-                        true
-                    );
-                    this._ctx.globalCompositeOperation = "destination-out";
-                    this._ctx.filter = "none";
-                    this._drawShape(
-                        cmds,
-                        offsetXUnscaled,
-                        offsetYUnscaled,
-                        false
-                    );
-                } else {
-                    this._drawShape(
-                        cmds,
-                        offsetXUnscaled,
-                        offsetYUnscaled,
-                        false
-                    );
+            if (!dryRun) {
+                this._canvas.width = this._width;
+                this._canvas.height = this._height;
+                this._handleStyling(
+                    time,
+                    style,
+                    overrides,
+                    lineOverrides,
+                    lineTransitionTargetOverrides,
+                    pass
+                ); //To workaround a bug.
+
+                //reset the composite operation
+                this._ctx.globalCompositeOperation = "source-over";
+                //draw the shape
+                {
+                    let spacing = overrides.getSpacing() ?? style.getSpacing();
+                    if (pass === sabre.RenderPasses.OUTLINE) {
+                        this._drawShape(
+                            cmds,
+                            offsetXUnscaled,
+                            offsetYUnscaled,
+                            true
+                        );
+                        this._ctx.globalCompositeOperation = "destination-out";
+                        this._ctx.filter = "none";
+                        this._drawShape(
+                            cmds,
+                            offsetXUnscaled,
+                            offsetYUnscaled,
+                            false
+                        );
+                    } else {
+                        this._drawShape(
+                            cmds,
+                            offsetXUnscaled,
+                            offsetYUnscaled,
+                            false
+                        );
+                    }
                 }
             }
         },

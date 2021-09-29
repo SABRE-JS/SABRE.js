@@ -251,7 +251,9 @@ const main_prototype = global.Object.create(global.Object, {
                         config["info"]["timing"] = keypair[1];
                         return;
                     case "Synch Point":
-                        //TODO: figgure out the format for this timestamp.
+                        config["renderer"]["sync_offset"] = this._parseTime(
+                            keypair[1]
+                        );
                         return;
                     case "Script Updated By":
                         config["info"]["updater"] = keypair[1];
@@ -286,17 +288,20 @@ const main_prototype = global.Object.create(global.Object, {
                     case "Collisions": {
                         let collisionMode = keypair[1].toLowerCase();
                         if (collisionMode === "normal") {
-                            config["renderer"]["default_collision_mode"] = 0;
+                            config["renderer"]["default_collision_mode"] =
+                                sabre.CollisionModes.NORMAL;
                             return;
                         }
                         if (collisionMode === "reverse") {
-                            config["renderer"]["default_collision_mode"] = 1;
+                            config["renderer"]["default_collision_mode"] =
+                                sabre.CollisionModes.REVERSE;
                             return;
                         }
                         console.warn(
                             "Warning: Unrecognized collision mode, defaulting to normal collisions."
                         );
-                        config["renderer"]["default_collision_mode"] = 0;
+                        config["renderer"]["default_collision_mode"] =
+                            sabre.CollisionModes.NORMAL;
                         return;
                     }
                     case "PlayResY":
@@ -2421,8 +2426,8 @@ const main_prototype = global.Object.create(global.Object, {
                     } else {
                         temp2 = parseFloat(lparameters[1]);
                         if (!global.isNaN(temp2)) {
-                            transitionStart = temp;
-                            transitionEnd = temp2;
+                            transitionStart = temp / 1000;
+                            transitionEnd = temp2 / 1000;
                             temp = parseFloat(lparameters[2]);
                             if (!global.isNaN(temp)) {
                                 acceleration = temp;
@@ -2458,8 +2463,12 @@ const main_prototype = global.Object.create(global.Object, {
                         final_param
                     );
 
-                    final_param.setTransitionStart(transitionStart);
-                    final_param.setTransitionEnd(transitionEnd);
+                    final_param.setTransitionStart(
+                        transitionStart + timeInfo.start
+                    );
+                    final_param.setTransitionEnd(
+                        transitionEnd + timeInfo.start
+                    );
                     final_param.setTransitionAcceleration(acceleration);
 
                     overrides.setTransition(final_param);

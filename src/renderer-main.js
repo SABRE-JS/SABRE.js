@@ -124,15 +124,245 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _rectangleOffset: {
+        value: function (x1, y1, w1, h1, x2, y2, w2, h2) {
+            var m = [0, 0];
+            if (x1 >= x2 && x1 < x2 + w2 && y1 >= y2 && y1 < y2 + h2) {
+                if (
+                    Math.pow(x1 + w1 - x2, 2) + Math.pow(y1 + h1 - y2, 2) <
+                    Math.pow(x2 + w2 - x1, 2) + Math.pow(y2 + h2 - y1, 2)
+                ) {
+                    m = [-(x1 + w1 - x2), -(y1 + h1 - y2)];
+                } else {
+                    m = [-(x2 + w2 - x1), -(y2 + h2 - y1)];
+                }
+            } else if (x2 >= x1 && x2 < x1 + w1 && y2 >= y1 && y2 < y1 + h1) {
+                if (
+                    Math.pow(x2 + w2 - x1, 2) + Math.pow(y2 + h2 - y1, 2) <
+                    Math.pow(x1 + w1 - x2, 2) + Math.pow(y1 + h1 - y2, 2)
+                ) {
+                    m = [-(x2 + w2 - x1), -(y2 + h2 - y1)];
+                } else {
+                    m = [-(x1 + w1 - x2), -(y1 + h1 - y2)];
+                }
+            } else {
+                return null;
+            }
+            return m;
+        },
+        writable: false
+    },
+
+    _getBlurKernelValueForPosition: {
+        value: function (center_value, x, y, dim, intgr) {
+            let value = Math.max(
+                center_value -
+                    Math.sqrt(
+                        Math.pow(x - (dim - 1) / 2, 2) +
+                            Math.pow(y - (dim - 1) / 2, 2)
+                    ),
+                0
+            );
+            if (intgr) value = Math.floor(value);
+            return value;
+        },
+        writable: false
+    },
+
+    _calcEdgeBlur: {
+        /**
+         * Calc blur iterations, handing transitions.
+         * @param {number} time
+         * @param {SSAStyleDefinition} style
+         * @param {SSAStyleOverride} overrides
+         */
+        value: function (time, style, overrides) {
+            let transitionOverrides = overrides.getTransition();
+            let iterations = overrides.getEdgeBlur() ?? 0;
+            if (transitionOverrides !== null)
+                iterations = sabre.performTransition(
+                    time,
+                    iterations,
+                    transitionOverrides.getEdgeBlur(),
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
+                );
+            return iterations;
+        },
+        writable: false
+    },
+
     _positionEvent: {
         /**
          * Positions the event.
          * @private
+         * @param {number} time time of the current frame.
          * @param {SSASubtitleEvent} event the current event we're positioning.
-         * @param {{voffset:number,xoffset:number}} textAnchorOffset the offset from the anchor point of the text.
+         * @param {{hoffset:number,voffset:number}} textAnchorOffset the offset from the anchor point of the text.
          * @returns {{x:number,y:number,width:number,height:number}} the positioning info of the event.
          */
-        value: function () {},
+        value: function (time, event, textAnchor) {
+            let result = { x: 0, y: 0, width: 0, height: 0 };
+            let lineOverrides = event.getLineOverrides();
+            if (!event.getOverrides().getDrawingMode()) {
+                this._textRenderer.renderEvent(
+                    time,
+                    currentEvent,
+                    sabre.RenderPasses.FILL,
+                    textAnchor,
+                    this._config.renderer["resolution_x"],
+                    true
+                );
+                let dim = this._textRenderer.getDimensions();
+                if (
+                    lineOverrides.getPosition() === null &&
+                    lineOverrides.getMovement() === null
+                ) {
+                    let anchorPoint = [0, 0];
+                    let alignment = event.getOverrides().getAlignment() - 1;
+                    switch (Math.floor(alignment / 3)) {
+                        case 2:
+                            //TOP
+                            anchorPoint[1] = 0;
+                            break;
+                        case 1:
+                            //MIDDLE
+                            anchorPoint[1] =
+                                this._config.renderer["resolution_y"] -
+                                dim[1] / 2;
+                            break;
+                        case 0:
+                            //BOTTOM
+                            anchorPoint[1] =
+                                this._config.renderer["resolution_y"] - dim[1];
+                            break;
+                    }
+                    switch (Math.floor(alignment % 3)) {
+                        case 2:
+                            anchorPoint[0] =
+                                this._config.renderer["resolution_x"] - dim[0];
+                        case 1:
+                            //CENTER
+                            anchorPoint[0] =
+                                this._config.renderer["resolution_x"] / 2 -
+                                dim[0] / 2;
+                            break;
+                        case 0:
+                            //LEFT
+                            //Nothing needs to be done, the x coordinate is already zero.
+                            break;
+                    }
+                    result.x = anchorPoint[0];
+                    result.y = anchorPoint[1];
+                } else {
+                    let curPos = [0, 0];
+                    if (lineOverrides.getMovement() === null) {
+                        curPos = lineOverrides.getPosition();
+                    } else {
+                        let move = lineOverrides.getMovement();
+                        curPos[0] = sabre.performTransition(
+                            time,
+                            move[0],
+                            move[2],
+                            move[4],
+                            move[5],
+                            1
+                        );
+                        curPos[1] = sabre.performTransition(
+                            time,
+                            move[1],
+                            move[3],
+                            move[4],
+                            move[5],
+                            1
+                        );
+                    }
+                    result.x = curPos[0];
+                    result.y = curPos[1];
+                }
+                result.width = dim[0];
+                result.height = dim[1];
+            } else {
+                this._shapeRenderer.renderEvent(
+                    time,
+                    currentEvent,
+                    sabre.RenderPasses.FILL,
+                    textAnchor,
+                    this._config.renderer["resolution_x"],
+                    true
+                );
+                let dim = this._shapeRenderer.getDimensions();
+                if (
+                    lineOverrides.getPosition() === null &&
+                    lineOverrides.getMovement() === null
+                ) {
+                    let anchorPoint = [0, 0];
+                    let alignment = event.getOverrides().getAlignment() - 1;
+                    switch (Math.floor(alignment / 3)) {
+                        case 2:
+                            //TOP
+                            anchorPoint[1] = 0;
+                            break;
+                        case 1:
+                            //MIDDLE
+                            anchorPoint[1] =
+                                this._config.renderer["resolution_y"] -
+                                dim[1] / 2;
+                            break;
+                        case 0:
+                            //BOTTOM
+                            anchorPoint[1] =
+                                this._config.renderer["resolution_y"] - dim[1];
+                            break;
+                    }
+                    switch (Math.floor(alignment % 3)) {
+                        case 2:
+                            anchorPoint[0] =
+                                this._config.renderer["resolution_x"] - dim[0];
+                        case 1:
+                            //CENTER
+                            anchorPoint[0] =
+                                this._config.renderer["resolution_x"] / 2 -
+                                dim[0] / 2;
+                            break;
+                        case 0:
+                            //LEFT
+                            //Nothing needs to be done, the x coordinate is already zero.
+                            break;
+                    }
+                    result.x = anchorPoint[0];
+                    result.y = anchorPoint[1];
+                } else {
+                    let curPos = [0, 0];
+                    if (lineOverrides.getMovement() === null) {
+                        curPos = lineOverrides.getPosition();
+                    } else {
+                        let move = lineOverrides.getMovement();
+                        curPos[0] = sabre.performTransition(
+                            time,
+                            move[0],
+                            move[2],
+                            move[4],
+                            move[5],
+                            1
+                        );
+                        curPos[1] = sabre.performTransition(
+                            time,
+                            move[1],
+                            move[3],
+                            move[4],
+                            move[5],
+                            1
+                        );
+                    }
+                    result.x = curPos[0];
+                    result.y = curPos[1];
+                }
+                result.width = dim[0];
+                result.height = dim[1];
+            }
+        },
         writable: false
     },
 
@@ -140,69 +370,133 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Collides two events.
          * @private
-         * @param {number} index1 current event's index.
-         * @param {Array<number>} indexesForMatchingId1 indexes who's id matches the current event's id.
-         * @param {number} index2 the index of the event we're colliding with.
-         * @param {Array<number>} indexesForMatchingId2 indexes who's id matches the event we're colliding with's id.
-         * @param {Array<{x:number,y:number,width:number,height:number}>} positions position info of each event.
+         * @param {{x:number,y:number,width:number,height:number}} positionInfo1 current event's position info.
+         * @param {Array<{x:number,y:number,width:number,height:number}>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
+         * @param {{x:number,y:number,width:number,height:number}} positionInfo2 the position info of the event we're colliding with.
+         * @param {Array<{x:number,y:number,width:number,height:number}>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
+         * @returns {boolean} did we move something?
          */
         value: function (
-            index1,
-            indexesForMatchingId1,
-            index2,
-            indexesForMatchingId2,
-            positions
-        ) {}
+            positionInfo1,
+            posInfosForMatchingId1,
+            positionInfo2,
+            posInfosForMatchingId2
+        ) {
+            let overlap = this._rectangleOffset(
+                positionInfo1.x,
+                positionInfo1.y,
+                positionInfo1.width,
+                positionInfo1.height,
+                positionInfo2.x,
+                positionInfo2.y,
+                positionInfo2.width,
+                positionInfo2.height
+            );
+            if (overlap != null) {
+                if (
+                    this._config.renderer["default_collision_mode"] ===
+                    sabre.CollisionModes.NORMAL
+                ) {
+                    if (overlap[1] < 0) {
+                        for (
+                            let i = 0;
+                            i < posInfosForMatchingId2.length;
+                            i++
+                        ) {
+                            posInfosForMatchingId2[i].y -= positionInfo1.height;
+                            posInfosForMatchingId;
+                        }
+                    } else {
+                    }
+                } else {
+                }
+                return true;
+            }
+            return false;
+        }
+    },
+
+    _collideEventWithViewport: {
+        /**
+         * Collides an event with the viewport.
+         * @private
+         * @param {{x:number,y:number,width:number,height:number}} positionInfo current event's position info.
+         * @param {Array<{x:number,y:number,width:number,height:number}>} posInfosForMatchingId position infos for events who's id matches the current event's id.
+         * @returns {boolean} did we move something?
+         */
+        value: function (positionInfo, posInfosForMatchingId) {},
+        writable: false
     },
 
     _organizeEvents: {
         /**
          * Positions events onscreen and handles collisions.
          * @private
+         * @param {number} time time of current frame.
          * @param {Array<SSASubtitleEvent>} events list of onscreen subtitle events for this frame in order of layer.
-         * @returns {Array<{x:number,y:number,width:number,height:number}>} each event's position onscreen.
+         * @returns {Array<{x:number,y:number,width:number,height:number,moveup:boolean}>} each event's position onscreen.
          */
         value: function (events) {
             let result = new Array(events.length);
-            result.fill(null);
             let resultsForId = {};
             {
                 let lastId = -1;
-                let textAnchor;
+                let textAnchor = { hoffset: 0, voffset: 0 };
                 for (let i = 0; i < events.length; i++) {
                     let id = events[i].getId();
                     resultsForId[id] = resultsForId[id] ?? [];
-                    resultsForId[id].push(i);
-                    if (id !== lastId) textAnchor = { voffset: 0, hoffset: 0 };
-                    result[i] = this._positionEvent(events[i], textAnchor);
+                    if (id !== lastId) {
+                        textAnchor.voffset = 0;
+                        textAnchor.hoffset = 0;
+                    }
+                    result[i] = this._positionEvent(
+                        time,
+                        events[i],
+                        textAnchor
+                    );
+                    resultsForId[id].push(result[i]);
                     lastId = id;
                 }
             }
-            for (let i = 0; i < events.length; i++) {
-                if (
-                    events[i].getLineOverrides().getPosition() !== null ||
-                    events[i].getLineOverrides().getMovement() !== null
-                )
-                    continue;
-                let id = events[i].getId();
-                for (let j = 0; j < events.length; j++) {
-                    if (events[j].getLayer() !== events[i].getLayer()) continue;
-                    let id2 = events[j].getId();
-                    if (id2 === id) continue;
+            let moved = false;
+            let count = 0;
+            do {
+                for (let i = 0; i < events.length; i++) {
+                    if (result[i].width === 0 || result[i].height === 0)
+                        continue;
                     if (
-                        events[j].getLineOverrides().getPosition() !== null ||
-                        events[j].getLineOverrides().getMovement() !== null
+                        events[i].getLineOverrides().getPosition() !== null ||
+                        events[i].getLineOverrides().getMovement() !== null
                     )
                         continue;
-                    this._collideEvent(
-                        i,
-                        resultsForId[id],
-                        j,
-                        resultsForId[id2],
-                        result
+                    let id = events[i].getId();
+                    moved |= this._collideEventWithViewport(
+                        result[i],
+                        resultsForId[id]
                     );
+                    for (let j = 0; j < events.length; j++) {
+                        if (events[j].getLayer() !== events[i].getLayer())
+                            continue;
+                        let id2 = events[j].getId();
+                        if (id2 === id) continue;
+                        if (result[j].width === 0 || result[j].height === 0)
+                            continue;
+                        if (
+                            events[j].getLineOverrides().getPosition() !==
+                                null ||
+                            events[j].getLineOverrides().getMovement() !== null
+                        )
+                            continue;
+                        moved |= this._collideEvent(
+                            result[i],
+                            resultsForId[id],
+                            result[j],
+                            resultsForId[id2]
+                        );
+                    }
                 }
-            }
+                count++;
+            } while (moved && count < 200);
             return result;
         },
         writable: false
@@ -311,28 +605,27 @@ const renderer_prototype = global.Object.create(Object, {
             this._gl.clear(
                 this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
             );
-            let positions = this._organizeEvents(events);
+            let positions = this._organizeEvents(time, events);
             for (let pass = 0; pass < 3; pass++) {
                 //One pass for background, one for outline and one for text.
                 for (let i = 0; i < events.length; i++) {
                     let currentEvent = events[i];
-                    let relTime = time - currentEvent.getStart();
                     if (!currentEvent.getOverrides().getDrawingMode()) {
                         this._textRenderer.renderEvent(
-                            relTime,
+                            time,
                             currentEvent,
                             pass,
                             false
                         );
-                        //TODO: Composite Text into image.
+                        //TODO: Composite Text into image. Applying rotation and then edge blur and gaussian blur as needed.
                     } else {
                         this._shapeRenderer.renderEvent(
-                            relTime,
+                            time,
                             currentEvent,
                             pass,
                             false
                         );
-                        //TODO: Composite Graphics into image.
+                        //TODO: Composite Graphics into image. Applying rotation and then edge blur and gaussian blur as needed.
                     }
                 }
             }

@@ -1,4 +1,13 @@
 /**
+ * Defines collision modes.
+ * @enum {number}
+ */
+sabre.CollisionModes = {
+    NORMAL: 0,
+    REVERSE: 1
+};
+
+/**
  * Defines karaoke modes.
  * @enum {number}
  */
