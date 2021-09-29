@@ -128,7 +128,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             let scaleX = overrides.getScaleX() ?? style.getScaleX();
             let scaleY = overrides.getScaleY() ?? style.getScaleY();
             if (transitionOverrides !== null) {
-                scaleX = this._doTransition(
+                scaleX = sabre.performTransition(
                     time,
                     scaleX,
                     transitionOverrides.getScaleX(),
@@ -136,7 +136,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                     transitionOverrides.getTransitionEnd(),
                     transitionOverrides.getTransitionAcceleration()
                 );
-                scaleY = this._doTransition(
+                scaleY = sabre.performTransition(
                     time,
                     scaleY,
                     transitionOverrides.getScaleY(),
@@ -169,7 +169,10 @@ const text_renderer_prototype = global.Object.create(Object, {
             pass
         ) {
             let scale = this._calcScale(time, style, overrides);
-            this._ctx.scale(scale.x, scale.y);
+            this._ctx.scale(
+                scale.x * this._pixelsPerDpt,
+                scale.y * this._pixelsPerDpt
+            );
         },
         writable: false
     },
@@ -186,7 +189,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
             let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
             if (transitionOverrides !== null) {
-                outlineX = this._doTransition(
+                outlineX = sabre.performTransition(
                     time,
                     outlineX,
                     transitionOverrides.getOutlineX(),
@@ -194,7 +197,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                     transitionOverrides.getTransitionEnd(),
                     transitionOverrides.getTransitionAcceleration()
                 );
-                outlineY = this._doTransition(
+                outlineY = sabre.performTransition(
                     time,
                     outlineY,
                     transitionOverrides.getOutlineY(),
@@ -247,7 +250,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                 (overrides.getFontSize() ?? style.getFontSize()) +
                 overrides.getFontSizeMod();
             if (transitionOverrides !== null)
-                fontSize = this._doTransition(
+                fontSize = sabre.performTransition(
                     time,
                     fontSize,
                     transitionOverrides.getFontSize(),
@@ -282,11 +285,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             let fontName = overrides.getFontName() ?? style.getFontName();
             let fontWeight = overrides.getWeight() ?? style.getWeight();
             let fontItalicized = overrides.getItalic() ?? style.getItalic();
-            let font =
-                fontSize * this._pixelsPerDpt +
-                "px '" +
-                fontName +
-                "', 'Arial', 'Open Sans'";
+            let font = fontSize + "px '" + fontName + "', 'Arial', 'Open Sans'";
             font = fontWeight + " " + font;
             if (fontItalicized) font = "italic " + font;
             this._ctx.font = font;
@@ -326,7 +325,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             let transitionOverrides = overrides.getTransition();
             let spacing = overrides.getSpacing() ?? style.getSpacing();
             if (transitionOverrides !== null)
-                spacing = this._doTransition(
+                spacing = sabre.performTransition(
                     time,
                     spacing,
                     transitionOverrides.getSpacing(),
@@ -442,7 +441,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                         this._width += this._ctx.measureText(text[i]).width;
                     this._width += spacing * (text.length - 1);
                 }
-                this._height = fontSize * this._pixelsPerDpt * lineSpacing;
+                this._height = fontSize * lineSpacing;
             }
 
             //pad for outline
@@ -451,15 +450,16 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._width += outline.x * 2;
                 this._height += outline.y * 2;
                 this._offsetX += outline.x;
+                this._offsetY += outline.y;
             }
 
             let offsetXUnscaled = this._offsetX;
             let offsetYUnscaled = this._offsetY;
             {
-                this._offsetX *= scale.x;
-                this._offsetY *= scale.y;
-                this._width *= scale.x;
-                this._height *= scale.y;
+                this._offsetX *= scale.x * this._pixelsPerDpt;
+                this._offsetY *= scale.y * this._pixelsPerDpt;
+                this._width *= scale.x * this._pixelsPerDpt;
+                this._height *= scale.y * this._pixelsPerDpt;
             }
 
             if (!dryRun) {

@@ -39,14 +39,9 @@ const expandBounds = function (max, min, x, y) {
 };
 
 const shape_renderer_prototype = global.Object.create(Object, {
-    _serializer: {
-        value: new XMLSerializer(),
-        writable: false
-    },
-
     _initialized: {
         /**
-         * Is the text renderer initialized.
+         * Is the shape renderer initialized.
          * @type {boolean}
          */
         value: false,
@@ -62,18 +57,9 @@ const shape_renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    _blur_urls: {
-        /**
-         * Blur URLS
-         * @type {Array<string>}
-         */
-        value: [],
-        writable: false
-    },
-
     _canvas: {
         /**
-         * The canvas for the text renderer.
+         * The canvas for the shape renderer.
          * @type {?HTMLCanvasElement|?OffscreenCanvas}
          */
         value: null,
@@ -82,7 +68,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
 
     _ctx: {
         /**
-         * The canvas context for the text renderer.
+         * The canvas context for the shape renderer.
          * @type {CanvasRenderingContext2D}
          */
         value: null,
@@ -145,104 +131,36 @@ const shape_renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    _getBlurKernelValueForPosition: {
-        value: function (center_value, x, y, dim, intgr) {
-            let value = Math.max(
-                center_value -
-                    Math.sqrt(
-                        Math.pow(x - (dim - 1) / 2, 2) +
-                            Math.pow(y - (dim - 1) / 2, 2)
-                    ),
-                0
-            );
-            if (intgr) value = Math.floor(value);
-            return value;
-        },
-        writable: false
-    },
-
-    _getBlurMatrixUrl: {
+    _calcScale: {
         /**
-         * Generates a edge-blur URL.
-         * @param {number} blur_count Number of times to apply edge-blur.
-         * @returns {string} the resulting URL.
+         * Calc scale, handing transitions.
+         * @param {number} time
+         * @param {SSAStyleDefinition} style
+         * @param {SSAStyleOverride} overrides
          */
-        value: function (blur_count) {
-            if (
-                typeof this._blur_urls[blur_count] === "undefined" ||
-                this._blur_urls[blur_count] === null
-            ) {
-                let filterdom;
-                let doctype = global.document.implementation.createDocumentType(
-                    "svg",
-                    "-//W3C//DTD SVG 1.1//EN",
-                    "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"
+        value: function (time, style, overrides) {
+            let transitionOverrides = overrides.getTransition();
+            let scaleX = overrides.getScaleX() ?? style.getScaleX();
+            let scaleY = overrides.getScaleY() ?? style.getScaleY();
+            if (transitionOverrides !== null) {
+                scaleX = sabre.performTransition(
+                    time,
+                    scaleX,
+                    transitionOverrides.getScaleX(),
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
                 );
-                let filter_doc = (filterdom = global.document.implementation.createDocument(
-                    "http://www.w3.org/2000/svg",
-                    "svg",
-                    doctype
-                )).documentElement;
-                let defs = filterdom.createElementNS(
-                    "http://www.w3.org/2000/svg",
-                    "defs"
+                scaleY = sabre.performTransition(
+                    time,
+                    scaleY,
+                    transitionOverrides.getScaleY(),
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
                 );
-                let filter = filterdom.createElementNS(
-                    "http://www.w3.org/2000/svg",
-                    "filter"
-                );
-                filter.setAttribute("id", "filter");
-                defs.appendChild(filter);
-                filter_doc.appendChild(defs);
-                filter.setAttribute("filterUnits", "userSpaceOnUse");
-                filter.setAttribute("x", "0");
-                filter.setAttribute("y", "0");
-                filter.setAttribute("width", global.screen.width);
-                filter.setAttribute("height", global.screen.height);
-                let filters_count = 0;
-                while (blur_count > 0) {
-                    let blur = filterdom.createElementNS(
-                        "http://www.w3.org/2000/svg",
-                        "feConvolveMatrix"
-                    );
-                    blur.setAttribute("edgeMode", "none");
-                    if (filters_count++ === 0)
-                        blur.setAttribute("in", "SourceGraphic");
-                    else
-                        blur.setAttribute(
-                            "in",
-                            "filterStep" + (filters_count - 1)
-                        );
-                    let blur_matrix = [];
-                    for (let i = 0; i < 5; i++)
-                        for (let j = 0; j < 5; j++)
-                            blur_matrix[
-                                i * 5 + j
-                            ] = this._getBlurKernelValueForPosition(
-                                4,
-                                j,
-                                i,
-                                5,
-                                false
-                            );
-                    blur.setAttribute("order", Math.sqrt(blur_matrix.length));
-                    blur.setAttribute("kernelMatrix", blur_matrix.join(", "));
-                    if (--blur_count > 0)
-                        blur.setAttribute(
-                            "result",
-                            "filterStep" + filters_count
-                        );
-                    filter.appendChild(blur);
-                }
-                let filterxml = this._serializer.serializeToString(filterdom);
-                let filterurl =
-                    "data:image/svg+xml;utf8," +
-                    global.encodeURIComponent(filterxml) +
-                    "#filter";
-                return (this._blur_urls[blur_count] = filterurl);
-            } else {
-                return this._blur_urls[blur_count];
             }
+            return { x: scaleX, y: scaleY };
         },
         writable: false
     },
@@ -250,19 +168,60 @@ const shape_renderer_prototype = global.Object.create(Object, {
     _setScale: {
         /**
          * Sets up the canvas to render to the correct scale.
+         * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
+         * @param {SSALineStyleOverride} lineOverrides
+         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          */
-        value: function (style, overrides, pass) {
+        value: function (
+            time,
+            style,
+            overrides,
+            lineOverrides,
+            lineTransitionTargetOverrides,
+            pass
+        ) {
+            let scale = this._calcScale(time, style, overrides);
             this._ctx.scale(
-                (overrides.getScaleX() ?? style.getScaleX()) *
-                    overrides.getDrawingScale() *
-                    this._pixelsPerDpt,
-                (overrides.getScaleY() ?? style.getScaleY()) *
-                    overrides.getDrawingScale() *
-                    this._pixelsPerDpt
+                scale.x * overrides.getDrawingScale() * this._pixelsPerDpt,
+                scale.y * overrides.getDrawingScale() * this._pixelsPerDpt
             );
+        },
+        writable: false
+    },
+
+    _calcOutline: {
+        /**
+         * Calc outline width, handing transitions.
+         * @param {number} time
+         * @param {SSAStyleDefinition} style
+         * @param {SSAStyleOverride} overrides
+         */
+        value: function (time, style, overrides) {
+            let transitionOverrides = overrides.getTransition();
+            let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
+            let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
+            if (transitionOverrides !== null) {
+                outlineX = sabre.performTransition(
+                    time,
+                    outlineX,
+                    transitionOverrides.getOutlineX(),
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
+                );
+                outlineY = sabre.performTransition(
+                    time,
+                    outlineY,
+                    transitionOverrides.getOutlineY(),
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
+                );
+            }
+            return { x: outlineX, y: outlineY };
         },
         writable: false
     },
@@ -270,43 +229,25 @@ const shape_renderer_prototype = global.Object.create(Object, {
     _setOutline: {
         /**
          * Set outline width to the correct size.
+         * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
+         * @param {SSALineStyleOverride} lineOverrides
+         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          */
-        value: function (style, overrides, pass) {
+        value: function (
+            time,
+            style,
+            overrides,
+            lineOverrides,
+            lineTransitionTargetOverrides,
+            pass
+        ) {
             //TODO: Figgure out a good way to do dimension specific line widths.
+            let outline = this._calcOutline(time, style, overrides);
             if (pass === sabre.RenderPasses.OUTLINE)
-                this._ctx.lineWidth =
-                    (overrides.getOutlineX() ?? style.getOutlineX()) +
-                    (overrides.getOutlineY() ?? style.getOutlineY()); //AVERAGE * 2 = SUM
-        },
-        writable: false
-    },
-
-    _setEdgeBlur: {
-        /**
-         * Set box blur radius, gaussian blur is handled in the compositing step instead of here for performance reasons.
-         * @param {SSAStyleDefinition} style
-         * @param {SSAStyleOverride} overrides
-         * @param {number} pass
-         */
-        value: function (style, overrides, pass) {
-            let iterations = overrides.getEdgeBlur() ?? 0;
-            if (iterations > 0) {
-                this._ctx.filter =
-                    "url('" + this._getBlurMatrixUrl(iterations) + "')";
-            } else this._ctx.filter = "none";
-        },
-        writable: false
-    },
-
-    _disableEdgeBlur: {
-        /**
-         * disables edge blur for passes where it is invalid.
-         */
-        value: function () {
-            this._ctx.filter = "none";
+                this._ctx.lineWidth = outline.x + outline.y; //AVERAGE * 2 = SUM
         },
         writable: false
     },
@@ -314,11 +255,21 @@ const shape_renderer_prototype = global.Object.create(Object, {
     _setColors: {
         /**
          * Set the colors for the subtitle.
+         * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
+         * @param {SSALineStyleOverride} lineOverrides
+         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          */
-        value: function (style, overrides, pass) {},
+        value: function (
+            time,
+            style,
+            overrides,
+            lineOverrides,
+            lineTransitionTargetOverrides,
+            pass
+        ) {},
         writable: false
     },
 
@@ -341,22 +292,30 @@ const shape_renderer_prototype = global.Object.create(Object, {
             pass
         ) {
             this._ctx.resetTransform();
-            this._setScale(style, overrides, pass);
-            this._setOutline(style, overrides, pass);
-            this._setColors(style, overrides, pass);
-            {
-                let borderStyle = style.getBorderStyle();
-                let outlineActive =
-                    (overrides.getOutlineX() ?? style.getOutlineX()) > 0 ||
-                    (overrides.getOutlineY() ?? style.getOutlineY()) > 0;
-                if (
-                    pass === sabre.RenderPasses.OUTLINE ||
-                    (pass !== sabre.RenderPasses.BACKGROUND &&
-                        (borderStyle !== 1 || !outlineActive))
-                )
-                    this._setEdgeBlur(style, overrides, pass);
-                else this._disableEdgeBlur();
-            }
+            this._setScale(
+                time,
+                style,
+                overrides,
+                lineOverrides,
+                lineTransitionTargetOverrides,
+                pass
+            );
+            this._setOutline(
+                time,
+                style,
+                overrides,
+                lineOverrides,
+                lineTransitionTargetOverrides,
+                pass
+            );
+            this._setColors(
+                time,
+                style,
+                overrides,
+                lineOverrides,
+                lineTransitionTargetOverrides,
+                pass
+            );
         },
         writable: false
     },
@@ -648,38 +607,27 @@ const shape_renderer_prototype = global.Object.create(Object, {
             //calculate size of drawing without scaling.
             this._calcSize(cmds);
 
-            //pad for box blur
-            if ((overrides.getEdgeBlur() ?? 0) > 0) {
-                let twoToEdgeBlur = global.Math.pow(2, overrides.getEdgeBlur());
-                this._width += twoToEdgeBlur * 2;
-                this._height += twoToEdgeBlur * 2;
-                this._offsetX += twoToEdgeBlur;
-            }
-
             //pad for outline
             if (pass === sabre.RenderPasses.OUTLINE) {
-                let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
-                let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
-                this._width += outlineX * 2;
-                this._height += outlineY * 2;
-                this._offsetX += outlineX;
+                let outline = this._calcOutline(time, style, overrides);
+                this._width += outline.x * 2;
+                this._height += outline.x * 2;
+                this._offsetX += outline.x;
+                this._offsetY += outline.y;
             }
-
-            this._offsetY += this._height / 2;
 
             let offsetXUnscaled = this._offsetX;
             let offsetYUnscaled = this._offsetY;
             {
-                let scaleX =
-                    (overrides.getScaleX() ?? style.getScaleX()) *
-                    overrides.getDrawingScale();
-                let scaleY =
-                    (overrides.getScaleY() ?? style.getScaleY()) *
-                    overrides.getDrawingScale();
-                this._offsetX *= scaleX;
-                this._offsetY *= scaleY;
-                this._width *= scaleX;
-                this._height *= scaleY;
+                let scale = this._calcScale(time, style, overrides);
+                this._offsetX *=
+                    scale.x * overrides.getDrawingScale() * this._pixelsPerDpt;
+                this._offsetY *=
+                    scale.y * overrides.getDrawingScale() * this._pixelsPerDpt;
+                this._width *=
+                    scale.x * overrides.getDrawingScale() * this._pixelsPerDpt;
+                this._height *=
+                    scale.y * overrides.getDrawingScale() * this._pixelsPerDpt;
             }
 
             if (!dryRun) {

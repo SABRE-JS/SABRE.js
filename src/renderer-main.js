@@ -208,7 +208,7 @@ const renderer_prototype = global.Object.create(Object, {
             if (!event.getOverrides().getDrawingMode()) {
                 this._textRenderer.renderEvent(
                     time,
-                    currentEvent,
+                    event,
                     sabre.RenderPasses.FILL,
                     textAnchor,
                     this._config.renderer["resolution_x"],
@@ -286,7 +286,7 @@ const renderer_prototype = global.Object.create(Object, {
             } else {
                 this._shapeRenderer.renderEvent(
                     time,
-                    currentEvent,
+                    event,
                     sabre.RenderPasses.FILL,
                     textAnchor,
                     this._config.renderer["resolution_x"],
