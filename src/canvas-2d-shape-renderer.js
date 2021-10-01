@@ -118,10 +118,11 @@ const shape_renderer_prototype = global.Object.create(Object, {
         value: function () {
             if (typeof global.OffscreenCanvas === "undefined") {
                 this._canvas = global.document.createElement("canvas");
-                this._height = this._width = 0;
+                this._canvas.height = this._canvas.width = 0;
             } else {
                 this._canvas = new global.OffscreenCanvas(0, 0);
             }
+            this._height = this._width = 0;
             this._ctx = this._canvas.getContext("2d", {
                 "alpha": true,
                 "desynchronized": true
