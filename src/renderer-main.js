@@ -6,6 +6,7 @@
  |-
  */
 //@include [util.js]
+//@include [global-constants.js]
 //@include [color.js]
 //@include [style.js]
 //@include [style-override.js]
@@ -15,6 +16,7 @@
 //@include [canvas-2d-text-renderer.js]
 //@include [canvas-2d-shape-renderer.js]
 sabre.import("util.min.js");
+sabre.import("global-constants.min.js");
 sabre.import("color.min.js");
 sabre.import("style.min.js");
 sabre.import("style-override.min.js");
@@ -203,7 +205,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {{hoffset:number,voffset:number}} textAnchorOffset the offset from the anchor point of the text.
          * @returns {{x:number,y:number,width:number,height:number}} the positioning info of the event.
          */
-        value: function (time, index, event, textAnchor) {
+        value: function (time, index, event, textAnchorOffset) {
             let result = { x: 0, y: 0, width: 0, height: 0, index: index };
             let lineOverrides = event.getLineOverrides();
             if (!event.getOverrides().getDrawingMode()) {
@@ -211,7 +213,7 @@ const renderer_prototype = global.Object.create(Object, {
                     time,
                     event,
                     sabre.RenderPasses.FILL,
-                    textAnchor,
+                    textAnchorOffset,
                     this._config.renderer["resolution_x"],
                     true
                 );
@@ -289,7 +291,7 @@ const renderer_prototype = global.Object.create(Object, {
                     time,
                     event,
                     sabre.RenderPasses.FILL,
-                    textAnchor,
+                    textAnchorOffset,
                     this._config.renderer["resolution_x"],
                     true
                 );
@@ -363,6 +365,7 @@ const renderer_prototype = global.Object.create(Object, {
                 result.width = dim[0];
                 result.height = dim[1];
             }
+            return result;
         },
         writable: false
     },
@@ -415,7 +418,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId1.length;
                                 i++
                             ) {
-                                posInfosForMatchingId1[i] += overlap[1];
+                                posInfosForMatchingId1[i].y += overlap[1];
                             }
                         }
                     } else if (overlap[1] > 0) {
@@ -425,7 +428,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
-                                posInfosForMatchingId2[i] += overlap[1];
+                                posInfosForMatchingId2[i].y += overlap[1];
                             }
                         } else {
                             for (
@@ -433,9 +436,9 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
-                                posInfosForMatchingId[i] -=
+                                posInfosForMatchingId1[i].y -=
                                     positionInfo2.height;
-                                posInfosForMatchingId1[i] -= overlap[1];
+                                posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
                     }
@@ -457,7 +460,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId1.length;
                                 i++
                             ) {
-                                posInfosForMatchingId1[i] += overlap[1];
+                                posInfosForMatchingId1[i].y += overlap[1];
                             }
                         }
                     } else if (overlap[1] < 0) {
@@ -467,7 +470,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
-                                posInfosForMatchingId2[i] += overlap[1];
+                                posInfosForMatchingId2[i].y += overlap[1];
                             }
                         } else {
                             for (
@@ -475,9 +478,9 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
-                                posInfosForMatchingId[i] -=
+                                posInfosForMatchingId1[i].y -=
                                     positionInfo2.height;
-                                posInfosForMatchingId1[i] -= overlap[1];
+                                posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
                     }
