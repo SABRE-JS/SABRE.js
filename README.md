@@ -18,6 +18,9 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 
 ### Documentation
 
+You can retrieve a instance of the library by calling `sabre.SABRERenderer(fontLoadingFunction)` and passing
+it a function that loads fonts using the CSS Font loading API.
+
 #### Functions
 
 <dl>
