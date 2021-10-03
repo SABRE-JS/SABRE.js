@@ -233,7 +233,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             //TODO: Figgure out a good way to do dimension specific line widths.
             let outline = this._calcOutline(time, style, overrides);
             if (pass === sabre.RenderPasses.OUTLINE)
-                this._ctx.lineWidth = outline.x + outline.y; //AVERAGE * 2 = SUM
+                this._ctx.lineWidth = Math.min(outline.x, outline.y)*2; 
         },
         writable: false
     },
@@ -446,12 +446,17 @@ const text_renderer_prototype = global.Object.create(Object, {
             }
 
             //pad for outline
+            let outline_x = 0;
+            let outline_y = 0;
+
             if (pass === sabre.RenderPasses.OUTLINE) {
                 let outline = this._calcOutline(time, style, overrides);
                 this._width += outline.x * 2;
                 this._height += outline.y * 2;
                 this._offsetX += outline.x;
                 this._offsetY += outline.y;
+                outline_x = outline.x;
+                outline_y = outline.y;
             }
 
             let offsetXUnscaled = this._offsetX;
@@ -480,12 +485,48 @@ const text_renderer_prototype = global.Object.create(Object, {
                 //draw the text
                 {
                     if (pass === sabre.RenderPasses.OUTLINE) {
+                        let outline_x_bigger = outline_x > outline_y;
                         if (spacing === 0) {
-                            this._ctx.strokeText(
-                                text,
-                                offsetXUnscaled,
-                                offsetYUnscaled
-                            );
+                            // Smear outline
+                            if (outline_x_bigger) {
+                                if (outline_x > 0 && outline_y > 0) {
+                                    for (let i = -outline_x/outline_y; i <= outline_x/outline_y ; i += outline_y/outline_x) {
+                                        this._ctx.strokeText(
+                                            text,
+                                            offsetXUnscaled+i,
+                                            offsetYUnscaled
+                                            );
+                                    }
+                                } else {
+                                    for (let i = -outline_x; i <= outline_x; i++) {
+                                        this._ctx.fillStyle = this._ctx.strokeStyle;
+                                        this._ctx.fillText(
+                                            text,
+                                            offsetXUnscaled+i,
+                                            offsetYUnscaled
+                                            );
+                                    }
+                                }
+                            } else {
+                                if (outline_y > 0 && outline_x > 0) {
+                                    for (let i = -outline_y/outline_x; i <= outline_y/outline_x ; i += outline_x/outline_y) {
+                                        this._ctx.strokeText(
+                                            text,
+                                            offsetXUnscaled,
+                                            offsetYUnscaled+i
+                                            );
+                                    }
+                                } else {
+                                    for (let i = -outline_y; i <= outline_y; i++) {
+                                        this._ctx.fillStyle = this._ctx.strokeStyle;
+                                        this._ctx.fillText(
+                                            text,
+                                            offsetXUnscaled,
+                                            offsetYUnscaled+i
+                                            );
+                                    }
+                                }
+                            }
                             this._ctx.globalCompositeOperation =
                                 "destination-out";
                             this._ctx.filter = "none";
@@ -495,17 +536,65 @@ const text_renderer_prototype = global.Object.create(Object, {
                                 offsetYUnscaled
                             );
                         } else {
+                            // Smear outline
                             let letter_offset = 0;
-                            for (let i = 0; i < text.length; i++) {
-                                this._ctx.strokeText(
-                                    text[i],
-                                    offsetXUnscaled +
-                                        (spacing * i + letter_offset),
-                                    offsetYUnscaled
-                                );
-                                letter_offset += this._ctx.measureText(text[i])
-                                    .width;
+                            if (outline_x_bigger) {
+                                if (outline_x > 0 && outline_y > 0) {
+                                    for (let j = -outline_x/outline_y; j <= outline_x/outline_y ; j += outline_y/outline_x) {
+                                        for (let i = 0; i < text.length; i++) {
+                                            this._ctx.strokeText(
+                                                text[i],
+                                                offsetXUnscaled + j +
+                                                (spacing * i + letter_offset),
+                                                offsetYUnscaled 
+                                                );
+                                            letter_offset += this._ctx.measureText(text[i]).width;
+                                        }
+                                    }
+                                } else {
+                                    for (let j = -outline_x; j <= outline_x; j++) {
+                                        for (let i = 0; i < text.length; i++) {
+                                            this._ctx.fillStyle = this._ctx.strokeStyle;
+                                            this._ctx.fillText(
+                                                text[i],
+                                                offsetXUnscaled + j +
+                                                (spacing * i + letter_offset),
+                                                offsetYUnscaled 
+                                                );
+                                            letter_offset += this._ctx.measureText(text[i]).width;
+                                        }
+                                    }
+                                }
+                            } else {
+                                if (outline_y > 0 && outline_x > 0) {
+                                    for (let j = -outline_y/outline_x; j <= outline_y/outline_x ; j += outline_x/outline_y) {
+                                        for (let i = 0; i < text.length; i++) {
+                                            this._ctx.strokeText(
+                                                text[i],
+                                                offsetXUnscaled +
+                                                (spacing * i + letter_offset),
+                                                offsetYUnscaled + j
+                                                );
+                                            letter_offset += this._ctx.measureText(text[i]).width;
+                                        }
+                                    }
+                                } else {
+                                    for (let j = -outline_y; j <= outline_y; j++) {
+                                        for (let i = 0; i < text.length; i++) {
+                                            this._ctx.fillStyle = this._ctx.strokeStyle;
+                                            this._ctx.fillText(
+                                                text[i],
+                                                offsetXUnscaled +
+                                                (spacing * i + letter_offset),
+                                                offsetYUnscaled + j
+                                                );
+                                            letter_offset += this._ctx.measureText(text[i]).width;
+                                        }
+                                    }
+
+                                }
                             }
+                            
                             this._ctx.globalCompositeOperation =
                                 "destination-out";
                             this._ctx.filter = "none";

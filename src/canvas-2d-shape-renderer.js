@@ -248,7 +248,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
             //TODO: Figgure out a good way to do dimension specific line widths.
             let outline = this._calcOutline(time, style, overrides);
             if (pass === sabre.RenderPasses.OUTLINE)
-                this._ctx.lineWidth = outline.x + outline.y; //AVERAGE * 2 = SUM
+                this._ctx.lineWidth = Math.min(outline.x, outline.y)*2; 
         },
         writable: false
     },
@@ -609,12 +609,17 @@ const shape_renderer_prototype = global.Object.create(Object, {
             this._calcSize(cmds);
 
             //pad for outline
+            let outline_x = 0;
+            let outline_y = 0;
+
             if (pass === sabre.RenderPasses.OUTLINE) {
                 let outline = this._calcOutline(time, style, overrides);
                 this._width += outline.x * 2;
                 this._height += outline.x * 2;
                 this._offsetX += outline.x;
                 this._offsetY += outline.y;
+                outline_x = outline.x;
+                outline_y = outline.y;
             }
 
             let offsetXUnscaled = this._offsetX;
@@ -649,12 +654,49 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 {
                     let spacing = overrides.getSpacing() ?? style.getSpacing();
                     if (pass === sabre.RenderPasses.OUTLINE) {
-                        this._drawShape(
-                            cmds,
-                            offsetXUnscaled,
-                            offsetYUnscaled,
-                            true
-                        );
+                        if (outline_x > outline_y) {
+                            if (outline_x > 0 && outline_y > 0) {
+                                for (let i = -outline_x/outline_y; i <= outline_x/outline_y ; i += outline_y/outline_x) {
+                                    this._drawShape(
+                                        cmds,
+                                        offsetXUnscaled + i,
+                                        offsetYUnscaled,
+                                        true
+                                    );
+                                }
+                            } else {
+                                for (let i = -outline_x; i <= outline_x; i++) {
+                                    this._ctx.fillStyle = this._ctx.strokeStyle;
+                                    this._drawShape(
+                                        cmds,
+                                        offsetXUnscaled + i,
+                                        offsetYUnscaled,
+                                        false
+                                    );
+                                }
+                            }
+                        } else {
+                            if (outline_y > 0 && outline_x > 0) {
+                                for (let i = -outline_y/outline_x; i <= outline_y/outline_x ; i += outline_x/outline_y) {
+                                    this._drawShape(
+                                        cmds,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled + i,
+                                        true
+                                    );
+                                }
+                            } else {
+                                for (let i = -outline_y; i <= outline_y; i++) {
+                                    this._ctx.fillStyle = this._ctx.strokeStyle;
+                                    this._drawShape(
+                                        cmds,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled + i,
+                                        false
+                                    );
+                                }
+                            }
+                        }
                         this._ctx.globalCompositeOperation = "destination-out";
                         this._ctx.filter = "none";
                         this._drawShape(
