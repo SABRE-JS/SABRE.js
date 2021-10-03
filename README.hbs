@@ -18,8 +18,42 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 
 
 You can retrieve a instance of the library by calling `sabre.SABRERenderer(fontLoadingFunction)` and passing
-it a function that loads fonts using the CSS Font loading API.
+it a function that loads fonts using the CSS Font loading API:
+```js
+function loadFont(name) {
+    // check if font is already loaded
+    if (document.fonts.check("12px '" + name + "'")) return;
 
+    // if the name has an extension, load from local fonts
+    if (name.indexOf(".") !== -1) {
+        const newFont = new FontFace(name, `url(./fonts/${name})`);
+        document.fonts.add(newFont);
+        return;
+    }
+
+    // otherwise, load from google fonts and add stylesheet to document
+    let link = document.createElement("link");
+    link.setAttribute("rel", "stylesheet");
+    link.setAttribute("media", "print");
+    link.setAttribute("type", "text/css");
+    link.setAttribute("onload", "this.media='all';");
+    link.setAttribute(
+        "href",
+        `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
+    );
+    document.head.appendChild(link);
+    let force_load = document.createElement("span");
+    force_load.setAttribute(
+        "style",
+        `font-family: '${name}';position:absolute;top:-999999px;left:0px;`
+    );
+    force_load.appendChild(document.createTextNode("Force Load"));
+    document.body.appendChild(force_load);
+}
+
+// pass the function to the renderer
+let renderer = sabre.SABRERenderer(loadFont);
+```
 {{>main}}
 
 &copy; 2012-2021 Patrick "ILOVEPIE" Rhodes Martin.
