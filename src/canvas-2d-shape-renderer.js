@@ -248,7 +248,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
             //TODO: Figgure out a good way to do dimension specific line widths.
             let outline = this._calcOutline(time, style, overrides);
             if (pass === sabre.RenderPasses.OUTLINE)
-                this._ctx.lineWidth = Math.min(outline.x, outline.y)*2; 
+                this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
         },
         writable: false
     },
@@ -654,9 +654,14 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 {
                     let spacing = overrides.getSpacing() ?? style.getSpacing();
                     if (pass === sabre.RenderPasses.OUTLINE) {
+                        let outline_gt_zero = outline_x > 0 && outline_y > 0;
                         if (outline_x > outline_y) {
-                            if (outline_x > 0 && outline_y > 0) {
-                                for (let i = -outline_x/outline_y; i <= outline_x/outline_y ; i += outline_y/outline_x) {
+                            if (outline_gt_zero) {
+                                for (
+                                    let i = -outline_x / outline_y;
+                                    i <= outline_x / outline_y;
+                                    i += outline_y / outline_x
+                                ) {
                                     this._drawShape(
                                         cmds,
                                         offsetXUnscaled + i,
@@ -676,8 +681,12 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                 }
                             }
                         } else {
-                            if (outline_y > 0 && outline_x > 0) {
-                                for (let i = -outline_y/outline_x; i <= outline_y/outline_x ; i += outline_x/outline_y) {
+                            if (outline_gt_zero) {
+                                for (
+                                    let i = -outline_y / outline_x;
+                                    i <= outline_y / outline_x;
+                                    i += outline_x / outline_y
+                                ) {
                                     this._drawShape(
                                         cmds,
                                         offsetXUnscaled,
@@ -698,7 +707,6 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             }
                         }
                         this._ctx.globalCompositeOperation = "destination-out";
-                        this._ctx.filter = "none";
                         this._drawShape(
                             cmds,
                             offsetXUnscaled,
