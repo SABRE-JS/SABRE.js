@@ -528,12 +528,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         );
                                     }
                                 } else {
+                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     for (
                                         let i = -outline_x;
                                         i <= outline_x;
                                         i++
                                     ) {
-                                        this._ctx.fillStyle = this._ctx.strokeStyle;
                                         this._ctx.fillText(
                                             text,
                                             offsetXUnscaled + i,
@@ -555,12 +555,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         );
                                     }
                                 } else {
+                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     for (
                                         let i = -outline_y;
                                         i <= outline_y;
                                         i++
                                     ) {
-                                        this._ctx.fillStyle = this._ctx.strokeStyle;
                                         this._ctx.fillText(
                                             text,
                                             offsetXUnscaled,
@@ -594,12 +594,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         );
                                     }
                                 } else {
+                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     for (
                                         let i = -outline_x;
                                         i <= outline_x;
                                         i++
                                     ) {
-                                        this._ctx.fillStyle = this._ctx.strokeStyle;
                                         this._drawTextWithRelativeKerning(
                                             text,
                                             offsetXUnscaled + i,
@@ -625,12 +625,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         );
                                     }
                                 } else {
+                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     for (
                                         let i = -outline_y;
                                         i <= outline_y;
                                         i++
                                     ) {
-                                        this._ctx.fillStyle = this._ctx.strokeStyle;
                                         this._drawTextWithRelativeKerning(
                                             text,
                                             offsetXUnscaled,

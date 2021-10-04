@@ -670,8 +670,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                     );
                                 }
                             } else {
+                                this._ctx.fillStyle = this._ctx.strokeStyle;
                                 for (let i = -outline_x; i <= outline_x; i++) {
-                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     this._drawShape(
                                         cmds,
                                         offsetXUnscaled + i,
@@ -695,8 +695,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                     );
                                 }
                             } else {
+                                this._ctx.fillStyle = this._ctx.strokeStyle;
                                 for (let i = -outline_y; i <= outline_y; i++) {
-                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     this._drawShape(
                                         cmds,
                                         offsetXUnscaled,
