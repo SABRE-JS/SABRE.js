@@ -4,7 +4,6 @@ describe("SubtitleScheduler", () => {
     let scheduler;
 
     beforeEach(() => {
-        debugger
         scheduler = new sabre.SubtitleScheduler();
     });
 
