@@ -23,14 +23,20 @@ In order to work on SABRE.js you will need to install the following utilities:
 
 To run a compile of files changed since the last build run the following command:
 
-```
+```sh
 make
 ```
 
 To re-compile all files run the following command:
 
-```
+```sh
 make rebuild
+```
+
+To run all tests run the following command:
+
+```sh
+make test
 ```
 
 ### Additional Info
@@ -44,26 +50,26 @@ Pull requests are to be submitted through github's interface but must be rebased
 
 Pull requests must reference the issue they resolve. If you are creating a pull request for an enhancement you must submit an issue that requests the enhancement and then create a pull request that references that issue.
 
-If it is your first pull request in this project don't forget to add your name to CONTRIBUTORS.md, You may chose if you wish to add your discord account next to your name/alias you may.
+If it is your first pull request in this project don't forget to add your name to CONTRIBUTORS.md, You may chose if you wish to add your discord account next to your name/alias.
 
 ## Style Guide/Coding Conventions
 
 Prettier is used to auto-enforce styling, in addition certain styling is necessary for the compiler, if a variable will be made available to other files in the project it must be added to the current file's header file and inside the current file it must use bracket syntax like so:
 
-```
-sabre["objectName"]["variableName"]
+```js
+sabre["objectName"]["variableName"];
 ```
 
 or if defining something on the global scope:
 
-```
-global["exampleGlobalVariable"]
+```js
+global["exampleGlobalVariable"];
 ```
 
 or if definining something on the external facing API:
 
-```
-external["exampleExternalVariable"]
+```js
+external["exampleExternalVariable"];
 ```
 
 Please note: this only applies if the file you are currently in is creating the variable. If it is a variable of another file you do not need to use the bracket syntax.
