@@ -2,7 +2,7 @@
 # SABRE.js: Substation Alpha suBtitles REnderer
 A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer. 
 
-<span style="text-align:center; width:100vw;display:inline-block;">[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) [![CodeFactor](https://www.codefactor.io/repository/github/sabre-js/sabre.js/badge)](https://www.codefactor.io/repository/github/sabre-js/sabre.js)</span>
+<span style="text-align:center; width:100%; display: inline-block;">[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) [![CodeFactor](https://www.codefactor.io/repository/github/sabre-js/sabre.js/badge)](https://www.codefactor.io/repository/github/sabre-js/sabre.js)</span>
 
 ## What is the SABRE.js?
 
@@ -27,7 +27,7 @@ function loadFont(name) {
     // if the name has an extension, load from local fonts
     if (name.indexOf(".") !== -1) {
         const newFont = new FontFace(name, `url(./fonts/${name})`);
-        document.fonts.add(newFont);
+        newFont.load().then((font) => document.fonts.add(font));
         return;
     }
 
@@ -42,6 +42,7 @@ function loadFont(name) {
         `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
     );
     document.head.appendChild(link);
+    //Force the font to load.
     let force_load = document.createElement("span");
     force_load.setAttribute(
         "style",
