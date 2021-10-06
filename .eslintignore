@@ -5,11 +5,12 @@ tbin/*
 tdata/*
 temp_files/*
 test/*
+src/__test__/*
 .eslintignore
 .eslintrc.json
 .lintstagedrc.json
 .prettierignore
 .prettierrc.json
-compile.log
+jest.config.js
+*.log
 Makefile
-pre-commit.log

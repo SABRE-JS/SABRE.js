@@ -20,7 +20,7 @@ if [ ! -f "$TOOL_BIN_DIR/closure.jar" ]; then
 fi
 TEMPVAR_1="$PWD"
 cd "$PROJECT_SOURCE_DIR"
-FILES_TO_COMPILE="$(find ./ -type f -name "*.js" ! -name "*.min.js")"
+FILES_TO_COMPILE="$(find ./ -type f -name "*.js" ! -name "*.min.js" ! -name "*.test.js")"
 FILE_COUNT=$(echo "$FILES_TO_COMPILE" | wc -l)
 cd "$TEMPVAR_1"
 unset TEMPVAR_1

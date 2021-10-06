@@ -1,4 +1,3 @@
 .vscode
 .vscode/
-compile.log
-pre-commit.log
+*.log
