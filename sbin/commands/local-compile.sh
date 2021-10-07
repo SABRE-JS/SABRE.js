@@ -29,6 +29,7 @@ for f in $FILES_TO_COMPILE
 do
     if $SCRIPT_BIN_DIR/helpers/file-modification-test.sh test "$f" $FILE_COUNT; then
         OUTPUT_FILE="$BIN_DIR/$(echo "$f" | sed -n 's|\.js|.min.js|p')"
+        OUTPUT_SOURCEMAP="$BIN_DIR/$(echo "$f" | sed -n 's|\.js|.map|p')"
         rm -rf "$OUTPUT_FILE" > /dev/null 2>&1
         echo "Compiling $f as $OUTPUT_FILE..." | tee -a $LOG_FILE
         mkdir -p "$(dirname "$OUTPUT_FILE")/"
@@ -44,7 +45,7 @@ do
 				INCLUDE_LIST="$INCLUDE_LIST --externs '$PROJECT_INCLUDE_DIR/$include'"
 			fi
 		done
-        $SCRIPT_BIN_DIR/helpers/execute-java.sh -jar "\"$TOOL_BIN_DIR/closure.jar\"" $CLOSURE_TYPE_INF --jscomp_off=globalThis --jscomp_error=visibility --assume_function_wrapper --use_types_for_optimization true --compilation_level=$CLOSURE_COMPILATION_LEVEL --warning_level=$CLOSURE_LOGGING_DETAIL --language_in=$CLOSURE_INPUT_LANGUAGE_VERSION --language_out=$CLOSURE_OUTPUT_LANGUAGE_VERSION --use_types_for_optimization=$CLOSURE_ENABLE_TYPED_OPTIMIZATION --assume_function_wrapper --output_wrapper="$CLOSURE_OUTPUT_WRAPPER_PREFIX$FILE_COUNT$CLOSURE_OUTPUT_WRAPPER_SUFFIX" $INCLUDE_LIST --js "\"$PROJECT_SOURCE_DIR/$f\"" --js_output_file "\"$OUTPUT_FILE\"" 2>&1 | $SCRIPT_BIN_DIR/helpers/error_formatter.sh closure | tee -a $LOG_FILE 
+        $SCRIPT_BIN_DIR/helpers/execute-java.sh -jar "\"$TOOL_BIN_DIR/closure.jar\"" $CLOSURE_TYPE_INF --jscomp_off=globalThis --jscomp_error=visibility --assume_function_wrapper --compilation_level=$CLOSURE_COMPILATION_LEVEL --warning_level=$CLOSURE_LOGGING_DETAIL --language_in=$CLOSURE_INPUT_LANGUAGE_VERSION --language_out=$CLOSURE_OUTPUT_LANGUAGE_VERSION --use_types_for_optimization=$CLOSURE_ENABLE_TYPED_OPTIMIZATION --assume_function_wrapper --output_wrapper="\"$CLOSURE_OUTPUT_WRAPPER_PREFIX$FILE_COUNT$CLOSURE_OUTPUT_WRAPPER_SUFFIX\"" $INCLUDE_LIST --js "\"$PROJECT_SOURCE_DIR/$f\"" --create_source_map "\"$OUTPUT_SOURCEMAP\"" --js_output_file "\"$OUTPUT_FILE\"" 2>&1 | $SCRIPT_BIN_DIR/helpers/error_formatter.sh closure | tee -a $LOG_FILE 
     else
         echo "$f was not modified and theirfore was not recompiled." | tee -a $LOG_FILE
     fi
