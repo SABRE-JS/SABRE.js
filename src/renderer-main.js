@@ -73,7 +73,7 @@ const renderer_prototype = global.Object.create(Object, {
     _gl: {
         /** @type{?WebGL2RenderingContext} */
         value: null,
-        writable: false
+        writable: true
     },
 
     _lastTime: {
@@ -597,13 +597,15 @@ const renderer_prototype = global.Object.create(Object, {
     "load": {
         /**
          * Load the configuration for the renderer and do any follow-up steps.
-         * @param {{info:Object,parser:Object,renderer:Object,events:Array<SSASubtitleEvent>}} config configuration for the renderer.
+         * @param {RendererData} config configuration for the renderer.
          * @returns {void}
          */
         value: function (config) {
             this._config = config;
             this._scheduler.setEvents(
-                /** @type {Array<SSASubtitleEvent>} */ (config.events)
+                /** @type {Array<SSASubtitleEvent>} */ (
+                    config.renderer["events"]
+                )
             );
             const options = Object.freeze({
                 "alpha": true,
@@ -613,9 +615,8 @@ const renderer_prototype = global.Object.create(Object, {
                 "premultipliedAlpha": true
             });
             if (typeof global.OffscreenCanvas === "undefined") {
-                this._compositingCanvas = global.document.createElement(
-                    "canvas"
-                );
+                this._compositingCanvas =
+                    global.document.createElement("canvas");
                 this._compositingCanvas.width = config.renderer["resolution_x"];
                 this._compositingCanvas.height =
                     config.renderer["resolution_y"];

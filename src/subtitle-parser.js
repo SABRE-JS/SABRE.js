@@ -18,7 +18,7 @@ sabre.import("color.min.js");
 sabre.import("style.min.js");
 sabre.import("style-override.min.js");
 sabre.import("subtitle-event.min.js");
-sabre.import("renderer-main.js");
+sabre.import("renderer-main.min.js");
 
 /**
  * @fileoverview subtitle parser code for Substation Alpha and Advanced Substation Alpha.
@@ -328,9 +328,8 @@ const main_prototype = global.Object.create(global.Object, {
                         );
                         return;
                     case "WrapStyle":
-                        config["renderer"][
-                            "default_wrap_style"
-                        ] = global.parseInt(keypair[1], 10);
+                        config["renderer"]["default_wrap_style"] =
+                            global.parseInt(keypair[1], 10);
                         return;
                     default:
                         console.warn(
@@ -2539,7 +2538,8 @@ const main_prototype = global.Object.create(global.Object, {
             //clone the old overrides so we can change them without affecting the prior tag.
             let overrides = old_overrides.clone();
             let lineGlobalOverrides = line_overrides;
-            let lineGlobalTransitionTargetOverrides = line_transition_target_overrides;
+            let lineGlobalTransitionTargetOverrides =
+                line_transition_target_overrides;
             let pre_params = null;
             let params = null;
             let post_params = null;
@@ -2627,7 +2627,8 @@ const main_prototype = global.Object.create(global.Object, {
             const override_regex = /\\([^\\()]+)(?:\(([^)]*)\)?)?([^\\()]+)?/g;
             let overrides = current_overrides;
             let lineGlobalOverrides = line_overrides;
-            let lineGlobalTransitionTargetOverrides = line_transition_target_overrides;
+            let lineGlobalTransitionTargetOverrides =
+                line_transition_target_overrides;
             let pre_params = null;
             let params = null;
             let post_params = null;
@@ -2704,7 +2705,8 @@ const main_prototype = global.Object.create(global.Object, {
             //Preload the default style into the event.
             let style = this._styles["Default"];
             //Create a new style override for the event.
-            let line_transition_target_overrides = new sabre.SSALineTransitionTargetOverride();
+            let line_transition_target_overrides =
+                new sabre.SSALineTransitionTargetOverride();
             let line_overrides = new sabre.SSALineStyleOverride();
             let event_overrides = new sabre.SSAStyleOverride();
             let tmp;
@@ -2788,9 +2790,10 @@ const main_prototype = global.Object.create(global.Object, {
          * @returns {Object} Info on the font.
          */
         value: function (internalName) {
-            let fontNameData = /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff|woff2)$/.exec(
-                internalName
-            );
+            let fontNameData =
+                /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff|woff2)$/.exec(
+                    internalName
+                );
             if (fontNameData === null) {
                 fontNameData = /^(.*)\.(ttf|otf|woff|woff2)$/.exec(
                     internalName

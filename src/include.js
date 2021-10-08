@@ -48,10 +48,10 @@ sabre["import"] = function (scriptUrl, callback) {
     scriptImport.setAttribute("src", scriptpath + scriptUrl);
     scriptImport.setAttribute("async", "");
     scriptImport.addEventListener("load", function () {
-        includelog[scriptUrl] = true;
         console.log("Finished Importing: " + scriptUrl);
         callback(true);
     });
+    includelog[scriptUrl] = true;
     head.appendChild(scriptImport);
 };
 /**
@@ -88,9 +88,9 @@ sabre["include"] = function (scriptUrl, callback) {
     scriptImport.setAttribute("type", "application/ecmascript");
     scriptImport.setAttribute("src", scriptpath + scriptUrl);
     scriptImport.addEventListener("load", function () {
-        includelog[scriptUrl] = true;
         console.log("Finished Including: " + scriptUrl);
         callback(true);
     });
+    includelog[scriptUrl] = true;
     head.appendChild(scriptImport);
 };

@@ -4,7 +4,9 @@
 		<meta charset="utf-8">
 		<title>Sabre.js Debug Page</title>
 		<meta name="description" content="Sabre.js Debug Page">
-		<meta name="author" content="Patrick 'ILOVEPIE' Rhodes Martin">
+        <meta name="author" content="Patrick 'ILOVEPIE' Rhodes Martin">
+        <script src="include.min.js"></script>
+        <script async src="/renderer-main.min.js"></script>
 	</head>
 	<body>
 		<div style="width:100%; display: flex; align-items: center; justify-content: center;">
@@ -127,11 +129,13 @@ Dialogue: 0,0:01:02.00,0:01:04.00,Default,,0000,0000,0000,,{\an5\t()\clip(69,215
                 force_load.appendChild(document.createTextNode("Force Load"));
                 document.body.appendChild(force_load);
             }
-            renderer = new sabre.SABRERenderer(loadFont);
-            renderer.loadSubtitles(subs.innerText);
-            renderer.setViewport(640,480);
-            playbutton.onclick = play;
-            stopbutton.onclick = stop;
+            window.onload = function(){
+                renderer = new sabre.SABRERenderer(loadFont);
+                renderer.loadSubtitles(subs.innerText);
+                renderer.setViewport(640,480);
+                playbutton.onclick = play;
+                stopbutton.onclick = stop;
+            };
         </script>
     </body>
 </html>

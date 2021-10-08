@@ -192,7 +192,13 @@ global.HTMLCanvasElement.prototype["toBlobHD"] =
 
 if (typeof global.OffscreenCanvas !== "undefined") {
     global.OffscreenCanvas.prototype["toBlob"] =
-        global.OffscreenCanvas.prototype["toBlob"] ?? canvas2blob;
+        global.OffscreenCanvas.prototype["toBlob"] ??
+        function (callback, type, quality) {
+            this.convertToBlob({ "type": type, "quality": quality }).then(
+                callback
+            );
+        } ??
+        canvas2blob;
     global.OffscreenCanvas.prototype["toBlobHD"] =
         global.OffscreenCanvas.prototype["toBlobHD"] ??
         global.OffscreenCanvas.prototype["toBlob"];
