@@ -237,7 +237,7 @@ sabre["SSAStyleDefinition"] = function () {
 
         "getScaleY": {
             value: function () {
-                return obj.scaleX;
+                return obj.scaleY;
             },
             writable: false
         },
