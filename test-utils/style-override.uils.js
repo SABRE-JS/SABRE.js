@@ -1,5 +1,5 @@
 global = globalThis;
-const { clip } = require('../constants/style-override.constants');
+const { clip } = require('../test-constants/style-override.constants');
 
 const getClipTest = (override) => {
     const { a, b, c, d, expectedClip } = clip;
@@ -29,24 +29,6 @@ const testArrayValuesMethod = (override, fieldName, alias, ...args) => {
         it(`should get field ${fieldName}`, () => {
             override[`set${fieldName}`](...args);
             expect(override[`get${fieldName}`]()).toEqual(args);
-        });
-    });
-}
-
-const testPrimitiveMethods = (override, primitiveMethodsWithAliases) => {
-    Object.entries(primitiveMethodsWithAliases).forEach(([fieldName, alias]) => {
-        const value = `${fieldName}Value`;
-
-        describe(`#set${fieldName} / #get${fieldName}`, () => {
-            it(`should set field ${fieldName}`, () => {
-                override[`set${fieldName}`](value);
-                expect(override.toJSON()[alias]).toBe(value)
-            });
-
-            it(`should get field ${fieldName}`, () => {
-                override[`set${fieldName}`](value);
-                expect(override[`get${fieldName}`]()).toBe(value);
-            });
         });
     });
 }
@@ -90,7 +72,6 @@ const testSetShadow = (override) => {
 module.exports = {
     getClipTest,
     testArrayValuesMethod,
-    testPrimitiveMethods,
     testSetInvalidRotations,
     testSetOutline,
     testSetShadow

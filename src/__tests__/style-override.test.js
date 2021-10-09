@@ -1,8 +1,9 @@
 global = globalThis;
 require("../style-override.js");
 
-const constants = require('./constants/style-override.constants');
-const utils = require('./utils/style-override.uils');
+const constants = require('../../test-constants/style-override.constants');
+const utils = require('../../test-utils/style-override.uils');
+const testPrimitiveMethods = require('../../test-utils/primitive-values-methods.utils');
 
 const { defaultStyleOverride, defaultTransitionTargetOverride } = constants;
 const { a, b, c, d, expectedClip } = constants.clip;
@@ -26,7 +27,7 @@ describe("style-override", () => {
         utils.testSetOutline(sabre.SSATransitionTargetOverride());
         utils.testSetInvalidRotations(sabre.SSATransitionTargetOverride());
         utils.testArrayValuesMethod(sabre.SSATransitionTargetOverride(), 'Rotation', 'r', ...constants.rotations);
-        utils.testPrimitiveMethods(sabre.SSATransitionTargetOverride(), constants.transitionTargetOverridePrimitiveFieldsAliases);
+        testPrimitiveMethods(sabre.SSATransitionTargetOverride(), constants.transitionTargetOverridePrimitiveFieldsAliases);
     });
 
     describe("SSAStyleOverride", () => {
@@ -148,7 +149,7 @@ describe("style-override", () => {
         utils.testSetInvalidRotations(sabre.SSAStyleOverride());
         utils.testArrayValuesMethod(sabre.SSAStyleOverride(), 'Margins', 'm', ...constants.margins);
         utils.testArrayValuesMethod(sabre.SSAStyleOverride(), 'Rotation', 'r', ...constants.rotations);
-        utils.testPrimitiveMethods(sabre.SSAStyleOverride(), constants.styleOverridePrimitiveFieldsAliases);
+        testPrimitiveMethods(sabre.SSAStyleOverride(), constants.styleOverridePrimitiveFieldsAliases);
     });
 
     describe("SSALineStyleOverride", () => {
