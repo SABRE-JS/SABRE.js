@@ -1,5 +1,5 @@
 global = globalThis;
-const { clip } = require('../test-constants/style-override.constants');
+const { clip } = require('../constants/style-override.constants');
 
 const getClipTest = (override) => {
     const { a, b, c, d, expectedClip } = clip;

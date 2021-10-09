@@ -1,7 +1,7 @@
 global = globalThis;
 require("../style.js");
 
-const testPrimitiveMethods = require('../../test-utils/primitive-values-methods.utils');
+const testPrimitiveMethods = require('./utils/primitive-values-methods.utils');
 
 const styleDefinitionPrimitiveFieldsAliases = {
     Name: 'n',
