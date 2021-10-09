@@ -1,25 +1,8 @@
 global = globalThis;
 require("../style.js");
 
-const styleDefinitionPrimitiveFields = [
-    'Name',
-    'FontName',
-    'FontSize',
-    'Weight',
-    'Italic',
-    'Underline',
-    'Strikeout',
-    'Spacing',
-    'Angle',
-    'BorderStyle',
-    'Shadow',
-    'Alignment',
-    'Encoding',
-    'ScaleX',
-    'ScaleY',
-    'OutlineX',
-    'OutlineY',
-];
+const testPrimitiveMethods = require('../../test-utils/primitive-values-methods.utils');
+
 const styleDefinitionPrimitiveFieldsAliases = {
     Name: 'n',
     FontName: 'fn',
@@ -40,13 +23,15 @@ const styleDefinitionPrimitiveFieldsAliases = {
     OutlineY: 'oy',
 }
 
+sabre.SSAColor = jest.fn().mockName('SSAColor');
+
 describe("SSAStyleDefinition", () => {
     let style;
 
     let defaultStyleDefinitionObject;
 
     beforeEach(() => {
-        sabre.SSAColor = jest.fn().mockName('SSAColor').mockImplementation((color) => ({ color }))
+        sabre.SSAColor .mockImplementation((color) => ({ color }))
     });
 
     beforeEach(() => {
@@ -78,24 +63,6 @@ describe("SSAStyleDefinition", () => {
         it("should return style definition object", () => {
             expect(style.toJSON()).toEqual(defaultStyleDefinitionObject)
         });
-    });
-
-    describe("primitive methods setters/getters", () => {
-        styleDefinitionPrimitiveFields.forEach((fieldName) => {
-            describe(`#set${fieldName} / #get${fieldName}`, () => {
-                const fieldValue = `${fieldName}Value`;
-
-                it(`should set style definition ${fieldName}`, () => {
-                    style[`set${fieldName}`](fieldValue);
-                    expect(style.toJSON()[styleDefinitionPrimitiveFieldsAliases[fieldName]]).toBe(fieldValue)
-                });
-
-                it(`should get style definition ${fieldName}`, () => {
-                    expect(style[`get${fieldName}`]()).toBe(defaultStyleDefinitionObject[styleDefinitionPrimitiveFieldsAliases[fieldName]])
-                });
-            });
-
-        })
     });
 
     describe("#setPrimaryColor / #getPrimaryColor", () => {
@@ -212,4 +179,6 @@ describe("SSAStyleDefinition", () => {
             expect(style.getMargins()[2]).toBe(marginVertical);
         });
     });
+
+    testPrimitiveMethods(sabre.SSAStyleDefinition(), styleDefinitionPrimitiveFieldsAliases);
 });
