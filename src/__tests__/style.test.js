@@ -31,7 +31,7 @@ describe("SSAStyleDefinition", () => {
     let defaultStyleDefinitionObject;
 
     beforeEach(() => {
-        sabre.SSAColor .mockImplementation((color) => ({ color }))
+        sabre.SSAColor.mockImplementation((color) => ({ color }))
     });
 
     beforeEach(() => {
