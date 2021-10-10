@@ -1,9 +1,9 @@
 global = globalThis;
 require("../style-override.js");
 
-const constants = require('./constants/style-override.constants');
-const utils = require('./utils/style-override.uils');
-const testPrimitiveMethods = require('./utils/primitive-values-methods.utils');
+const constants = require('./test-constants/style-override.constants');
+const utils = require('./test-utils/style-override.uils');
+const testPrimitiveMethods = require('./test-utils/primitive-values-methods.utils');
 
 const { defaultStyleOverride, defaultTransitionTargetOverride } = constants;
 const { a, b, c, d, expectedClip } = constants.clip;
