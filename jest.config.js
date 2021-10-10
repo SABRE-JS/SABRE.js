@@ -10,7 +10,7 @@ const config = {
         "external": {}
     },
     testEnvironment: "jsdom",
-    testPathIgnorePatterns: ["includes"],
+    testPathIgnorePatterns: ["includes", "test-constants", "test-utils"],
     extraGlobals: ["Math", "Object", "isNaN", "URL", "parseInt", "parseFloat"],
     cacheDirectory: "./tdata/cache"
 };

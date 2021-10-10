@@ -13,6 +13,7 @@ sabre["SSASubtitleEvent"] = function () {
         style: null,
         overrides: null,
         lineOverrides: null,
+        lineTransitionTargetOverrides: null,
         text: null
     };
     return Object.create(Object, {
