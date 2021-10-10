@@ -24,7 +24,7 @@ sabre["SSATransitionTargetOverride"] = function () {
         secondaryColor: null,
         tertiaryColor: null,
         quaternaryColor: null,
-        rotation: [null, null, null],
+        rotation: [0, 0, 0],
         scaleX: null,
         scaleY: null,
         shadowX: null,

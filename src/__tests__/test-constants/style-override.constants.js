@@ -93,7 +93,7 @@ const defaultTransitionTargetOverride = {
     oY: null,
     pC: null,
     qC: null,
-    r: [null, null, null], // looks like here is the issue in SSATransitionTargetOverride
+    r: [0, 0, 0],
     sC: null,
     sX: null,
     sY: null,

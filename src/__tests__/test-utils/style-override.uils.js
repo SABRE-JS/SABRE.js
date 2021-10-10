@@ -35,11 +35,9 @@ const testArrayValuesMethod = (override, fieldName, alias, ...args) => {
 
 const testSetInvalidRotations = (override) => {
     describe("#setRotation", () => {
-        const defaultRotations = override.getRotation();
-
         it("should set default rotation if passed rotation axis is null", () => {
             override.setRotation(null, null, null);
-            expect(override.getRotation()).toEqual(defaultRotations);
+            expect(override.getRotation()).toEqual([0, 0, 0]);
         });
     });
 }
