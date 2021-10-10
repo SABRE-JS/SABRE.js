@@ -41,8 +41,8 @@ describe("SSASubtitleEvent", () => {
     describe("#setLineTransitionTargetOverrides / getLineTransitionTargetOverrides", () => {
         const lineOverrides = 'lineOverrides';
 
-        it("should return undefined if line overrides is not defined", () => {
-            expect(subtitleEvent.getLineTransitionTargetOverrides()).toBeUndefined();
+        it("should return null if line overrides is not defined", () => {
+            expect(subtitleEvent.getLineTransitionTargetOverrides()).toBeNull();
         });
 
         it("should be able to set and get line overrides", () => {
