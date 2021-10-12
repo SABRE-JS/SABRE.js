@@ -27,6 +27,7 @@ sabre["SSASubtitleEvent"] = function () {
                     st: obj.style,
                     o: obj.overrides,
                     lO: obj.lineOverrides,
+                    tO: obj.lineTransitionTargetOverrides,
                     t: obj.text
                 };
             },
