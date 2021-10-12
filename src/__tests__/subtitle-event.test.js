@@ -1,17 +1,18 @@
 global = globalThis;
 require("../subtitle-event.js");
 
-const testPrimitiveMethods = require('./test-utils/primitive-values-methods.utils');
+const testPrimitiveMethods = require("./test-utils/primitive-values-methods.utils");
 
 const subtitleEventPrimitiveFieldsAliases = {
-    Id: 'id',
-    Start: 's',
-    End: 'e',
-    Text: 't',
-    Layer: 'l',
-    Style: 'st',
-    Overrides: 'o',
-    LineOverrides: 'lO',
+    Id: "id",
+    Start: "s",
+    End: "e",
+    Text: "t",
+    Layer: "l",
+    Style: "st",
+    Overrides: "o",
+    LineOverrides: "lO",
+    LineTransitionTargetOverrides: "tO"
 };
 
 describe("SSASubtitleEvent", () => {
@@ -30,7 +31,8 @@ describe("SSASubtitleEvent", () => {
             o: null,
             s: 0,
             st: null,
-            t: null
+            t: null,
+            tO: null
         };
 
         it("should return subtitle event object", () => {
@@ -38,18 +40,8 @@ describe("SSASubtitleEvent", () => {
         });
     });
 
-    describe("#setLineTransitionTargetOverrides / getLineTransitionTargetOverrides", () => {
-        const lineOverrides = 'lineOverrides';
-
-        it("should return null if line overrides is not defined", () => {
-            expect(subtitleEvent.getLineTransitionTargetOverrides()).toBeNull();
-        });
-
-        it("should be able to set and get line overrides", () => {
-            subtitleEvent.setLineTransitionTargetOverrides(lineOverrides);
-            expect(subtitleEvent.getLineTransitionTargetOverrides()).toBe(lineOverrides);
-        });
-    });
-
-    testPrimitiveMethods(sabre.SSASubtitleEvent(), subtitleEventPrimitiveFieldsAliases);
+    testPrimitiveMethods(
+        sabre.SSASubtitleEvent(),
+        subtitleEventPrimitiveFieldsAliases
+    );
 });
