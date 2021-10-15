@@ -358,14 +358,11 @@ const text_renderer_prototype = global.Object.create(Object, {
             pass
         ) {
             this._ctx.resetTransform();
-            this._setScale(
-                time,
-                style,
-                overrides,
-                lineOverrides,
-                lineTransitionTargetOverrides,
-                pass
-            );
+            this._ctx.textAlign = "left";
+            this._ctx.textBaseline = "middle";
+            this._ctx.lineCap = "round";
+            this._ctx.lineJoin = "round";
+            //TODO: Strikeout/Strikethrough
             this._setOutline(
                 time,
                 style,
@@ -390,11 +387,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                 lineTransitionTargetOverrides,
                 pass
             );
-            //TODO: Strikeout/Strikethrough
-            this._ctx.textAlign = "left";
-            this._ctx.textBaseline = "middle";
-            this._ctx.lineCap = "round";
-            this._ctx.lineJoin = "round";
+            this._setScale(
+                time,
+                style,
+                overrides,
+                lineOverrides,
+                lineTransitionTargetOverrides,
+                pass
+            );
         },
         writable: false
     },
@@ -439,7 +439,8 @@ const text_renderer_prototype = global.Object.create(Object, {
             let style = event.getStyle();
             let overrides = event.getOverrides();
             let lineOverrides = event.getLineOverrides();
-            let lineTransitionTargetOverrides = event.getLineTransitionTargetOverrides();
+            let lineTransitionTargetOverrides =
+                event.getLineTransitionTargetOverrides();
 
             this._offsetX = this._offsetY = 0;
 
