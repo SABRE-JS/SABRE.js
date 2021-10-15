@@ -11,6 +11,7 @@
  * @suppress {globalThis}
  */
 const shaderlog = {};
+const statetracker = {};
 sabre["ShaderPrototype"] = Object.create(Object, {
     _shader: {
         value: null,
@@ -26,9 +27,9 @@ sabre["ShaderPrototype"] = Object.create(Object, {
     },
 
     _isUnchanged: {
-        value: function (property) {
+        value: function (property, uniformid, context) {
             let val = property.val;
-            let cval = property.cval;
+            let cval = statetracker[context][uniformid];
             let i;
             let unchanged = true;
             if (val === cval) return true;
@@ -153,7 +154,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
     "addOption": {
         value: function (key, value, type) {
             if (this._keys[key] === null) {
-                this._keys[key] = { val: value, datatype: type, cval: null };
+                this._keys[key] = { val: value, datatype: type };
                 return true;
             }
             return false;
@@ -196,8 +197,8 @@ sabre["ShaderPrototype"] = Object.create(Object, {
             let type = null;
             for (let i = 0; i < props.length; i++) {
                 key = props[i];
-                if (this._isUnchanged(this._keys[key])) continue;
                 uniform = gl.getUniformLocation(this._shader, key);
+                if (this._isUnchanged(this._keys[key], uniform, gl)) continue;
                 if ((uniform || null) !== null) {
                     type = this._keys[key].datatype;
                     switch (type) {
@@ -301,7 +302,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
                             );
                             break;
                     }
-                    this._keys[key].cval = this._keys[key].val;
+                    statetracker[uniform] = this._keys[key].val;
                 }
             }
         },
@@ -318,6 +319,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
 
     "compile": {
         value: function (gl, defines, err, version) {
+            statetracker[gl] = statetracker[gl] ?? {};
             if (typeof err === "undefined" || err === null) {
                 err = defines;
                 defines = null;
