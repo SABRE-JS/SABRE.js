@@ -8,9 +8,11 @@
  *              compile:function((!WebGLRenderingContext|!WebGL2RenderingContext),Object=,function(),string=),
  *          }}
  */
-var shaderManager;
+var Shader;
 
 /**
- * @type {shaderManager}
+ * @type {function(new:Shader)}
  */
-sabre.ShaderPrototype;
+sabre.Shader = function () {};
+
+sabre.Shader.resetStateEngine = function () {};

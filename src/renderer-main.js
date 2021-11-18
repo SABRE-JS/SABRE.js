@@ -70,9 +70,51 @@ const renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    //BEGIN WEBGL VARIABLES
+
     _gl: {
         /** @type{?WebGL2RenderingContext} */
         value: null,
+        writable: true
+    },
+
+    _textureSubtitle: {
+        /** @type{?WebGLTexture} */
+        value: null,
+        writable: true
+    },
+
+    _fbTextureA: {
+        /** @type{?WebGLTexture} */
+        value: null,
+        writable: true
+    },
+
+    _fbTextureB: {
+        /** @type{?WebGLTexture} */
+        value: null,
+        writable: true
+    },
+
+    _frameBufferA: {
+        /** @type{?WebGLFramebuffer} */
+        value: null,
+        writable: true
+    },
+
+    _frameBufferB: {
+        /** @type{?WebGLFramebuffer} */
+        value: null,
+        writable: true
+    },
+
+    //END WEBGL VARIABLES
+
+    _contextLost: {
+        /**
+         * @type {boolean}
+         */
+        value: false,
         writable: true
     },
 
@@ -102,6 +144,42 @@ const renderer_prototype = global.Object.create(Object, {
 
     //END LOCAL VARIABLES
     //BEGIN LOCAL FUNCTIONS
+
+    _matrixMultiply3x3: {
+        /**
+         * Matrix multiplication for 3x3 matrix.
+         */
+        value: function (a, b) {
+            let result = {};
+            result.m00 = a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20;
+            result.m01 = a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21;
+            result.m02 = a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22;
+
+            result.m10 = a.m10 * b.m00 + a.m11 * b.m10 + a.m12 * b.m20;
+            result.m11 = a.m10 * b.m01 + a.m11 * b.m11 + a.m12 * b.m21;
+            result.m12 = a.m10 * b.m02 + a.m11 * b.m12 + a.m12 * b.m22;
+
+            result.m20 = a.m20 * b.m00 + a.m21 * b.m10 + a.m22 * b.m20;
+            result.m21 = a.m20 * b.m01 + a.m21 * b.m11 + a.m22 * b.m21;
+            result.m22 = a.m20 * b.m02 + a.m21 * b.m12 + a.m22 * b.m22;
+            return result;
+        },
+        writable: false
+    },
+
+    _matrixMultiply1x3and3x3: {
+        /**
+         * Matrix multiplication for 3x3 matrix.
+         */
+        value: function (a, b) {
+            let result = {};
+            result.m00 = a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20;
+            result.m01 = a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21;
+            result.m02 = a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22;
+            return result;
+        },
+        writable: false
+    },
 
     _hashEvents: {
         /**
@@ -195,6 +273,101 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _calcGaussianBlur: {
+        value: function (time, style, overrides) {
+            const blurConstant = 1.17741002251547469;
+            let transitionOverrides = overrides.getTransition();
+            let factor = overrides.getGaussianEdgeBlur() ?? 0;
+            if (transitionOverrides !== null)
+                factor = sabre.performTransition(
+                    time,
+                    factor,
+                    transitionOverrides.getGaussianEdgeBlur(),
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
+                );
+            return factor / blurConstant;
+        },
+        writable: false
+    },
+
+    _calcOutline: {
+        /**
+         * Calc outline width, handing transitions.
+         * @param {number} time
+         * @param {SSAStyleDefinition} style
+         * @param {SSAStyleOverride} overrides
+         */
+        value: function (time, style, overrides) {
+            let transitionOverrides = overrides.getTransition();
+            let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
+            let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
+            if (transitionOverrides !== null) {
+                outlineX = sabre.performTransition(
+                    time,
+                    outlineX,
+                    transitionOverrides.getOutlineX(),
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
+                );
+                outlineY = sabre.performTransition(
+                    time,
+                    outlineY,
+                    transitionOverrides.getOutlineY(),
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
+                );
+            }
+            return { x: outlineX, y: outlineY };
+        },
+        writable: false
+    },
+
+    _calcRotation: {
+        /**
+         * Calc rotation, handing transitions.
+         * @param {number} time
+         * @param {SSAStyleDefinition} style
+         * @param {SSAStyleOverride} overrides
+         */
+        value: function (time, style, overrides) {
+            let transitionOverrides = overrides.getTransition();
+            let rotation = overrides.getRotation();
+            let rotationTarget = transitionOverrides.getRotation();
+            if (transitionOverrides !== null) {
+                rotation[0] = sabre.performTransition(
+                    time,
+                    rotation[0],
+                    rotationTarget[0],
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
+                );
+                rotation[1] = sabre.performTransition(
+                    time,
+                    rotation[1],
+                    rotationTarget[1],
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
+                );
+                rotation[2] = sabre.performTransition(
+                    time,
+                    rotation[2],
+                    rotationTarget[2],
+                    transitionOverrides.getTransitionStart(),
+                    transitionOverrides.getTransitionEnd(),
+                    transitionOverrides.getTransitionAcceleration()
+                );
+            }
+            return rotation;
+        },
+        writable: false
+    },
+
     _positionEvent: {
         /**
          * Positions the event.
@@ -206,7 +379,15 @@ const renderer_prototype = global.Object.create(Object, {
          * @returns {{x:number,y:number,width:number,height:number}} the positioning info of the event.
          */
         value: function (time, index, event, textAnchorOffset) {
-            let result = { x: 0, y: 0, width: 0, height: 0, index: index };
+            let result = {
+                x: 0,
+                y: 0,
+                originalX: 0,
+                originalY: 0,
+                width: 0,
+                height: 0,
+                index: index
+            };
             let lineOverrides = event.getLineOverrides();
             if (!event.getOverrides().getDrawingMode()) {
                 this._textRenderer.renderEvent(
@@ -256,8 +437,8 @@ const renderer_prototype = global.Object.create(Object, {
                             //Nothing needs to be done, the x coordinate is already zero.
                             break;
                     }
-                    result.x = anchorPoint[0];
-                    result.y = anchorPoint[1];
+                    result.originalX = result.x = anchorPoint[0];
+                    result.originalY = result.y = anchorPoint[1];
                 } else {
                     let curPos = [0, 0];
                     if (lineOverrides.getMovement() === null) {
@@ -334,8 +515,8 @@ const renderer_prototype = global.Object.create(Object, {
                             //Nothing needs to be done, the x coordinate is already zero.
                             break;
                     }
-                    result.x = anchorPoint[0];
-                    result.y = anchorPoint[1];
+                    result.originalX = result.x = anchorPoint[0];
+                    result.originalY = result.y = anchorPoint[1];
                 } else {
                     let curPos = [0, 0];
                     if (lineOverrides.getMovement() === null) {
@@ -578,6 +759,558 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _glSetup: {
+        value: function () {
+            this._gl.viewport(
+                0,
+                0,
+                config.renderer["resolution_x"],
+                config.renderer["resolution_y"]
+            );
+
+            this._textureSubtitle = this._gl.createTexture();
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._texture);
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_S,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_T,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MIN_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MAG_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.pixelStorei(this._gl.UNPACK_FLIP_Y_WEBGL, true);
+            this._gl.texImage2D(
+                this._gl.TEXTURE_2D,
+                0,
+                this._gl.RGBA,
+                1,
+                1,
+                0,
+                this._gl.RGBA,
+                this._gl.UNSIGNED_BYTE,
+                null
+            );
+
+            this._fbTextureA = this._gl.createTexture();
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTexture);
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_S,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_T,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MIN_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MAG_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.pixelStorei(this._gl.UNPACK_FLIP_Y_WEBGL, false);
+            this._gl.texImage2D(
+                this._gl.TEXTURE_2D,
+                0,
+                this._gl.RGBA,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"],
+                0,
+                this._gl.RGBA,
+                this._gl.UNSIGNED_BYTE,
+                null
+            );
+
+            this._fbTextureB = this._gl.createTexture();
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTexture);
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_S,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_T,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MIN_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MAG_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.pixelStorei(this._gl.UNPACK_FLIP_Y_WEBGL, false);
+            this._gl.texImage2D(
+                this._gl.TEXTURE_2D,
+                0,
+                this._gl.RGBA,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"],
+                0,
+                this._gl.RGBA,
+                this._gl.UNSIGNED_BYTE,
+                null
+            );
+
+            this._frameBufferA = this._gl.createFramebuffer();
+            this._gl.bindFramebuffer(
+                this._gl.DRAW_FRAMEBUFFER,
+                this._frameBufferA
+            );
+            this,
+                _this._gl.framebufferTexture2D(
+                    this._gl.FRAMEBUFFER,
+                    this._gl.COLOR_ATTACHMENT0,
+                    this._gl.TEXTURE_2D,
+                    this._fbTextureA,
+                    0
+                );
+
+            this._frameBufferB = this._gl.createFramebuffer();
+            this._gl.bindFramebuffer(
+                this._gl.DRAW_FRAMEBUFFER,
+                this._frameBufferB
+            );
+            this,
+                _this._gl.framebufferTexture2D(
+                    this._gl.FRAMEBUFFER,
+                    this._gl.COLOR_ATTACHMENT0,
+                    this._gl.TEXTURE_2D,
+                    this._fbTextureB,
+                    0
+                );
+
+            this._positioningShader = new sabre.Shader();
+            this._positioningShader.load(
+                sabre.getScriptPath() + "/shaders/positioning.vertex.glsl",
+                sabre.getScriptPath() + "/shaders/positioning.fragment.glsl",
+                1
+            );
+            this._positioningShader.compile(this._gl);
+            this._convEdgeBlurShader = new sabre.Shader();
+            this._convEdgeBlurShader.load(
+                sabre.getScriptPath() + "/shaders/edge_blur.vertex.glsl",
+                sabre.getScriptPath() + "/shaders/edge_blur.fragment.glsl",
+                1
+            );
+            this._convEdgeBlurShader.compile(this._gl);
+            this._gaussEdgeBlurPass1Shader = new sabre.Shader();
+            this._gaussEdgeBlurPass1Shader.load(
+                sabre.getScriptPath() + "/shaders/gauss_blur.vertex.glsl",
+                sabre.getScriptPath() + "/shaders/gauss_blur.1.fragment.glsl",
+                1
+            );
+            this._gaussEdgeBlurPass1Shader.compile(this._gl);
+            this._gaussEdgeBlurPass2Shader = new sabre.Shader();
+            this._gaussEdgeBlurPass2Shader.load(
+                sabre.getScriptPath() + "/shaders/gauss_blur.vertex.glsl",
+                sabre.getScriptPath() + "/shaders/gauss_blur.2.fragment.glsl",
+                1
+            );
+            this._gaussEdgeBlurPass2Shader.compile(this._gl);
+        },
+        writable: false
+    },
+
+    _compositeSubtitle: {
+        /**
+         * Performs the actual compositing of the subtitles onscreen.
+         * @param {number} time The time the subtitle must be rendered at.
+         * @param {SSASubtitleEvent} currentEvent The properties of the subtitle.
+         * @param {number} pass the current render pass we are on.
+         * @param {boolean} isShape is the subtitle we are compositing a shape?
+         */
+        value: function (time, currentEvent, pass, position, isShape) {
+            const fullscreen_coordinates = new Float32Array([
+                -1,
+                -1,
+                1,
+                -1,
+                -1,
+                1 - 1,
+                1,
+                1,
+                -1,
+                1,
+                1
+            ]);
+            let bluring;
+            let edgeBlurActive;
+            let gaussianBlurActive;
+            {
+                let outline = this._calcOutline(
+                    time,
+                    currentEvent.getStyle(),
+                    currentEvent.getOverrides()
+                );
+                bluring =
+                    (pass === sabre.RenderPasses.OUTLINE &&
+                        (outline.x > 0 || outline.y > 0)) ||
+                    (pass === sabre.RenderPasses.FILL &&
+                        outline.x === 0 &&
+                        outline.y === 0);
+                let edgeBlurIterations = this._calcEdgeBlur(
+                    time,
+                    currentEvent.getStyle(),
+                    currentEvent.getOverrides()
+                );
+                let gaussianBlurFactor = this._calcGaussianBlur(
+                    time,
+                    currentEvent.getStyle(),
+                    currentEvent.getOverrides()
+                );
+                edgeBlurActive = edgeBlurIterations > 0;
+                gaussianBlurActive = gaussianBlurFactor > 0;
+                bluring = bluring && (edgeBlurActive || gaussianBlurActive);
+            }
+
+            let source = !isShape ? this._textRenderer : this._shapeRenderer;
+
+            this._gl.bindFramebuffer(
+                this._gl.FRAMEBUFFER,
+                bluring ? this._frameBufferA : null
+            );
+            this._gl.viewport(
+                0,
+                0,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"]
+            );
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
+            this._gl.texImage2D(
+                this._gl.TEXTURE_2D,
+                0,
+                this._gl.RGBA,
+                this._gl.RGBA,
+                this._gl.UNSIGNED_BYTE,
+                source.getImage()
+            );
+
+            let xScale = 2 / this._config.renderer["resolution_x"];
+            let yScale = 2 / this._config.renderer["resolution_Y"];
+            let positioningMatrix;
+            {
+                let offsetMatrix;
+                {
+                    let offset = source.getOffset();
+                    offsetMatrix = {
+                        m00: 1,
+                        m01: 0,
+                        m02: offset[0] * xScale,
+                        m10: 0,
+                        m11: 1,
+                        m12: offset[1] * yScale,
+                        m20: 0,
+                        m21: 0,
+                        m22: 1
+                    };
+                }
+
+                let negativeRotationTranslationMatrix;
+                let positiveRotationTranslationMatrix;
+                {
+                    let lineOverrides = currentEvent.getLineOverrides();
+                    if (lineOverrides.getRotationOrigin() !== null) {
+                        let curPos = [0, 0];
+                        if (
+                            lineOverrides.getMovement() === null &&
+                            lineOverrides.getPosition() === null
+                        ) {
+                            curPos[0] = position.originalY;
+                            curPos[1] = position.originalX;
+                        } else if (lineOverrides.getMovement() === null) {
+                            curPos = lineOverrides.getPosition();
+                        } else {
+                            let move = lineOverrides.getMovement();
+                            curPos[0] = move[0];
+                            curPos[1] = move[1];
+                        }
+
+                        let rotationOrigin = lineOverrides.getRotationOrigin();
+                        let diff = [0, 0];
+                        diff[0] = curPos[0] - rotationOrigin[0];
+                        diff[1] = curPos[1] - rotationOrigin[1];
+                        negativeRotationTranslationMatrix = {
+                            m00: 1,
+                            m01: 0,
+                            m02: diff[0] * xScale,
+                            m10: 0,
+                            m11: 1,
+                            m12: diff[1] * yScale,
+                            m20: 0,
+                            m21: 0,
+                            m22: 1
+                        };
+                        positiveRotationTranslationMatrix = {
+                            m00: 1,
+                            m01: 0,
+                            m02: -diff[0] * xScale,
+                            m10: 0,
+                            m11: 1,
+                            m12: -diff[1] * yScale,
+                            m20: 0,
+                            m21: 0,
+                            m22: 1
+                        };
+                    } else {
+                        positiveRotationTranslationMatrix =
+                            negativeRotationTranslationMatrix = {
+                                m00: 1,
+                                m01: 0,
+                                m02: 0,
+                                m10: 0,
+                                m11: 1,
+                                m12: 0,
+                                m20: 0,
+                                m21: 0,
+                                m22: 1
+                            };
+                    }
+                }
+
+                let rotationMatrixX;
+                let rotationMatrixY;
+                let rotationMatrixZ;
+                {
+                    const toRad = Math.PI / 180;
+                    let rotation = this._calcRotation(
+                        time,
+                        currentEvent.getStyle(),
+                        currentEvent.getOverrides()
+                    );
+                    rotationMatrixX = {
+                        m00: 1,
+                        m01: 0,
+                        m02: 0,
+                        m10: 0,
+                        m11: Math.cos(rotation.x * toRad),
+                        m12: -Math.sin(rotation.x * toRad),
+                        m20: 0,
+                        m21: Math.sin(rotation.x * toRad),
+                        m22: Math.cos(rotation.x * toRad)
+                    };
+                    rotationMatrixY = {
+                        m00: Math.cos(rotation.x * toRad),
+                        m01: 0,
+                        m02: Math.sin(rotation.x * toRad),
+                        m10: 0,
+                        m11: 1,
+                        m12: 0,
+                        m20: -Math.sin(rotation.x * toRad),
+                        m21: 0,
+                        m22: Math.cos(rotation.x * toRad)
+                    };
+                    rotationMatrixZ = {
+                        m01: Math.cos(rotation.x * toRad),
+                        m01: -Math.sin(rotation.x * toRad),
+                        m02: 0,
+                        m10: Math.sin(rotation.x * toRad),
+                        m11: Math.cos(rotation.x * toRad),
+                        m12: 0,
+                        m20: 0,
+                        m21: 0,
+                        m22: 0
+                    };
+                }
+
+                let finalPositionOffsetMatrix = {
+                    m00: 1,
+                    m01: 0,
+                    m02: position.x * xScale,
+                    m10: 0,
+                    m11: 1,
+                    m12: position.y * yScale,
+                    m20: 0,
+                    m21: 0,
+                    m22: 1
+                };
+
+                positioningMatrix = this._matrixMultiply3x3(
+                    offsetMatrix,
+                    negativeRotationTranslationMatrix
+                );
+                positioningMatrix = this._matrixMultiply3x3(
+                    positioningMatrix,
+                    rotationMatrixX
+                );
+                positioningMatrix = this._matrixMultiply3x3(
+                    positioningMatrix,
+                    rotationMatrixY
+                );
+                positioningMatrix = this._matrixMultiply3x3(
+                    positioningMatrix,
+                    rotationMatrixZ
+                );
+                positioningMatrix = this._matrixMultiply3x3(
+                    positioningMatrix,
+                    positiveRotationTranslationMatrix
+                );
+                positioningMatrix = this._matrixMultiply3x3(
+                    positioningMatrix,
+                    finalPositionOffsetMatrix
+                );
+            }
+
+            let upperLeft = {
+                m00: -1,
+                m01: -1,
+                m02: 0
+            };
+
+            let lowerLeft = {
+                m00: -1,
+                m01: position.height * yScale - 1,
+                m02: 0
+            };
+
+            let upperRight = {
+                m00: position.width * xScale - 1,
+                m01: -1,
+                m02: 0
+            };
+
+            let lowerRight = {
+                m00: position.width * xScale - 1,
+                m01: position.height * yScale - 1,
+                m02: 0
+            };
+
+            upperLeft = this._matrixMultiply1x3and3x3(
+                upperLeft,
+                positioningMatrix
+            );
+            upperRight = this._matrixMultiply1x3and3x3(
+                upperRight,
+                positioningMatrix
+            );
+            lowerleft = this._matrixMultiply1x3and3x3(
+                lowerLeft,
+                positioningMatrix
+            );
+            lowerRight = this._matrixMultiply1x3and3x3(
+                lowerRight,
+                positioningMatrix
+            );
+
+            let coordinates = new Float32Array([
+                upperLeft.m00,
+                upperLeft.m01,
+                upperLeft.m02,
+                upperRight.m00,
+                upperRight.m01,
+                upperRight.m02,
+                lowerLeft.m00,
+                lowerLeft.m01,
+                lowerLeft.m02,
+                lowerLeft.m00,
+                lowerLeft.m01,
+                lowerLeft.m02,
+                upperRight.m00,
+                upperRight.m01,
+                upperRight.m02,
+                lowerRight.m00,
+                lowerRight.m01,
+                lowerRight.m02
+            ]);
+
+            //Draw background or outline or text depending on pass to framebuffer a
+
+            if (bluring) {
+                if (edgeBlurActive) {
+                    if (gaussianBlurActive) {
+                        this._gl.bindFramebuffer(
+                            this._gl.FRAMEBUFFER,
+                            this._frameBufferB
+                        );
+                    } else {
+                        this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+                    }
+                    this._gl.viewport(
+                        0,
+                        0,
+                        this._config.renderer["resolution_x"],
+                        this._config.renderer["resolution_y"]
+                    );
+                    this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
+                    //Apply Convolution edge blur
+                    //Draw framebuffer a to framebuffer b
+                }
+
+                if (gaussianBlurActive) {
+                    if (edgeBlurActive) {
+                        this._gl.bindFramebuffer(
+                            this._gl.FRAMEBUFFER,
+                            this._frameBufferA
+                        );
+                        this._gl.viewport(
+                            0,
+                            0,
+                            this._config.renderer["resolution_x"],
+                            this._config.renderer["resolution_y"]
+                        );
+                        this._gl.bindTexture(
+                            this._gl.TEXTURE_2D,
+                            this._fbTextureB
+                        );
+                    } else {
+                        this._gl.bindFramebuffer(
+                            this._gl.FRAMEBUFFER,
+                            this._frameBufferB
+                        );
+                        this._gl.viewport(
+                            0,
+                            0,
+                            this._config.renderer["resolution_x"],
+                            this._config.renderer["resolution_y"]
+                        );
+                        this._gl.bindTexture(
+                            this._gl.TEXTURE_2D,
+                            this._fbTextureA
+                        );
+                    }
+                    //Apply gaussian filter 1
+                    //Draw framebuffer X to framebuffer Y
+                    if (edgeBlurActive) {
+                        this._gl.bindTexture(
+                            this._gl.TEXTURE_2D,
+                            this._fbTextureA
+                        );
+                    } else {
+                        this._gl.bindTexture(
+                            this._gl.TEXTURE_2D,
+                            this._fbTextureB
+                        );
+                    }
+                    this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+                    //Apply gaussian filter 2
+                    //Draw framebuffer Y to screen
+                }
+            }
+        },
+        writable: false
+    },
+
     //END LOCAL FUNCTIONS
     //BEGIN PUBLIC FUNCTIONS
 
@@ -612,7 +1345,7 @@ const renderer_prototype = global.Object.create(Object, {
                 "desynchronized": true,
                 "antialias": true,
                 "powerPreference": "high-performance",
-                "premultipliedAlpha": true
+                "premultipliedAlpha": false
             });
             if (typeof global.OffscreenCanvas === "undefined") {
                 this._compositingCanvas =
@@ -626,13 +1359,29 @@ const renderer_prototype = global.Object.create(Object, {
                     config.renderer["resolution_y"]
                 );
             }
-            this._gl = this._compositingCanvas.getContext("webgl2", options);
-            this._gl.viewport(
-                0,
-                0,
-                config.renderer["resolution_x"],
-                config.renderer["resolution_y"]
+
+            this._compositingCanvas.addEventListener(
+                "webglcontextlost",
+                function (event) {
+                    console.log("WebGL Context Lost...");
+                    this._contextLost = true;
+                    event.preventDefault();
+                },
+                false
             );
+            this._compositingCanvas.addEventListener(
+                "webglcontextrestored",
+                function (event) {
+                    console.log("WebGL Context Restored. Recovering...");
+                    sabre.Shader.resetStateEngine();
+                    this._glSetup();
+                    this._contextLost = false;
+                },
+                false
+            );
+
+            this._gl = this._compositingCanvas.getContext("webgl2", options);
+            this._glSetup();
         },
         writable: false
     },
@@ -654,6 +1403,41 @@ const renderer_prototype = global.Object.create(Object, {
                 this._config.renderer["resolution_x"],
                 this._config.renderer["resolution_y"]
             );
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
+            this._gl.texImage2D(
+                this._gl.TEXTURE_2D,
+                0,
+                this._gl.RGBA,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"],
+                0,
+                this._gl.RGBA,
+                this._gl.UNSIGNED_BYTE,
+                null
+            );
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureB);
+            this._gl.texImage2D(
+                this._gl.TEXTURE_2D,
+                0,
+                this._gl.RGBA,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"],
+                0,
+                this._gl.RGBA,
+                this._gl.UNSIGNED_BYTE,
+                null
+            );
+        },
+        writable: false
+    },
+
+    "canRender": {
+        /**
+         * Returns false if context is lost and not recovered yet.
+         * @returns {boolean}
+         */
+        value: function () {
+            return this._contextLost;
         },
         writable: false
     },
@@ -665,6 +1449,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @returns {void}
          */
         value: function (time) {
+            if (this._contextLost) return;
             if (time === this._lastTime) return;
             this._lastTime = time;
             let events = this._scheduler.getVisibleAtTime(time);
@@ -694,7 +1479,13 @@ const renderer_prototype = global.Object.create(Object, {
                             pass,
                             false
                         );
-                        //TODO: Composite Text into image. Applying rotation and then edge blur and gaussian blur as needed.
+                        this._compositeSubtitle(
+                            time,
+                            currentEvent,
+                            pass,
+                            positions[i],
+                            false
+                        );
                     } else {
                         this._shapeRenderer.renderEvent(
                             time,
@@ -702,7 +1493,13 @@ const renderer_prototype = global.Object.create(Object, {
                             pass,
                             false
                         );
-                        //TODO: Composite Graphics into image. Applying rotation and then edge blur and gaussian blur as needed.
+                        this._compositeSubtitle(
+                            time,
+                            currentEvent,
+                            pass,
+                            positions[i],
+                            true
+                        );
                     }
                 }
             }

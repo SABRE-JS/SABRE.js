@@ -396,7 +396,6 @@ sabre["SSAStyleOverride"] = function () {
         tertiaryColor: null,
         quaternaryColor: null,
         rotation: [0, 0, 0],
-        rotationOrigin: null,
         scaleX: null,
         scaleY: null,
         shadowX: null,

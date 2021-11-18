@@ -12,7 +12,7 @@
  */
 const shaderlog = {};
 const statetracker = {};
-sabre["ShaderPrototype"] = Object.create(Object, {
+const ShaderPrototype = Object.create(Object, {
     _shader: {
         value: null,
         writable: true
@@ -165,7 +165,7 @@ sabre["ShaderPrototype"] = Object.create(Object, {
     /*'getTexture':{
 		value: function(gl,name){
 			var getTexture = function(ctx){
-				return ctx.createTexture();
+				return gl.createTexture();
 			};
 			if(!textures[name]){
 				if (arguments.length > 2){
@@ -354,8 +354,12 @@ sabre["ShaderPrototype"] = Object.create(Object, {
                 gl.isContextLost()
             ) {
                 gl.deleteProgram(shaderProgram);
-                gl.deleteShader(this._vert);
-                gl.deleteShader(this._frag);
+                try {
+                    gl.deleteShader(this._vert);
+                } catch (e) {}
+                try {
+                    gl.deleteShader(this._frag);
+                } catch (e) {}
                 err();
                 return;
             }
@@ -401,7 +405,9 @@ sabre["ShaderPrototype"] = Object.create(Object, {
                 gl.isContextLost()
             ) {
                 console.log(gl.getShaderInfoLog(shader));
-                gl.deleteShader(shader);
+                try {
+                    gl.deleteShader(shader);
+                } catch (e) {}
                 return null;
             }
 
@@ -409,3 +415,11 @@ sabre["ShaderPrototype"] = Object.create(Object, {
         }
     }
 });
+
+sabre["Shader"] = function () {
+    return Object.create(ShaderPrototype);
+};
+sabre["Shader"]["resetStateEngine"] = function () {
+    let keys = Object.keys(statetracker);
+    for (let i = 0; i < keys.length; i++) statetracker[keys[i]] = null;
+};

@@ -2920,6 +2920,17 @@ const main_prototype = global.Object.create(global.Object, {
         writable: false
     },
 
+    canRender: {
+        /**
+         * Returns if the renderer can render a frame at the current time.
+         * @returns {boolean}
+         */
+        value: function () {
+            return this._renderer.canRender();
+        },
+        writable: false
+    },
+
     frame: {
         /**
          * A wrapper method around the renderer that allows our delegate to fetch rendered subtitle frames.
@@ -2943,7 +2954,7 @@ const main_prototype = global.Object.create(global.Object, {
             let defaultStyle = new sabre.SSAStyleDefinition();
             defaultStyle.setName("Default");
             this._styles = { "Default": defaultStyle };
-            this._config = { info: {}, parser: {}, renderer: {} };
+            this._config = { "info": {}, "parser": {}, "renderer": {} };
             if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
                 //check for BOM
                 subsText = subsText.replace("\xEF\xBB\xBF", ""); //ignore BOM, we're on the web, everything is big endian.
@@ -2980,17 +2991,24 @@ external["SABRERenderer"] = function (loadFont) {
             parser.load(subsText);
         },
         /**
-         * Updates the resolution/scale at which the subtitles are rendered (if the player is resized, for example).
-         * @param {number} width
-         * @param {number} height
+         * Updates the resolution at which the subtitles are rendered (if the player is resized, for example).
+         * @param {number} width the desired width of the resolution.
+         * @param {number} height the desired height of the resolution.
          */
         "setViewport": function (width, height) {
             parser.updateViewport(width, height);
         },
         /**
+         * Checks if the renderer is ready to render a frame.
+         * @returns {boolean} is the renderer ready?
+         */
+        "checkReadyToRender": function () {
+            return parser.canRender();
+        },
+        /**
          * Fetches a rendered frame of subtitles as an object url.
          * @param {number} time
-         * @returns {string}
+         * @returns {string} the object URL of the frame
          */
         "getFrame": function (time) {
             return parser.frame(time);

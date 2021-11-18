@@ -94,3 +94,11 @@ sabre["include"] = function (scriptUrl, callback) {
     includelog[scriptUrl] = true;
     head.appendChild(scriptImport);
 };
+
+/**
+ * returns the root directory for included ecmascript files.
+ * @returns {string} the path.
+ */
+sabre["getScriptPath"] = function () {
+    return scriptpath;
+};
