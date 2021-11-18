@@ -943,17 +943,7 @@ const renderer_prototype = global.Object.create(Object, {
          */
         value: function (time, currentEvent, pass, position, isShape) {
             const fullscreen_coordinates = new Float32Array([
-                -1,
-                -1,
-                1,
-                -1,
-                -1,
-                1 - 1,
-                1,
-                1,
-                -1,
-                1,
-                1
+                -1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0
             ]);
             let bluring;
             let edgeBlurActive;
