@@ -12,17 +12,39 @@
  */
 const shaderlog = {};
 const statetracker = {};
+
+function isArrayish(a) {
+    return (
+        a instanceof Array ||
+        a instanceof Float32Array ||
+        a instanceof Float64Array ||
+        a instanceof Int8Array ||
+        a instanceof Int16Array ||
+        a instanceof Int32Array ||
+        a instanceof Uint8Array ||
+        a instanceof Uint16Array ||
+        a instanceof Uint32Array
+    );
+}
+
 const ShaderPrototype = Object.create(Object, {
     _shader: {
         value: null,
         writable: true
     },
+
     _keys: {
-        value: Object.create(Object),
+        value: null,
         writable: true
     },
+
     _textures: {
-        value: Object.create(Object),
+        value: null,
+        writable: true
+    },
+
+    _attributes: {
+        value: null,
         writable: true
     },
 
@@ -33,7 +55,7 @@ const ShaderPrototype = Object.create(Object, {
             let i;
             let unchanged = true;
             if (val === cval) return true;
-            if (val instanceof Array && cval instanceof Array) {
+            if (isArrayish(val) && isArrayish(cval)) {
                 if (val.length !== cval.length) return false;
                 else
                     for (i = 0; i < val.length; i++)
@@ -47,6 +69,9 @@ const ShaderPrototype = Object.create(Object, {
 
     "load": {
         value: function (vertexUrl, fragmentUrl, expire) {
+            this._keys = {};
+            this._textures = {};
+            this._attributes = {};
             let xmlhttp = null;
             if (
                 typeof global.localStorage === "undefined" ||
@@ -315,6 +340,18 @@ const ShaderPrototype = Object.create(Object, {
             return this._shader;
         },
         writable: false
+    },
+
+    "getAttribute": {
+        value: function (gl, name) {
+            if (typeof this._attributes[name] === "undefined") {
+                let attrib = gl.getAttribLocation(this._shader, name);
+                this._attributes[name] = attrib;
+                return attrib;
+            } else {
+                return this._attributes[name];
+            }
+        }
     },
 
     "compile": {
