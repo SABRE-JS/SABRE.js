@@ -7,7 +7,7 @@
  |- include - synchronous inclusion of ecmascript, ecmascript is garunteed to be loaded as soon as control of the thread is returned to the browser.
  */
 let includelog = Object.create(Object, {});
-let scriptpath = null;
+let scriptpath = "";
 {
     let scripts = global.document.getElementsByTagName("script");
     let curscript = new global.URL(scripts[scripts.length - 1].src);
