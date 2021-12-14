@@ -15,6 +15,7 @@
 //@include [scheduler.js]
 //@include [canvas-2d-text-renderer.js]
 //@include [canvas-2d-shape-renderer.js]
+//@include [shader.js]
 sabre.import("util.min.js");
 sabre.import("global-constants.min.js");
 sabre.import("color.min.js");
@@ -78,6 +79,24 @@ const renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _textureCoordinatesBuffer: {
+        /** @type{?WebGLBuffer} */
+        value: null,
+        writable: true
+    },
+
+    _subtitlePositioningBuffer: {
+        /** @type{?WebGLBuffer} */
+        value: null,
+        writable: true
+    },
+
+    _fullscreenPositioningBuffer: {
+        /** @type{?WebGLBuffer} */
+        value: null,
+        writable: true
+    },
+
     _textureSubtitle: {
         /** @type{?WebGLTexture} */
         value: null,
@@ -104,6 +123,30 @@ const renderer_prototype = global.Object.create(Object, {
 
     _frameBufferB: {
         /** @type{?WebGLFramebuffer} */
+        value: null,
+        writable: true
+    },
+
+    _positioningShader: {
+        /** @type{?Shader} */
+        value: null,
+        writable: true
+    },
+
+    _convEdgeBlurShader: {
+        /** @type{?Shader} */
+        value: null,
+        writable: true
+    },
+
+    _gaussEdgeBlurPass1Shader: {
+        /** @type{?Shader} */
+        value: null,
+        writable: true
+    },
+
+    _gaussEdgeBlurPass2Shader: {
+        /** @type{?Shader} */
         value: null,
         writable: true
     },
@@ -144,6 +187,27 @@ const renderer_prototype = global.Object.create(Object, {
 
     //END LOCAL VARIABLES
     //BEGIN LOCAL FUNCTIONS
+
+    _matrixToArrayRepresentation3x3: {
+        /**
+         * Represent the matrix as an array.
+         * @returns {Array<number>} the array representation.
+         */
+        value: function (a) {
+            return [
+                a.m00,
+                a.m01,
+                a.m02,
+                a.m10,
+                a.m11,
+                a.m12,
+                a.m20,
+                a.m21,
+                a.m22
+            ];
+        },
+        writable: false
+    },
 
     _matrixMultiply3x3: {
         /**
@@ -229,22 +293,6 @@ const renderer_prototype = global.Object.create(Object, {
                 return null;
             }
             return m;
-        },
-        writable: false
-    },
-
-    _getBlurKernelValueForPosition: {
-        value: function (center_value, x, y, dim, intgr) {
-            let value = Math.max(
-                center_value -
-                    Math.sqrt(
-                        Math.pow(x - (dim - 1) / 2, 2) +
-                            Math.pow(y - (dim - 1) / 2, 2)
-                    ),
-                0
-            );
-            if (intgr) value = Math.floor(value);
-            return value;
         },
         writable: false
     },
@@ -761,15 +809,45 @@ const renderer_prototype = global.Object.create(Object, {
 
     _glSetup: {
         value: function () {
+            const tex_coords = new Float32Array([
+                0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1
+            ]);
+            const fullscreen_coordinates = new Float32Array([
+                -1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0
+            ]);
             this._gl.viewport(
                 0,
                 0,
-                config.renderer["resolution_x"],
-                config.renderer["resolution_y"]
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"]
+            );
+
+            this._textureCoordinatesBuffer = this._gl.createBuffer();
+            this._subtitlePositioningBuffer = this._gl.createBuffer();
+            this._fullscreenPositioningBuffer = this._gl.createBuffer();
+
+            this._gl.bindBuffer(
+                this._gl.ARRAY_BUFFER,
+                this._textureCoordinatesBuffer
+            );
+            this._gl.bufferData(
+                this._gl.ARRAY_BUFFER,
+                tex_coords,
+                this._gl.STATIC_DRAW
+            );
+
+            this._gl.bindBuffer(
+                this._gl.ARRAY_BUFFER,
+                this._fullscreenPositioningBuffer
+            );
+            this._gl.bufferData(
+                this._gl.ARRAY_BUFFER,
+                fullscreen_coordinates,
+                this._gl.STATIC_DRAW
             );
 
             this._textureSubtitle = this._gl.createTexture();
-            this._gl.bindTexture(this._gl.TEXTURE_2D, this._texture);
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
             this._gl.texParameteri(
                 this._gl.TEXTURE_2D,
                 this._gl.TEXTURE_WRAP_S,
@@ -804,7 +882,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._fbTextureA = this._gl.createTexture();
-            this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTexture);
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
             this._gl.texParameteri(
                 this._gl.TEXTURE_2D,
                 this._gl.TEXTURE_WRAP_S,
@@ -839,7 +917,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._fbTextureB = this._gl.createTexture();
-            this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTexture);
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureB);
             this._gl.texParameteri(
                 this._gl.TEXTURE_2D,
                 this._gl.TEXTURE_WRAP_S,
@@ -878,28 +956,26 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.DRAW_FRAMEBUFFER,
                 this._frameBufferA
             );
-            this,
-                _this._gl.framebufferTexture2D(
-                    this._gl.FRAMEBUFFER,
-                    this._gl.COLOR_ATTACHMENT0,
-                    this._gl.TEXTURE_2D,
-                    this._fbTextureA,
-                    0
-                );
+            this._gl.framebufferTexture2D(
+                this._gl.FRAMEBUFFER,
+                this._gl.COLOR_ATTACHMENT0,
+                this._gl.TEXTURE_2D,
+                this._fbTextureA,
+                0
+            );
 
             this._frameBufferB = this._gl.createFramebuffer();
             this._gl.bindFramebuffer(
                 this._gl.DRAW_FRAMEBUFFER,
                 this._frameBufferB
             );
-            this,
-                _this._gl.framebufferTexture2D(
-                    this._gl.FRAMEBUFFER,
-                    this._gl.COLOR_ATTACHMENT0,
-                    this._gl.TEXTURE_2D,
-                    this._fbTextureB,
-                    0
-                );
+            this._gl.framebufferTexture2D(
+                this._gl.FRAMEBUFFER,
+                this._gl.COLOR_ATTACHMENT0,
+                this._gl.TEXTURE_2D,
+                this._fbTextureB,
+                0
+            );
 
             this._positioningShader = new sabre.Shader();
             this._positioningShader.load(
@@ -908,27 +984,61 @@ const renderer_prototype = global.Object.create(Object, {
                 1
             );
             this._positioningShader.compile(this._gl);
+            this._positioningShader.addOption(
+                "u_matrix",
+                new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+                "Matrix3fv"
+            );
+            this._positioningShader.addOption("u_texture", 0, "1i");
+
             this._convEdgeBlurShader = new sabre.Shader();
             this._convEdgeBlurShader.load(
-                sabre.getScriptPath() + "/shaders/edge_blur.vertex.glsl",
+                sabre.getScriptPath() + "/shaders/effect.vertex.glsl",
                 sabre.getScriptPath() + "/shaders/edge_blur.fragment.glsl",
                 1
             );
             this._convEdgeBlurShader.compile(this._gl);
+            this._convEdgeBlurShader.addOption("u_texture", 0, "1i");
+            this._convEdgeBlurShader.addOption(
+                "u_resolution_x",
+                this._config.renderer["resolution_x"],
+                "1f"
+            );
+            this._convEdgeBlurShader.addOption(
+                "u_resolution_y",
+                this._config.renderer["resolution_y"],
+                "1f"
+            );
+
             this._gaussEdgeBlurPass1Shader = new sabre.Shader();
             this._gaussEdgeBlurPass1Shader.load(
-                sabre.getScriptPath() + "/shaders/gauss_blur.vertex.glsl",
+                sabre.getScriptPath() + "/shaders/effect.vertex.glsl",
                 sabre.getScriptPath() + "/shaders/gauss_blur.1.fragment.glsl",
                 1
             );
             this._gaussEdgeBlurPass1Shader.compile(this._gl);
+            this._gaussEdgeBlurPass1Shader.addOption(
+                "u_resolution_x",
+                this._config.renderer["resolution_x"],
+                "1f"
+            );
+            this._gaussEdgeBlurPass1Shader.addOption("u_texture", 0, "1i");
+            this._gaussEdgeBlurPass1Shader.addOption("u_sigma", 0, "1f");
+
             this._gaussEdgeBlurPass2Shader = new sabre.Shader();
             this._gaussEdgeBlurPass2Shader.load(
-                sabre.getScriptPath() + "/shaders/gauss_blur.vertex.glsl",
+                sabre.getScriptPath() + "/shaders/effect.vertex.glsl",
                 sabre.getScriptPath() + "/shaders/gauss_blur.2.fragment.glsl",
                 1
             );
             this._gaussEdgeBlurPass2Shader.compile(this._gl);
+            this._gaussEdgeBlurPass2Shader.addOption(
+                "u_resolution_y",
+                this._config.renderer["resolution_y"],
+                "1f"
+            );
+            this._gaussEdgeBlurPass2Shader.addOption("u_texture", 0, "1i");
+            this._gaussEdgeBlurPass2Shader.addOption("u_sigma", 0, "1f");
         },
         writable: false
     },
@@ -942,12 +1052,11 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {boolean} isShape is the subtitle we are compositing a shape?
          */
         value: function (time, currentEvent, pass, position, isShape) {
-            const fullscreen_coordinates = new Float32Array([
-                -1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0
-            ]);
             let bluring;
             let edgeBlurActive;
             let gaussianBlurActive;
+            let edgeBlurIterations = 0;
+            let gaussianBlurFactor = 0;
             {
                 let outline = this._calcOutline(
                     time,
@@ -960,12 +1069,12 @@ const renderer_prototype = global.Object.create(Object, {
                     (pass === sabre.RenderPasses.FILL &&
                         outline.x === 0 &&
                         outline.y === 0);
-                let edgeBlurIterations = this._calcEdgeBlur(
+                edgeBlurIterations = this._calcEdgeBlur(
                     time,
                     currentEvent.getStyle(),
                     currentEvent.getOverrides()
                 );
-                let gaussianBlurFactor = this._calcGaussianBlur(
+                gaussianBlurFactor = this._calcGaussianBlur(
                     time,
                     currentEvent.getStyle(),
                     currentEvent.getOverrides()
@@ -1039,15 +1148,15 @@ const renderer_prototype = global.Object.create(Object, {
 
                         let rotationOrigin = lineOverrides.getRotationOrigin();
                         let diff = [0, 0];
-                        diff[0] = curPos[0] - rotationOrigin[0];
-                        diff[1] = curPos[1] - rotationOrigin[1];
+                        diff[0] = rotationOrigin[0] - curPos[0];
+                        diff[1] = rotationOrigin[1] - curPos[1];
                         negativeRotationTranslationMatrix = {
                             m00: 1,
                             m01: 0,
-                            m02: diff[0] * xScale,
+                            m02: diff[0] * xScale - 1,
                             m10: 0,
                             m11: 1,
-                            m12: diff[1] * yScale,
+                            m12: diff[1] * yScale - 1,
                             m20: 0,
                             m21: 0,
                             m22: 1
@@ -1055,10 +1164,10 @@ const renderer_prototype = global.Object.create(Object, {
                         positiveRotationTranslationMatrix = {
                             m00: 1,
                             m01: 0,
-                            m02: -diff[0] * xScale,
+                            m02: -diff[0] * xScale - 1,
                             m10: 0,
                             m11: 1,
-                            m12: -diff[1] * yScale,
+                            m12: -diff[1] * yScale - 1,
                             m20: 0,
                             m21: 0,
                             m22: 1
@@ -1112,7 +1221,7 @@ const renderer_prototype = global.Object.create(Object, {
                         m22: Math.cos(rotation.x * toRad)
                     };
                     rotationMatrixZ = {
-                        m01: Math.cos(rotation.x * toRad),
+                        m00: Math.cos(rotation.x * toRad),
                         m01: -Math.sin(rotation.x * toRad),
                         m02: 0,
                         m10: Math.sin(rotation.x * toRad),
@@ -1120,17 +1229,17 @@ const renderer_prototype = global.Object.create(Object, {
                         m12: 0,
                         m20: 0,
                         m21: 0,
-                        m22: 0
+                        m22: 1
                     };
                 }
 
                 let finalPositionOffsetMatrix = {
                     m00: 1,
                     m01: 0,
-                    m02: position.x * xScale,
+                    m02: position.x * xScale - 1,
                     m10: 0,
                     m11: 1,
-                    m12: position.y * yScale,
+                    m12: position.y * yScale - 1,
                     m20: 0,
                     m21: 0,
                     m22: 1
@@ -1186,23 +1295,6 @@ const renderer_prototype = global.Object.create(Object, {
                 m02: 0
             };
 
-            upperLeft = this._matrixMultiply1x3and3x3(
-                upperLeft,
-                positioningMatrix
-            );
-            upperRight = this._matrixMultiply1x3and3x3(
-                upperRight,
-                positioningMatrix
-            );
-            lowerleft = this._matrixMultiply1x3and3x3(
-                lowerLeft,
-                positioningMatrix
-            );
-            lowerRight = this._matrixMultiply1x3and3x3(
-                lowerRight,
-                positioningMatrix
-            );
-
             let coordinates = new Float32Array([
                 upperLeft.m00,
                 upperLeft.m01,
@@ -1224,77 +1316,217 @@ const renderer_prototype = global.Object.create(Object, {
                 lowerRight.m02
             ]);
 
-            //Draw background or outline or text depending on pass to framebuffer a
+            //Draw background or outline or text depending on pass to destination
+            {
+                let positionAttrib = this._positioningShader.getAttribute(
+                    this._gl,
+                    "a_position"
+                );
+                let textureAttrib = this._positioningShader.getAttribute(
+                    this._gl,
+                    "a_texcoord"
+                );
+                this._positioningShader.updateOption(
+                    "u_matrix",
+                    new Float32Array(
+                        this._matrixToArrayRepresentation3x3(positioningMatrix)
+                    )
+                );
+                this._positioningShader.updateOption("u_texture", 0);
+                this._positioningShader.bindShader(this._gl);
+                this._gl.bindBuffer(
+                    this._gl.ARRAY_BUFFER,
+                    this._textureCoordinatesBuffer
+                );
+                this._gl.enableVertexAttribArray(textureAttrib);
+                this._gl.vertexAttribPointer(
+                    textureAttrib,
+                    2,
+                    this._gl.FLOAT,
+                    false,
+                    0,
+                    0
+                );
+                this._gl.bindBuffer(
+                    this._gl.ARRAY_BUFFER,
+                    this._subtitlePositioningBuffer
+                );
+                this._gl.bufferData(
+                    this._gl.ARRAY_BUFFER,
+                    coordinates,
+                    this._gl.DYNAMIC_DRAW
+                );
+                this._gl.enableVertexAttribArray(positionAttrib);
+                this._gl.vertexAttribPointer(
+                    positionAttrib,
+                    3,
+                    this._gl.FLOAT,
+                    false,
+                    0,
+                    0
+                );
+                this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+            }
 
             if (bluring) {
+                let backFramebuffer = this._frameBufferB;
+                let sourceFramebuffer = this._frameBufferA;
+                let backTexture = this._fbTextureB;
+                let sourceTexture = this._fbTextureA;
                 if (edgeBlurActive) {
+                    this._convEdgeBlurShader.updateOption(
+                        "u_resolution_x",
+                        this._config.renderer["resolution_x"]
+                    );
+                    this._convEdgeBlurShader.updateOption(
+                        "u_resolution_y",
+                        this._config.renderer["resolution_y"]
+                    );
+                    this._convEdgeBlurShader.updateOption("u_texture", 0);
+                    this._convEdgeBlurShader.bindShader(this._gl);
+                    //Draw framebuffer to destination
+                    let swap;
+                    for (let i = 0; i < edgeBlurIterations - 1; i++) {
+                        this._gl.bindFramebuffer(
+                            this._gl.FRAMEBUFFER,
+                            backFramebuffer
+                        );
+                        this._gl.activeTexture(this._gl.TEXTURE0);
+                        this._gl.bindTexture(
+                            this._gl.TEXTURE_2D,
+                            sourceTexture
+                        );
+                        this._gl.bindBuffer(
+                            this._gl.ARRAY_BUFFER,
+                            this._fullscreenPositioningBuffer
+                        );
+                        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                        swap = backTexture;
+                        backTexture = sourceTexture;
+                        sourceTexture = swap;
+                        swap = backFramebuffer;
+                        backFramebuffer = sourceFramebuffer;
+                        sourceFramebuffer = swap;
+                    }
                     if (gaussianBlurActive) {
                         this._gl.bindFramebuffer(
                             this._gl.FRAMEBUFFER,
-                            this._frameBufferB
+                            backFramebuffer
                         );
                     } else {
                         this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
                     }
-                    this._gl.viewport(
-                        0,
-                        0,
-                        this._config.renderer["resolution_x"],
-                        this._config.renderer["resolution_y"]
-                    );
-                    this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
-                    //Apply Convolution edge blur
-                    //Draw framebuffer a to framebuffer b
+
+                    this._gl.activeTexture(this._gl.TEXTURE0);
+                    this._gl.bindTexture(this._gl.TEXTURE_2D, sourceTexture);
+
+                    {
+                        let positionAttrib =
+                            this._convEdgeBlurShader.getAttribute(
+                                this._gl,
+                                "a_position"
+                            );
+                        this._gl.bindBuffer(
+                            this._gl.ARRAY_BUFFER,
+                            this._fullscreenPositioningBuffer
+                        );
+                        this._gl.enableVertexAttribArray(positionAttrib);
+                        this._gl.vertexAttribPointer(
+                            positionAttrib,
+                            3,
+                            this._gl.FLOAT,
+                            false,
+                            0,
+                            0
+                        );
+                        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                    }
+
+                    swap = backTexture;
+                    backTexture = sourceTexture;
+                    sourceTexture = swap;
+                    swap = backFramebuffer;
+                    backFramebuffer = sourceFramebuffer;
+                    sourceFramebuffer = swap;
                 }
 
                 if (gaussianBlurActive) {
-                    if (edgeBlurActive) {
-                        this._gl.bindFramebuffer(
-                            this._gl.FRAMEBUFFER,
-                            this._frameBufferA
-                        );
-                        this._gl.viewport(
-                            0,
-                            0,
-                            this._config.renderer["resolution_x"],
-                            this._config.renderer["resolution_y"]
-                        );
-                        this._gl.bindTexture(
-                            this._gl.TEXTURE_2D,
-                            this._fbTextureB
-                        );
-                    } else {
-                        this._gl.bindFramebuffer(
-                            this._gl.FRAMEBUFFER,
-                            this._frameBufferB
-                        );
-                        this._gl.viewport(
-                            0,
-                            0,
-                            this._config.renderer["resolution_x"],
-                            this._config.renderer["resolution_y"]
-                        );
-                        this._gl.bindTexture(
-                            this._gl.TEXTURE_2D,
-                            this._fbTextureA
-                        );
-                    }
+                    this._gl.bindFramebuffer(
+                        this._gl.FRAMEBUFFER,
+                        backFramebuffer
+                    );
+                    this._gl.activeTexture(this._gl.TEXTURE0);
+                    this._gl.bindTexture(this._gl.TEXTURE_2D, sourceTexture);
                     //Apply gaussian filter 1
+                    this._gaussEdgeBlurPass1Shader.updateOption(
+                        "u_resolution_x",
+                        this._config.renderer["resolution_x"]
+                    );
+                    this._gaussEdgeBlurPass1Shader.updateOption(
+                        "u_sigma",
+                        gaussianBlurFactor
+                    );
+                    this._gaussEdgeBlurPass1Shader.updateOption("u_texture", 0);
+                    this._gaussEdgeBlurPass1Shader.bindShader(this._gl);
                     //Draw framebuffer X to framebuffer Y
-                    if (edgeBlurActive) {
-                        this._gl.bindTexture(
-                            this._gl.TEXTURE_2D,
-                            this._fbTextureA
+                    {
+                        let positionAttrib =
+                            this._gaussEdgeBlurPass1Shader.getAttribute(
+                                this._gl,
+                                "a_position"
+                            );
+                        this._gl.bindBuffer(
+                            this._gl.ARRAY_BUFFER,
+                            this._fullscreenPositioningBuffer
                         );
-                    } else {
-                        this._gl.bindTexture(
-                            this._gl.TEXTURE_2D,
-                            this._fbTextureB
+                        this._gl.enableVertexAttribArray(positionAttrib);
+                        this._gl.vertexAttribPointer(
+                            positionAttrib,
+                            3,
+                            this._gl.FLOAT,
+                            false,
+                            0,
+                            0
                         );
+                        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
                     }
+
                     this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+                    this._gl.activeTexture(this._gl.TEXTURE0);
+                    this._gl.bindTexture(this._gl.TEXTURE_2D, backTexture);
                     //Apply gaussian filter 2
+                    this._gaussEdgeBlurPass2Shader.updateOption(
+                        "u_resolution_y",
+                        this._config.renderer["resolution_y"]
+                    );
+                    this._gaussEdgeBlurPass2Shader.updateOption(
+                        "u_sigma",
+                        gaussianBlurFactor
+                    );
+                    this._gaussEdgeBlurPass2Shader.updateOption("u_texture", 0);
+                    this._gaussEdgeBlurPass2Shader.bindShader(this._gl);
                     //Draw framebuffer Y to screen
+                    {
+                        let positionAttrib =
+                            this._gaussEdgeBlurPass1Shader.getAttribute(
+                                this._gl,
+                                "a_position"
+                            );
+                        this._gl.bindBuffer(
+                            this._gl.ARRAY_BUFFER,
+                            this._fullscreenPositioningBuffer
+                        );
+                        this._gl.enableVertexAttribArray(positionAttrib);
+                        this._gl.vertexAttribPointer(
+                            positionAttrib,
+                            3,
+                            this._gl.FLOAT,
+                            false,
+                            0,
+                            0
+                        );
+                        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                    }
                 }
             }
         },
@@ -1353,7 +1585,7 @@ const renderer_prototype = global.Object.create(Object, {
             this._compositingCanvas.addEventListener(
                 "webglcontextlost",
                 function (event) {
-                    console.log("WebGL Context Lost...");
+                    console.log("[SABRE.js] WebGL Context Lost...");
                     this._contextLost = true;
                     event.preventDefault();
                 },
@@ -1362,7 +1594,9 @@ const renderer_prototype = global.Object.create(Object, {
             this._compositingCanvas.addEventListener(
                 "webglcontextrestored",
                 function (event) {
-                    console.log("WebGL Context Restored. Recovering...");
+                    console.log(
+                        "[SABRE.js] WebGL Context Restored. Recovering..."
+                    );
                     sabre.Shader.resetStateEngine();
                     this._glSetup();
                     this._contextLost = false;
