@@ -37,7 +37,7 @@ do
             mkdir -p "$(dirname "$PROJECT_INCLUDE_DIR/$f")"
             touch "$PROJECT_INCLUDE_DIR/$f"
         fi
-		INCLUDE_LIST="--externs '$PROJECT_INCLUDE_DIR/shared.include.js'"
+		INCLUDE_LIST="--externs '$PROJECT_INCLUDE_DIR/shared.include.js' --externs '$PROJECT_INCLUDE_DIR/include.js'"
 		FILES_TO_INCLUDE="$(cat "$PROJECT_SOURCE_DIR/$f" | grep -E "//@include \[..*?\]" | sed -E "s|//@include \[(..*?)\]|\1|g" | tr '\r\n' ' ' | tr '\n' ' ')"
 		for include in $FILES_TO_INCLUDE
 		do
