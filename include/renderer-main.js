@@ -4,7 +4,7 @@
  *      updateViewport:function(number,number):void,
  *      canRender:function():boolean,
  *      frame:function(number):void,
- *      getDisplayUri:function():string,
+ *      getDisplayUri:function(function(string):void):void
  * }}
  */
 var SSARenderer;

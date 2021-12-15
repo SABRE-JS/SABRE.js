@@ -24,6 +24,7 @@ sabre.import("style-override.min.js");
 sabre.import("subtitle-event.min.js");
 sabre.import("subtitle-parser.min.js");
 sabre.import("scheduler.min.js");
+sabre.import("shader.min.js");
 sabre.import("canvas-2d-text-renderer.min.js");
 sabre.import("canvas-2d-shape-renderer.min.js");
 /**
@@ -384,8 +385,8 @@ const renderer_prototype = global.Object.create(Object, {
         value: function (time, style, overrides) {
             let transitionOverrides = overrides.getTransition();
             let rotation = overrides.getRotation();
-            let rotationTarget = transitionOverrides.getRotation();
             if (transitionOverrides !== null) {
+                let rotationTarget = transitionOverrides.getRotation();
                 rotation[0] = sabre.performTransition(
                     time,
                     rotation[0],
@@ -1734,16 +1735,16 @@ const renderer_prototype = global.Object.create(Object, {
     "getDisplayUri": {
         /**
          * Get the frame output.
-         * @returns {string} The ObjectURL of the display output.
+         * @param {function(string):void} callback the callback to call with the URI.
          */
-        value: function () {
-            let output = global.URL.createObjectURL(
-                this._compositingCanvas.toBlobHD()
-            );
-            if (this._lastOutput !== null)
-                global.URL.revokeObjectURL(this._lastOutput);
-            this._lastOutput = output;
-            return output;
+        value: function (callback) {
+            this._compositingCanvas.toBlobHD((a) => {
+                let output = global.URL.createObjectURL(a);
+                if (this._lastOutput !== null)
+                    global.URL.revokeObjectURL(this._lastOutput);
+                this._lastOutput = output;
+                callback(output);
+            });
         },
         writable: false
     }

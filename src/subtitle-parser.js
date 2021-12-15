@@ -2935,11 +2935,11 @@ const main_prototype = global.Object.create(global.Object, {
         /**
          * A wrapper method around the renderer that allows our delegate to fetch rendered subtitle frames.
          * @param {number} time the time as provided by HTMLVideoElement.currentTime.
-         * @returns {string} Object URI of frame.
+         * @param {function(string):void} callback a callback that provides the URI for the image generated.
          */
-        value: function (time) {
+        value: function (time, callback) {
             this._renderer.frame(time);
-            return this._renderer.getDisplayUri();
+            this._renderer.getDisplayUri(callback);
         },
         writable: false
     },
@@ -3006,12 +3006,12 @@ external["SABRERenderer"] = function (loadFont) {
             return parser.canRender();
         },
         /**
-         * Fetches a rendered frame of subtitles as an object url.
+         * Fetches a rendered frame of subtitles as an object uri.
          * @param {number} time
-         * @returns {string} the object URL of the frame
+         * @param {function(string):void} callback a callback that provides the URI for the image generated.
          */
-        "getFrame": function (time) {
-            return parser.frame(time);
+        "getFrame": function (time, callback) {
+            parser.frame(time, callback);
         }
     });
 };

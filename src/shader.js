@@ -107,59 +107,59 @@ const ShaderPrototype = Object.create(Object, {
             let storageNameVertex = "shader.js|vrtx|" + vertexUrl;
             let storageNameFragment = "shader.js|frag|" + fragmentUrl;
             if (
-                window.localStorage.getItem(storageNameVertex) === null ||
+                global.localStorage.getItem(storageNameVertex) === null ||
                 parseInt(
-                    window.localStorage
+                    global.localStorage
                         .getItem(storageNameVertex)
                         .split("\u0003")[1],
                     16
-                ) < window.Date.now()
+                ) < global.Date.now()
             ) {
                 xmlhttp = new XMLHttpRequest();
                 xmlhttp.open("GET", vertexUrl, false);
                 xmlhttp.overrideMimeType("text/plain");
                 xmlhttp.send();
                 if (xmlhttp.status === 200) {
-                    window.localStorage.setItem(
+                    global.localStorage.setItem(
                         storageNameVertex,
                         xmlhttp.responseText +
                             "\u0003" +
-                            (expire * 86400000 + window.Date.now()).toString(16)
+                            (expire * 86400000 + global.Date.now()).toString(16)
                     );
                     shaderlog[vertexUrl] = xmlhttp.responseText;
                     this.vertSrc = xmlhttp.responseText;
                 }
             } else {
-                this.vertSrc = window.localStorage
-                    .getItem(vertexUrl)
+                this.vertSrc = global.localStorage
+                    .getItem(storageNameVertex)
                     .split("\u0003")[0];
             }
             if (
-                window.localStorage.getItem(storageNameFragment) === null ||
+                global.localStorage.getItem(storageNameFragment) === null ||
                 parseInt(
-                    window.localStorage
+                    global.localStorage
                         .getItem(storageNameFragment)
                         .split("\u0003")[1],
                     16
-                ) < window.Date.now()
+                ) < global.Date.now()
             ) {
                 xmlhttp = new XMLHttpRequest();
                 xmlhttp.open("GET", fragmentUrl, false);
                 xmlhttp.overrideMimeType("text/plain");
                 xmlhttp.send();
                 if (xmlhttp.status === 200) {
-                    window.localStorage.setItem(
+                    global.localStorage.setItem(
                         storageNameFragment,
                         xmlhttp.responseText +
                             "\u0003" +
-                            (expire * 86400000 + window.Date.now()).toString(16)
+                            (expire * 86400000 + global.Date.now()).toString(16)
                     );
                     shaderlog[fragmentUrl] = xmlhttp.responseText;
                     this.fragSrc = xmlhttp.responseText;
                 }
             } else {
-                this.fragSrc = window.localStorage
-                    .getItem(fragmentUrl)
+                this.fragSrc = global.localStorage
+                    .getItem(storageNameFragment)
                     .split("\u0003")[0];
             }
         }
@@ -216,7 +216,7 @@ const ShaderPrototype = Object.create(Object, {
     "bindShader": {
         value: function (gl) {
             gl.useProgram(this._shader);
-            let props = this._keys.keys(this._keys);
+            let props = Object.keys(this._keys);
             let key = null;
             let uniform = null;
             let type = null;
