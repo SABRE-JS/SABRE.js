@@ -102,12 +102,12 @@ sabre["performTransition"] = function (
     acceleration
 ) {
     if (transitionValue === null || curtime < start) return originalValue;
-    if (curtime >= end) return transitionValue;
+    if (curtime >= end || end <= start) return transitionValue;
     var percent = Math.max(
         0,
         Math.min(Math.pow((curtime - start) / (end - start), acceleration), 1)
     );
-    return originalValue / percent + transitionValue * percent;
+    return originalValue * (1 - percent) + transitionValue * percent;
 };
 
 //implement toBlob on systems that don't support it in a manner that avoids using costly dataurls
@@ -193,11 +193,13 @@ global.HTMLCanvasElement.prototype["toBlobHD"] =
 if (typeof global.OffscreenCanvas !== "undefined") {
     global.OffscreenCanvas.prototype["toBlob"] =
         global.OffscreenCanvas.prototype["toBlob"] ??
-        function (callback, type, quality) {
-            this.convertToBlob({ "type": type, "quality": quality }).then(
-                callback
-            );
-        } ??
+        (typeof global.OffscreenCanvas.prototype.convertToBlob !== "undefined"
+            ? function (callback, type, quality) {
+                  this.convertToBlob({ "type": type, "quality": quality }).then(
+                      callback
+                  );
+              }
+            : null) ??
         canvas2blob;
     global.OffscreenCanvas.prototype["toBlobHD"] =
         global.OffscreenCanvas.prototype["toBlobHD"] ??
