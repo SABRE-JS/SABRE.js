@@ -26,24 +26,69 @@ describe("#performTransition", () => {
 
     it("should return original value if transition value is null", () => {
         transitionValue = null;
-        expect(performTransition(curtime, originalValue, transitionValue, start, end, acceleration)).toBe(originalValue);
+        expect(
+            performTransition(
+                curtime,
+                originalValue,
+                transitionValue,
+                start,
+                end,
+                acceleration
+            )
+        ).toBe(originalValue);
     });
 
     it("should return original value if current time less than start", () => {
         curtime = start - 1;
-        expect(performTransition(curtime, originalValue, transitionValue, start, end, acceleration)).toBe(originalValue);
+        expect(
+            performTransition(
+                curtime,
+                originalValue,
+                transitionValue,
+                start,
+                end,
+                acceleration
+            )
+        ).toBe(originalValue);
     });
 
     it("should return transition value if current time more or equal than end", () => {
         curtime = end;
-        expect(performTransition(curtime, originalValue, transitionValue, start, end, acceleration)).toBe(transitionValue);
+        expect(
+            performTransition(
+                curtime,
+                originalValue,
+                transitionValue,
+                start,
+                end,
+                acceleration
+            )
+        ).toBe(transitionValue);
 
         curtime = end + 1;
-        expect(performTransition(curtime, originalValue, transitionValue, start, end, acceleration)).toBe(transitionValue);
+        expect(
+            performTransition(
+                curtime,
+                originalValue,
+                transitionValue,
+                start,
+                end,
+                acceleration
+            )
+        ).toBe(transitionValue);
     });
 
     it("should return transition value calculated based on the passed arguments", () => {
-        expect(performTransition(curtime, originalValue, transitionValue, start, end, acceleration)).toBe(171.07100591715977);
+        expect(
+            performTransition(
+                curtime,
+                originalValue,
+                transitionValue,
+                start,
+                end,
+                acceleration
+            )
+        ).toBe(23.37278106508876);
     });
 });
 
@@ -58,8 +103,8 @@ describe("#stringEqualsCaseInsensitive", () => {
     });
 
     beforeEach(() => {
-        a = 'a';
-        b = 'b'
+        a = "a";
+        b = "b";
     });
 
     it("should return true if strings are equal even with different register", () => {
@@ -78,6 +123,11 @@ describe("#stringEqualsCaseInsensitive", () => {
         expect(stringEqualsCaseInsensitive(1, 2)).toBeFalsy();
         expect(stringEqualsCaseInsensitive(1, 1)).toBeTruthy();
         expect(stringEqualsCaseInsensitive({}, {})).toBeFalsy();
-        expect(stringEqualsCaseInsensitive(stringEqualsCaseInsensitive, stringEqualsCaseInsensitive)).toBeTruthy();
+        expect(
+            stringEqualsCaseInsensitive(
+                stringEqualsCaseInsensitive,
+                stringEqualsCaseInsensitive
+            )
+        ).toBeTruthy();
     });
 });
