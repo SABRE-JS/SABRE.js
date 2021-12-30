@@ -15,13 +15,14 @@ sabre["SSAColor"] = function (r, g, b, a) {
     if (typeof r === "number") {
         if (r > 1.0 || r < 0) {
             if (typeof g === "undefined") {
-                a = (r & 0xff) / 255;
-                r = r >>> 8;
-                b = (r & 0xff) / 255;
-                r = r >>> 8;
-                g = (r & 0xff) / 255;
-                r = r >>> 8;
-                r = (r & 0xff) / 255;
+                let n = r;
+                r = (n & 0xff) / 255;
+                n = n >>> 8;
+                g = (n & 0xff) / 255;
+                n = n >>> 8;
+                b = (n & 0xff) / 255;
+                n = n >>> 8;
+                a = (255 - (n & 0xff)) / 255;
             } else {
                 r = (r & 0xff) / 255;
                 g = (g & 0xff) / 255;
@@ -165,10 +166,10 @@ sabre["SSAOverrideColor"] = function (r, g, b, a) {
 
         "applyOverride": {
             value: function (color) {
-                let r = color.getR();
-                let g = color.getG();
-                let b = color.getB();
-                let a = color.getA();
+                let r = color["getR"]();
+                let g = color["getG"]();
+                let b = color["getB"]();
+                let a = color["getA"]();
 
                 if (obj.r !== null) r = obj.r;
                 if (obj.g !== null) g = obj.g;
