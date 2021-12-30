@@ -5,12 +5,13 @@
 		<title>Sabre.js Debug Page</title>
 		<meta name="description" content="Sabre.js Debug Page">
         <meta name="author" content="Patrick 'ILOVEPIE' Rhodes Martin">
-        <script src="include.min.js"></script>
-        <script async src="/renderer-main.min.js"></script>
+        <script src="https://spectorcdn.babylonjs.com/spector.bundle.js"></script>
+        <script src="/include.min.js"></script>
+        <script async src="/sabre.min.js"></script>
 	</head>
 	<body>
 		<div style="width:100%; display: flex; align-items: center; justify-content: center;">
-			<img id="display" width="640" height="480" style="background-color: green;">
+			<canvas id="display" width="640" height="480" style="background-color: green;">
         </div>
         <div style="width:100%; display: flex; align-items: center; justify-content: center;">
             <button id="play">Play</button><button id="stop">Stop</button>
@@ -83,7 +84,7 @@ Dialogue: 0,0:01:02.00,0:01:04.00,Default,,0000,0000,0000,,{\an5\t()\clip(69,215
             let stopbutton = document.getElementById("stop");
 
             function displayImage(){
-                display.src = renderer.getFrame(Date.now()-startTime);
+                renderer.drawFrame(video.currentTime,display,"2d");
                 if(playing){
                     window.requestAnimationFrame(displayImage);
                 }
@@ -91,7 +92,7 @@ Dialogue: 0,0:01:02.00,0:01:04.00,Default,,0000,0000,0000,,{\an5\t()\clip(69,215
 
             function play(){
                 playing = true;
-                startTime = Date.now();
+                startTime = Date.now()/1000;
                 window.requestAnimationFrame(displayImage);
             }
 
