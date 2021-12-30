@@ -170,6 +170,12 @@ const ShaderPrototype = Object.create(Object, {
             if (this._keys[key]) {
                 this._keys[key].val = value;
                 return true;
+            } else {
+                console.warn(
+                    'Uninitialized option for shader updated, "' +
+                        key +
+                        '" is unknown.'
+                );
             }
             return false;
         },
@@ -178,9 +184,18 @@ const ShaderPrototype = Object.create(Object, {
 
     "addOption": {
         value: function (key, value, type) {
-            if (this._keys[key] === null) {
+            if (
+                typeof this._keys[key] === "undefined" ||
+                this._keys[key] === null
+            ) {
                 this._keys[key] = { val: value, datatype: type };
                 return true;
+            } else {
+                console.warn(
+                    'Attempt to re-initialize an option for shader, "' +
+                        key +
+                        '" is already defined.'
+                );
             }
             return false;
         },
