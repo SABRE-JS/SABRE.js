@@ -14,6 +14,11 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 - Libass
 - XY-VSFilter
 
+### Gallery
+A gallery of major milestones in the development process.
+
+To view the gallery click [here](/gallery/gallery.md) if you're using a decent browser or [here](/gallery/but_i_use_safari.md) if you like safari or internet explorer.
+
 ### Documentation
 
 
@@ -22,26 +27,26 @@ it a function that loads fonts using the CSS Font loading API:
 ```js
 function loadFont(name) {
     // check if font is already loaded
-    if (document.fonts.check("12px '" + name + "'")) return;
+    if (!document.fonts.check("12px '" + name + "'")){
+        // if the name has an extension, load from local fonts
+        if (name.indexOf(".") !== -1) {
+            const newFont = new FontFace(name, `url(./fonts/${name})`);
+            newFont.load().then((font) => document.fonts.add(font));
+            return;
+        }
 
-    // if the name has an extension, load from local fonts
-    if (name.indexOf(".") !== -1) {
-        const newFont = new FontFace(name, `url(./fonts/${name})`);
-        newFont.load().then((font) => document.fonts.add(font));
-        return;
+        // otherwise, load from google fonts and add stylesheet to document
+        let link = document.createElement("link");
+        link.setAttribute("rel", "stylesheet");
+        link.setAttribute("media", "print");
+        link.setAttribute("type", "text/css");
+        link.setAttribute("onload", "this.media='all';");
+        link.setAttribute(
+            "href",
+            `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
+        );
+        document.head.appendChild(link);
     }
-
-    // otherwise, load from google fonts and add stylesheet to document
-    let link = document.createElement("link");
-    link.setAttribute("rel", "stylesheet");
-    link.setAttribute("media", "print");
-    link.setAttribute("type", "text/css");
-    link.setAttribute("onload", "this.media='all';");
-    link.setAttribute(
-        "href",
-        `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
-    );
-    document.head.appendChild(link);
     //Force the font to load.
     let force_load = document.createElement("span");
     force_load.setAttribute(

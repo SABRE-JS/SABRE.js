@@ -14,6 +14,11 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 - Libass
 - XY-VSFilter
 
+### Gallery
+A gallery of major milestones in the development process.
+
+To view the gallery click [here](/gallery/gallery.md) if you're using a decent browser or [here](/gallery/but_i_use_safari.md) if you like safari or internet explorer.
+
 ### Documentation
 
 
@@ -22,26 +27,26 @@ it a function that loads fonts using the CSS Font loading API:
 ```js
 function loadFont(name) {
     // check if font is already loaded
-    if (document.fonts.check("12px '" + name + "'")) return;
+    if (!document.fonts.check("12px '" + name + "'")){
+        // if the name has an extension, load from local fonts
+        if (name.indexOf(".") !== -1) {
+            const newFont = new FontFace(name, `url(./fonts/${name})`);
+            newFont.load().then((font) => document.fonts.add(font));
+            return;
+        }
 
-    // if the name has an extension, load from local fonts
-    if (name.indexOf(".") !== -1) {
-        const newFont = new FontFace(name, `url(./fonts/${name})`);
-        newFont.load().then((font) => document.fonts.add(font));
-        return;
+        // otherwise, load from google fonts and add stylesheet to document
+        let link = document.createElement("link");
+        link.setAttribute("rel", "stylesheet");
+        link.setAttribute("media", "print");
+        link.setAttribute("type", "text/css");
+        link.setAttribute("onload", "this.media='all';");
+        link.setAttribute(
+            "href",
+            `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
+        );
+        document.head.appendChild(link);
     }
-
-    // otherwise, load from google fonts and add stylesheet to document
-    let link = document.createElement("link");
-    link.setAttribute("rel", "stylesheet");
-    link.setAttribute("media", "print");
-    link.setAttribute("type", "text/css");
-    link.setAttribute("onload", "this.media='all';");
-    link.setAttribute(
-        "href",
-        `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
-    );
-    document.head.appendChild(link);
     //Force the font to load.
     let force_load = document.createElement("span");
     force_load.setAttribute(
@@ -55,23 +60,55 @@ function loadFont(name) {
 // pass the function to the renderer
 let renderer = sabre.SABRERenderer(loadFont);
 ```
-#### Functions
+#### Constants
 
 <dl>
-<dt><a href="#loadSubtitles">loadSubtitles(subsText)</a></dt>
-<dd><p>Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.</p>
+<dt><a href="#isImageBitmapSupported">isImageBitmapSupported</a> : <code>boolean</code></dt>
+<dd><p>Is ImageBitmap Supported.</p>
 </dd>
-<dt><a href="#setViewport">setViewport(width, height)</a></dt>
-<dd><p>Updates the resolution/scale at which the subtitles are rendered (if the player is resized, for example).</p>
-</dd>
-<dt><a href="#getFrame">getFrame(time)</a> ⇒ <code>string</code></dt>
-<dd><p>Fetches a rendered frame of subtitles as an object url.</p>
+<dt><a href="#bitmapSupported">bitmapSupported</a> : <code>boolean</code></dt>
+<dd><p>Is Bitmap Rendering supported for canvas?</p>
 </dd>
 </dl>
 
+#### Functions
+
+<dl>
+<dt><a href="#loadSubtitles">loadSubtitles(subsText)</a> ⇒ <code>void</code></dt>
+<dd><p>Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.</p>
+</dd>
+<dt><a href="#setViewport">setViewport(width, height)</a> ⇒ <code>void</code></dt>
+<dd><p>Updates the resolution at which the subtitles are rendered (if the player is resized, for example).</p>
+</dd>
+<dt><a href="#checkReadyToRender">checkReadyToRender()</a> ⇒ <code>boolean</code></dt>
+<dd><p>Checks if the renderer is ready to render a frame.</p>
+</dd>
+<dt><a href="#getFrame">getFrame(time)</a> ⇒ <code>ImageBitmap</code></dt>
+<dd><p>Fetches a rendered frame of subtitles as an ImageBitmap, returns null if ImageBitmap is unsupported.</p>
+</dd>
+<dt><a href="#getFrameAsUri">getFrameAsUri(time, callback)</a> ⇒ <code>void</code></dt>
+<dd><p>Fetches a rendered frame of subtitles as an object uri.</p>
+</dd>
+<dt><a href="#drawFrame">drawFrame(time, canvas, [contextType])</a> ⇒ <code>void</code></dt>
+<dd><p>Fetches a rendered frame of subtitles to a canvas.</p>
+</dd>
+</dl>
+
+<a name="isImageBitmapSupported"></a>
+
+#### isImageBitmapSupported : <code>boolean</code>
+Is ImageBitmap Supported.
+
+**Kind**: global constant  
+<a name="bitmapSupported"></a>
+
+#### bitmapSupported : <code>boolean</code>
+Is Bitmap Rendering supported for canvas?
+
+**Kind**: global constant  
 <a name="loadSubtitles"></a>
 
-#### loadSubtitles(subsText)
+#### loadSubtitles(subsText) ⇒ <code>void</code>
 Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
 
 **Kind**: global function  
@@ -82,26 +119,58 @@ Begins the process of parsing the passed subtitles in SSA/ASS format into subtit
 
 <a name="setViewport"></a>
 
-#### setViewport(width, height)
-Updates the resolution/scale at which the subtitles are rendered (if the player is resized, for example).
+#### setViewport(width, height) ⇒ <code>void</code>
+Updates the resolution at which the subtitles are rendered (if the player is resized, for example).
 
 **Kind**: global function  
 
-| Param | Type |
-| --- | --- |
-| width | <code>number</code> | 
-| height | <code>number</code> | 
+| Param | Type | Description |
+| --- | --- | --- |
+| width | <code>number</code> | the desired width of the resolution. |
+| height | <code>number</code> | the desired height of the resolution. |
 
+<a name="checkReadyToRender"></a>
+
+#### checkReadyToRender() ⇒ <code>boolean</code>
+Checks if the renderer is ready to render a frame.
+
+**Kind**: global function  
+**Returns**: <code>boolean</code> - is the renderer ready?  
 <a name="getFrame"></a>
 
-#### getFrame(time) ⇒ <code>string</code>
-Fetches a rendered frame of subtitles as an object url.
+#### getFrame(time) ⇒ <code>ImageBitmap</code>
+Fetches a rendered frame of subtitles as an ImageBitmap, returns null if ImageBitmap is unsupported.
 
 **Kind**: global function  
 
-| Param | Type |
-| --- | --- |
-| time | <code>number</code> | 
+| Param | Type | Description |
+| --- | --- | --- |
+| time | <code>number</code> | the time at which to draw subtitles. |
+
+<a name="getFrameAsUri"></a>
+
+#### getFrameAsUri(time, callback) ⇒ <code>void</code>
+Fetches a rendered frame of subtitles as an object uri.
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | <code>number</code> | the time at which to draw subtitles. |
+| callback | <code>function</code> | a callback that provides the URI for the image generated. |
+
+<a name="drawFrame"></a>
+
+#### drawFrame(time, canvas, [contextType]) ⇒ <code>void</code>
+Fetches a rendered frame of subtitles to a canvas.
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | <code>number</code> | the time at which to draw subtitles. |
+| canvas | <code>HTMLCanvasElement</code> \| <code>OffscreenCanvas</code> | the target canvas |
+| [contextType] | <code>string</code> | the context type to use (must be one of "bitmap" or "2d"), defaults to "bitmap" unless unsupported by the browser, in which case "2d" is the default. |
 
 
 &copy; 2012-2021 Patrick "ILOVEPIE" Rhodes Martin.
