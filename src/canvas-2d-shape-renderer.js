@@ -118,11 +118,11 @@ const shape_renderer_prototype = global.Object.create(Object, {
         value: function () {
             if (typeof global.OffscreenCanvas === "undefined") {
                 this._canvas = global.document.createElement("canvas");
-                this._canvas.height = this._canvas.width = 0;
+                this._canvas.height = this._canvas.width = 1;
             } else {
-                this._canvas = new global.OffscreenCanvas(0, 0);
+                this._canvas = new global.OffscreenCanvas(1, 1);
             }
-            this._height = this._width = 0;
+            this._height = this._width = 1;
             this._ctx = this._canvas.getContext("2d", {
                 "alpha": true,
                 "desynchronized": true
@@ -140,28 +140,28 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleOverride} overrides
          */
         value: function (time, style, overrides) {
-            let transitionOverrides = overrides.getTransition();
+            let transitionOverrides = overrides.getTransitions();
             let scaleX = overrides.getScaleX() ?? style.getScaleX();
             let scaleY = overrides.getScaleY() ?? style.getScaleY();
-            if (transitionOverrides !== null) {
+            for (let i = 0; i < transitionOverrides.length; i++) {
                 scaleX = sabre.performTransition(
                     time,
                     scaleX,
-                    transitionOverrides.getScaleX(),
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getScaleX(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
                 scaleY = sabre.performTransition(
                     time,
                     scaleY,
-                    transitionOverrides.getScaleY(),
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getScaleY(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
             }
-            return { x: scaleX, y: scaleY };
+            return { x: scaleX / 100, y: scaleY / 100 };
         },
         writable: false
     },
@@ -201,25 +201,25 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleOverride} overrides
          */
         value: function (time, style, overrides) {
-            let transitionOverrides = overrides.getTransition();
+            let transitionOverrides = overrides.getTransitions();
             let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
             let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
-            if (transitionOverrides !== null) {
+            for (let i = 0; i < transitionOverrides.length; i++) {
                 outlineX = sabre.performTransition(
                     time,
                     outlineX,
-                    transitionOverrides.getOutlineX(),
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getOutlineX(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
                 outlineY = sabre.performTransition(
                     time,
                     outlineY,
-                    transitionOverrides.getOutlineY(),
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getOutlineY(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
             }
             return { x: outlineX, y: outlineY };
@@ -592,7 +592,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
             let style = event.getStyle();
             let overrides = event.getOverrides();
             let lineOverrides = event.getLineOverrides();
-            let lineTransitionTargetOverrides = event.getLineTransitionTargetOverrides();
+            let lineTransitionTargetOverrides =
+                event.getLineTransitionTargetOverrides();
 
             this._offsetX = this._offsetY = 0;
 

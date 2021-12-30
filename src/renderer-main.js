@@ -31,6 +31,11 @@ sabre.import("canvas-2d-shape-renderer.min.js");
  * @fileoverview webgl subtitle compositing code.
  */
 /**
+ * Is ImageBitmap Supported.
+ * @type {boolean}
+ */
+const isImageBitmapSupported = typeof global.ImageBitmap !== "undefined";
+/**
  * Fixes JSON
  * @private
  * @param {string} key the key of the field of the object.
@@ -75,7 +80,7 @@ const renderer_prototype = global.Object.create(Object, {
     //BEGIN WEBGL VARIABLES
 
     _gl: {
-        /** @type{?WebGL2RenderingContext} */
+        /** @type{?WebGLRenderingContext} */
         value: null,
         writable: true
     },
@@ -189,58 +194,121 @@ const renderer_prototype = global.Object.create(Object, {
     //END LOCAL VARIABLES
     //BEGIN LOCAL FUNCTIONS
 
-    _matrixToArrayRepresentation3x3: {
+    _matrixToArrayRepresentation4x4: {
         /**
-         * Represent the matrix as an array.
+         * Represent the matrix as an array, in openGL format.
+         * @private
          * @returns {Array<number>} the array representation.
          */
         value: function (a) {
             return [
                 a.m00,
-                a.m01,
-                a.m02,
                 a.m10,
-                a.m11,
-                a.m12,
                 a.m20,
+                a.m30,
+                a.m01,
+                a.m11,
                 a.m21,
-                a.m22
+                a.m31,
+                a.m02,
+                a.m12,
+                a.m22,
+                a.m32,
+                a.m03,
+                a.m13,
+                a.m23,
+                a.m33
             ];
         },
         writable: false
     },
 
-    _matrixMultiply3x3: {
+    _matrixMultiply4x4: {
         /**
-         * Matrix multiplication for 3x3 matrix.
+         * Matrix multiplication for 4x4 matrix.
+         * @private
+         * @param {Object} a first matrix
+         * @param {Object} b second matrix
+         * @returns {Object} the result matrix
          */
         value: function (a, b) {
             let result = {};
-            result.m00 = a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20;
-            result.m01 = a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21;
-            result.m02 = a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22;
+            result.m00 =
+                a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20 + a.m03 * b.m30;
+            result.m01 =
+                a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21 + a.m03 * b.m31;
+            result.m02 =
+                a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22 + a.m03 * b.m32;
+            result.m03 =
+                a.m00 * b.m03 + a.m01 * b.m13 + a.m02 * b.m23 + a.m03 * b.m33;
 
-            result.m10 = a.m10 * b.m00 + a.m11 * b.m10 + a.m12 * b.m20;
-            result.m11 = a.m10 * b.m01 + a.m11 * b.m11 + a.m12 * b.m21;
-            result.m12 = a.m10 * b.m02 + a.m11 * b.m12 + a.m12 * b.m22;
+            result.m10 =
+                a.m10 * b.m00 + a.m11 * b.m10 + a.m12 * b.m20 + a.m13 * b.m30;
+            result.m11 =
+                a.m10 * b.m01 + a.m11 * b.m11 + a.m12 * b.m21 + a.m13 * b.m31;
+            result.m12 =
+                a.m10 * b.m02 + a.m11 * b.m12 + a.m12 * b.m22 + a.m13 * b.m32;
+            result.m13 =
+                a.m10 * b.m03 + a.m11 * b.m13 + a.m12 * b.m23 + a.m13 * b.m33;
 
-            result.m20 = a.m20 * b.m00 + a.m21 * b.m10 + a.m22 * b.m20;
-            result.m21 = a.m20 * b.m01 + a.m21 * b.m11 + a.m22 * b.m21;
-            result.m22 = a.m20 * b.m02 + a.m21 * b.m12 + a.m22 * b.m22;
+            result.m20 =
+                a.m20 * b.m00 + a.m21 * b.m10 + a.m22 * b.m20 + a.m23 * b.m30;
+            result.m21 =
+                a.m20 * b.m01 + a.m21 * b.m11 + a.m22 * b.m21 + a.m23 * b.m31;
+            result.m22 =
+                a.m20 * b.m02 + a.m21 * b.m12 + a.m22 * b.m22 + a.m23 * b.m32;
+            result.m23 =
+                a.m20 * b.m03 + a.m21 * b.m13 + a.m22 * b.m23 + a.m23 * b.m33;
+
+            result.m30 =
+                a.m30 * b.m00 + a.m31 * b.m10 + a.m32 * b.m20 + a.m33 * b.m30;
+            result.m31 =
+                a.m30 * b.m01 + a.m31 * b.m11 + a.m32 * b.m21 + a.m33 * b.m31;
+            result.m32 =
+                a.m30 * b.m02 + a.m31 * b.m12 + a.m32 * b.m22 + a.m33 * b.m32;
+            result.m33 =
+                a.m30 * b.m03 + a.m31 * b.m13 + a.m32 * b.m23 + a.m33 * b.m33;
             return result;
         },
         writable: false
     },
 
-    _matrixMultiply1x3and3x3: {
+    _matrixMultiply1x4and4x4: {
         /**
-         * Matrix multiplication for 3x3 matrix.
+         * Matrix multiplication for 1x4 vector and 4x4 matrix.
          */
         value: function (a, b) {
             let result = {};
-            result.m00 = a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20;
-            result.m01 = a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21;
-            result.m02 = a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22;
+            result.m00 =
+                a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20 + a.m03 * b.m30;
+            result.m01 =
+                a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21 + a.m03 * b.m31;
+            result.m02 =
+                a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22 + a.m03 * b.m32;
+            result.m03 =
+                a.m00 * b.m03 + a.m01 * b.m13 + a.m02 * b.m23 + a.m03 * b.m33;
+            return result;
+        },
+        writable: false
+    },
+
+    _listOfEventsContainsAnimation: {
+        /**
+         * Determines if a list of SSASubtitleEvent objects contains use any animation features.
+         * @param {Array<SSASubtitleEvent>} events list of SSASubtitleEvents
+         * @returns {boolean} do they use animation?
+         */
+        value: function (events) {
+            let result = false;
+            for (let i = 0; i < events.length && !result; i++) {
+                result =
+                    result ||
+                    events[i].getLineOverrides().getMovement() !== null ||
+                    events[i].getLineTransitionTargetOverrides() !== null ||
+                    events[i].getOverrides().getKaraokeMode() ===
+                        sabre.KaraokeModes.OFF ||
+                    events[i].getOverrides().getTransitions().length === 0;
+            }
             return result;
         },
         writable: false
@@ -306,16 +374,16 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleOverride} overrides
          */
         value: function (time, style, overrides) {
-            let transitionOverrides = overrides.getTransition();
+            let transitionOverrides = overrides.getTransitions();
             let iterations = overrides.getEdgeBlur() ?? 0;
-            if (transitionOverrides !== null)
+            for (let i = 0; i < transitionOverrides.length; i++)
                 iterations = sabre.performTransition(
                     time,
                     iterations,
-                    transitionOverrides.getEdgeBlur(),
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getEdgeBlur(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
             return iterations;
         },
@@ -325,16 +393,16 @@ const renderer_prototype = global.Object.create(Object, {
     _calcGaussianBlur: {
         value: function (time, style, overrides) {
             const blurConstant = 1.17741002251547469;
-            let transitionOverrides = overrides.getTransition();
+            let transitionOverrides = overrides.getTransitions();
             let factor = overrides.getGaussianEdgeBlur() ?? 0;
-            if (transitionOverrides !== null)
+            for (let i = 0; i < transitionOverrides.length; i++)
                 factor = sabre.performTransition(
                     time,
                     factor,
-                    transitionOverrides.getGaussianEdgeBlur(),
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getGaussianEdgeBlur(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
             return factor / blurConstant;
         },
@@ -349,25 +417,25 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleOverride} overrides
          */
         value: function (time, style, overrides) {
-            let transitionOverrides = overrides.getTransition();
+            let transitionOverrides = overrides.getTransitions();
             let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
             let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
-            if (transitionOverrides !== null) {
+            for (let i = 0; i < transitionOverrides.length; i++) {
                 outlineX = sabre.performTransition(
                     time,
                     outlineX,
-                    transitionOverrides.getOutlineX(),
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getOutlineX(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
                 outlineY = sabre.performTransition(
                     time,
                     outlineY,
-                    transitionOverrides.getOutlineY(),
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getOutlineY(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
             }
             return { x: outlineX, y: outlineY };
@@ -383,33 +451,33 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleOverride} overrides
          */
         value: function (time, style, overrides) {
-            let transitionOverrides = overrides.getTransition();
+            let transitionOverrides = overrides.getTransitions();
             let rotation = overrides.getRotation();
-            if (transitionOverrides !== null) {
-                let rotationTarget = transitionOverrides.getRotation();
+            for (let i = 0; i < transitionOverrides.length; i++) {
+                let rotationTarget = transitionOverrides[i].getRotation();
                 rotation[0] = sabre.performTransition(
                     time,
                     rotation[0],
                     rotationTarget[0],
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
                 rotation[1] = sabre.performTransition(
                     time,
                     rotation[1],
                     rotationTarget[1],
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
                 rotation[2] = sabre.performTransition(
                     time,
                     rotation[2],
                     rotationTarget[2],
-                    transitionOverrides.getTransitionStart(),
-                    transitionOverrides.getTransitionEnd(),
-                    transitionOverrides.getTransitionAcceleration()
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
                 );
             }
             return rotation;
@@ -425,9 +493,12 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} index the index of the event we're positioning.
          * @param {SSASubtitleEvent} event the current event we're positioning.
          * @param {{hoffset:number,voffset:number}} textAnchorOffset the offset from the anchor point of the text.
-         * @returns {{x:number,y:number,width:number,height:number}} the positioning info of the event.
+         * @returns {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} the positioning info of the event.
          */
         value: function (time, index, event, textAnchorOffset) {
+            let alignment =
+                (event.getOverrides().getAlignment() ??
+                    event.getStyle().getAlignment()) - 1;
             let result = {
                 x: 0,
                 y: 0,
@@ -435,8 +506,35 @@ const renderer_prototype = global.Object.create(Object, {
                 originalY: 0,
                 width: 0,
                 height: 0,
-                index: index
+                index: index,
+                marginLeft: 0,
+                marginRight: 0,
+                marginVertical: 0,
+                alignment: alignment
             };
+            {
+                let style = event.getStyle();
+                let overrides = event.getOverrides();
+                let styleMargins = style.getMargins();
+                let overrideMargins = overrides.getMargins();
+                if (
+                    (overrideMargins[0] === 0 &&
+                        overrideMargins[1] === 0 &&
+                        overrideMargins[2] == 0) ||
+                    (overrideMargins[0] === null &&
+                        overrideMargins[1] === null &&
+                        overrideMargins[2] == null)
+                ) {
+                    result.marginLeft = styleMargins[0];
+                    result.marginRight = styleMargins[1];
+                    result.marginVertical = styleMargins[2];
+                } else {
+                    result.marginLeft = overrideMargins[0] ?? styleMargins[0];
+                    result.marginRight = overrideMargins[1] ?? styleMargins[1];
+                    result.marginVertical =
+                        overrideMargins[2] ?? styleMargins[2];
+                }
+            }
             let lineOverrides = event.getLineOverrides();
             if (!event.getOverrides().getDrawingMode()) {
                 this._textRenderer.renderEvent(
@@ -453,33 +551,36 @@ const renderer_prototype = global.Object.create(Object, {
                     lineOverrides.getMovement() === null
                 ) {
                     let anchorPoint = [0, 0];
-                    let alignment = event.getOverrides().getAlignment() - 1;
                     switch (Math.floor(alignment / 3)) {
                         case 2:
                             //TOP
-                            anchorPoint[1] = 0;
+                            anchorPoint[1] =
+                                this._config.renderer["resolution_y"];
                             break;
                         case 1:
                             //MIDDLE
                             anchorPoint[1] =
-                                this._config.renderer["resolution_y"] -
-                                dim[1] / 2;
+                                (this._config.renderer["resolution_y"] +
+                                    dim[1]) /
+                                2;
                             break;
                         case 0:
                             //BOTTOM
-                            anchorPoint[1] =
-                                this._config.renderer["resolution_y"] - dim[1];
+                            anchorPoint[1] = dim[1];
                             break;
                     }
                     switch (Math.floor(alignment % 3)) {
                         case 2:
+                            //RIGHT
                             anchorPoint[0] =
                                 this._config.renderer["resolution_x"] - dim[0];
+                            break;
                         case 1:
                             //CENTER
                             anchorPoint[0] =
-                                this._config.renderer["resolution_x"] / 2 -
-                                dim[0] / 2;
+                                (this._config.renderer["resolution_x"] -
+                                    dim[0]) /
+                                2;
                             break;
                         case 0:
                             //LEFT
@@ -492,8 +593,72 @@ const renderer_prototype = global.Object.create(Object, {
                     let curPos = [0, 0];
                     if (lineOverrides.getMovement() === null) {
                         curPos = lineOverrides.getPosition();
+                        switch (Math.floor(alignment / 3)) {
+                            case 2:
+                                //TOP
+                                // Do nothing. The subtitle is already top aligned.
+                                break;
+                            case 1:
+                                //MIDDLE
+                                curPos[1] -= dim[1] / 2; // middle align the subtitle
+                                break;
+                            case 0:
+                                //BOTTOM
+                                curPos[1] -= dim[1]; // bottom align the subtitle
+                                break;
+                        }
+                        switch (Math.floor(alignment % 3)) {
+                            case 2:
+                                //RIGHT
+                                curPos[0] -= dim[0]; // right align the subtitle
+                                break;
+                            case 1:
+                                //CENTER
+                                curPos[0] -= dim[0] / 2; // middle align the subtitle.
+                                break;
+                            case 0:
+                                //LEFT
+                                // Do nothing. The subtitle is already left aligned.
+                                break;
+                        }
+                        result.originalX = curPos[0];
+                        result.originalY =
+                            this._config.renderer["resolution_y"] - curPos[1];
                     } else {
                         let move = lineOverrides.getMovement();
+                        switch (Math.floor(alignment / 3)) {
+                            case 2:
+                                //TOP
+                                // Do nothing. The subtitle is already top aligned.
+                                break;
+                            case 1:
+                                //MIDDLE
+                                move[1] -= dim[1] / 2; // middle align the subtitle
+                                move[3] -= dim[1] / 2; // middle align the subtitle
+                                break;
+                            case 0:
+                                //BOTTOM
+                                move[1] -= dim[1]; // bottom align the subtitle
+                                move[3] -= dim[1]; // bottom align the subtitle
+                                break;
+                        }
+                        switch (Math.floor(alignment % 3)) {
+                            case 2:
+                                //RIGHT
+                                move[0] -= dim[0]; // right align the subtitle
+                                move[2] -= dim[0]; // right align the subtitle
+                                break;
+                            case 1:
+                                //CENTER
+                                move[0] -= dim[0] / 2; // center align the subtitle.
+                                move[2] -= dim[0] / 2; // center align the subtitle.
+                                break;
+                            case 0:
+                                //LEFT
+                                // Do nothing. The subtitle is already left aligned.
+                                break;
+                        }
+                        result.originalX = move[0];
                         curPos[0] = sabre.performTransition(
                             time,
                             move[0],
@@ -502,6 +667,8 @@ const renderer_prototype = global.Object.create(Object, {
                             move[5],
                             1
                         );
+                        result.originalY =
+                            this._config.renderer["resolution_y"] - move[1];
                         curPos[1] = sabre.performTransition(
                             time,
                             move[1],
@@ -512,7 +679,8 @@ const renderer_prototype = global.Object.create(Object, {
                         );
                     }
                     result.x = curPos[0];
-                    result.y = curPos[1];
+                    result.y =
+                        this._config.renderer["resolution_y"] - curPos[1];
                 }
                 result.width = dim[0];
                 result.height = dim[1];
@@ -531,33 +699,36 @@ const renderer_prototype = global.Object.create(Object, {
                     lineOverrides.getMovement() === null
                 ) {
                     let anchorPoint = [0, 0];
-                    let alignment = event.getOverrides().getAlignment() - 1;
                     switch (Math.floor(alignment / 3)) {
                         case 2:
                             //TOP
-                            anchorPoint[1] = 0;
+                            anchorPoint[1] =
+                                this._config.renderer["resolution_y"];
                             break;
                         case 1:
                             //MIDDLE
                             anchorPoint[1] =
-                                this._config.renderer["resolution_y"] -
-                                dim[1] / 2;
+                                (this._config.renderer["resolution_y"] +
+                                    dim[1]) /
+                                2;
                             break;
                         case 0:
                             //BOTTOM
-                            anchorPoint[1] =
-                                this._config.renderer["resolution_y"] - dim[1];
+                            anchorPoint[1] = dim[1];
                             break;
                     }
                     switch (Math.floor(alignment % 3)) {
                         case 2:
+                            //RIGHT
                             anchorPoint[0] =
                                 this._config.renderer["resolution_x"] - dim[0];
+                            break;
                         case 1:
                             //CENTER
                             anchorPoint[0] =
-                                this._config.renderer["resolution_x"] / 2 -
-                                dim[0] / 2;
+                                (this._config.renderer["resolution_x"] -
+                                    dim[0]) /
+                                2;
                             break;
                         case 0:
                             //LEFT
@@ -570,8 +741,12 @@ const renderer_prototype = global.Object.create(Object, {
                     let curPos = [0, 0];
                     if (lineOverrides.getMovement() === null) {
                         curPos = lineOverrides.getPosition();
+                        result.originalX = curPos[0];
+                        result.originalY =
+                            this._config.renderer["resolution_y"] - curPos[1];
                     } else {
                         let move = lineOverrides.getMovement();
+                        result.originalX = move[0];
                         curPos[0] = sabre.performTransition(
                             time,
                             move[0],
@@ -580,6 +755,8 @@ const renderer_prototype = global.Object.create(Object, {
                             move[5],
                             1
                         );
+                        result.originalY =
+                            this._config.renderer["resolution_y"] - move[1];
                         curPos[1] = sabre.performTransition(
                             time,
                             move[1],
@@ -590,7 +767,8 @@ const renderer_prototype = global.Object.create(Object, {
                         );
                     }
                     result.x = curPos[0];
-                    result.y = curPos[1];
+                    result.y =
+                        this._config.renderer["resolution_y"] - curPos[1];
                 }
                 result.width = dim[0];
                 result.height = dim[1];
@@ -604,10 +782,10 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Collides two events.
          * @private
-         * @param {{x:number,y:number,width:number,height:number,index:number}} positionInfo1 current event's position info.
-         * @param {Array<{x:number,y:number,width:number,height:number,index:number}>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
-         * @param {{x:number,y:number,width:number,height:number,index:number}} positionInfo2 the position info of the event we're colliding with.
-         * @param {Array<{x:number,y:number,width:number,height:number,index:number}>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
+         * @param {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} positionInfo1 current event's position info.
+         * @param {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
+         * @param {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} positionInfo2 the position info of the event we're colliding with.
+         * @param {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
          * @returns {boolean} did we move something?
          */
         value: function (
@@ -663,7 +841,7 @@ const renderer_prototype = global.Object.create(Object, {
                         } else {
                             for (
                                 let i = 0;
-                                i < posInfosForMatchingId2.length;
+                                i < posInfosForMatchingId1.length;
                                 i++
                             ) {
                                 posInfosForMatchingId1[i].y -=
@@ -705,7 +883,7 @@ const renderer_prototype = global.Object.create(Object, {
                         } else {
                             for (
                                 let i = 0;
-                                i < posInfosForMatchingId2.length;
+                                i < posInfosForMatchingId1.length;
                                 i++
                             ) {
                                 posInfosForMatchingId1[i].y -=
@@ -725,11 +903,70 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Collides an event with the viewport.
          * @private
-         * @param {{x:number,y:number,width:number,height:number}} positionInfo current event's position info.
-         * @param {Array<{x:number,y:number,width:number,height:number}>} posInfosForMatchingId position infos for events who's id matches the current event's id.
+         * @param {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} positionInfo current event's position info.
+         * @param {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} posInfosForMatchingId position infos for events who's id matches the current event's id.
          * @returns {boolean} did we move something?
          */
-        value: function (positionInfo, posInfosForMatchingId) {},
+        value: function (positionInfo, posInfosForMatchingId) {
+            let horizontalAlignment = positionInfo.alignment % 3;
+            let verticalAlignment = Math.floor(positionInfo.alignment / 3);
+            let xshouldmove = false;
+            let xdistance = 0;
+            let yshouldmove = false;
+            let ydistance = 0;
+            switch (horizontalAlignment) {
+                case 2:
+                    //RIGHT
+                    xdistance =
+                        this._config.renderer["resolution_x"] -
+                        (positionInfo.x +
+                            positionInfo.width +
+                            positionInfo.marginRight);
+                    xshouldmove = xdistance < 0;
+                    break;
+                case 1:
+                    //CENTER
+                    //We aren't aligned to a a side so do nothing. //TODO: is this really right?
+                    break;
+                case 0:
+                    //LEFT
+                    xdistance = -(positionInfo.x - positionInfo.marginLeft);
+                    xshouldmove = xdistance > 0;
+                    break;
+            }
+            switch (verticalAlignment) {
+                case 2:
+                    //TOP
+                    ydistance =
+                        this._config.renderer["resolution_y"] -
+                        (positionInfo.y + positionInfo.marginVertical);
+                    yshouldmove = ydistance < 0;
+                    break;
+                case 1:
+                    //CENTER
+                    //We aren't aligned to a side so do nothing. //TODO: is this really right?
+                    break;
+                case 0:
+                    //BOTTOM
+                    ydistance = -(
+                        positionInfo.y -
+                        (positionInfo.height + positionInfo.marginVertical)
+                    );
+                    yshouldmove = ydistance > 0;
+                    break;
+            }
+            if (xshouldmove) {
+                for (let i = 0; i < posInfosForMatchingId.length; i++) {
+                    posInfosForMatchingId[i].x += xdistance;
+                }
+            }
+            if (yshouldmove) {
+                for (let i = 0; i < posInfosForMatchingId.length; i++) {
+                    posInfosForMatchingId[i].y += ydistance;
+                }
+            }
+            return xshouldmove || yshouldmove;
+        },
         writable: false
     },
 
@@ -739,7 +976,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @private
          * @param {number} time time of current frame.
          * @param {Array<SSASubtitleEvent>} events list of onscreen subtitle events for this frame in order of layer.
-         * @returns {Array<{x:number,y:number,width:number,height:number,moveup:boolean}>} each event's position onscreen.
+         * @returns {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} each event's position onscreen.
          */
         value: function (time, events) {
             let result = new Array(events.length);
@@ -823,6 +1060,14 @@ const renderer_prototype = global.Object.create(Object, {
                 this._config.renderer["resolution_y"]
             );
 
+            this._gl.clearColor(0, 0, 0, 0);
+            this._gl.disable(this._gl.DEPTH_TEST);
+            this._gl.enable(this._gl.BLEND);
+            this._gl.blendFunc(
+                this._gl.SRC_ALPHA,
+                this._gl.ONE_MINUS_SRC_ALPHA
+            );
+
             this._textureCoordinatesBuffer = this._gl.createBuffer();
             this._subtitlePositioningBuffer = this._gl.createBuffer();
             this._fullscreenPositioningBuffer = this._gl.createBuffer();
@@ -904,7 +1149,6 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.TEXTURE_MAG_FILTER,
                 this._gl.LINEAR
             );
-            this._gl.pixelStorei(this._gl.UNPACK_FLIP_Y_WEBGL, false);
             this._gl.texImage2D(
                 this._gl.TEXTURE_2D,
                 0,
@@ -939,7 +1183,6 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.TEXTURE_MAG_FILTER,
                 this._gl.LINEAR
             );
-            this._gl.pixelStorei(this._gl.UNPACK_FLIP_Y_WEBGL, false);
             this._gl.texImage2D(
                 this._gl.TEXTURE_2D,
                 0,
@@ -953,9 +1196,12 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._frameBufferA = this._gl.createFramebuffer();
-            this._gl.bindFramebuffer(
-                this._gl.DRAW_FRAMEBUFFER,
-                this._frameBufferA
+            this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferA);
+            this._gl.viewport(
+                0,
+                0,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"]
             );
             this._gl.framebufferTexture2D(
                 this._gl.FRAMEBUFFER,
@@ -966,9 +1212,12 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._frameBufferB = this._gl.createFramebuffer();
-            this._gl.bindFramebuffer(
-                this._gl.DRAW_FRAMEBUFFER,
-                this._frameBufferB
+            this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferB);
+            this._gl.viewport(
+                0,
+                0,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"]
             );
             this._gl.framebufferTexture2D(
                 this._gl.FRAMEBUFFER,
@@ -980,22 +1229,44 @@ const renderer_prototype = global.Object.create(Object, {
 
             this._positioningShader = new sabre.Shader();
             this._positioningShader.load(
-                sabre.getScriptPath() + "/shaders/positioning.vertex.glsl",
-                sabre.getScriptPath() + "/shaders/positioning.fragment.glsl",
+                sabre.getScriptPath() + "shaders/positioning.vertex.glsl",
+                sabre.getScriptPath() + "shaders/positioning.fragment.glsl",
                 1
             );
             this._positioningShader.compile(this._gl);
             this._positioningShader.addOption(
                 "u_matrix",
-                new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
-                "Matrix3fv"
+                new Float32Array([
+                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+                ]),
+                "Matrix4fv"
             );
             this._positioningShader.addOption("u_texture", 0, "1i");
+            this._positioningShader.addOption(
+                "u_primary_color",
+                [0, 0, 0, 0],
+                "4f"
+            );
+            this._positioningShader.addOption(
+                "u_secondary_color",
+                [0, 0, 0, 0],
+                "4f"
+            );
+            this._positioningShader.addOption(
+                "u_tertiary_color",
+                [0, 0, 0, 0],
+                "4f"
+            );
+            this._positioningShader.addOption(
+                "u_quaternary_color",
+                [0, 0, 0, 0],
+                "4f"
+            );
 
             this._convEdgeBlurShader = new sabre.Shader();
             this._convEdgeBlurShader.load(
-                sabre.getScriptPath() + "/shaders/effect.vertex.glsl",
-                sabre.getScriptPath() + "/shaders/edge_blur.fragment.glsl",
+                sabre.getScriptPath() + "shaders/effect.vertex.glsl",
+                sabre.getScriptPath() + "shaders/edge_blur.fragment.glsl",
                 1
             );
             this._convEdgeBlurShader.compile(this._gl);
@@ -1013,8 +1284,8 @@ const renderer_prototype = global.Object.create(Object, {
 
             this._gaussEdgeBlurPass1Shader = new sabre.Shader();
             this._gaussEdgeBlurPass1Shader.load(
-                sabre.getScriptPath() + "/shaders/effect.vertex.glsl",
-                sabre.getScriptPath() + "/shaders/gauss_blur.1.fragment.glsl",
+                sabre.getScriptPath() + "shaders/effect.vertex.glsl",
+                sabre.getScriptPath() + "shaders/gauss_blur.1.fragment.glsl",
                 1
             );
             this._gaussEdgeBlurPass1Shader.compile(this._gl);
@@ -1028,8 +1299,8 @@ const renderer_prototype = global.Object.create(Object, {
 
             this._gaussEdgeBlurPass2Shader = new sabre.Shader();
             this._gaussEdgeBlurPass2Shader.load(
-                sabre.getScriptPath() + "/shaders/effect.vertex.glsl",
-                sabre.getScriptPath() + "/shaders/gauss_blur.2.fragment.glsl",
+                sabre.getScriptPath() + "shaders/effect.vertex.glsl",
+                sabre.getScriptPath() + "shaders/gauss_blur.2.fragment.glsl",
                 1
             );
             this._gaussEdgeBlurPass2Shader.compile(this._gl);
@@ -1064,12 +1335,15 @@ const renderer_prototype = global.Object.create(Object, {
                     currentEvent.getStyle(),
                     currentEvent.getOverrides()
                 );
+                let borderStyle = currentEvent.getStyle().getBorderStyle();
                 bluring =
                     (pass === sabre.RenderPasses.OUTLINE &&
                         (outline.x > 0 || outline.y > 0)) ||
                     (pass === sabre.RenderPasses.FILL &&
-                        outline.x === 0 &&
-                        outline.y === 0);
+                        ((outline.x === 0 && outline.y === 0) ||
+                            (borderStyle !== sabre.BorderStyleModes.NORMAL &&
+                                borderStyle !==
+                                    sabre.BorderStyleModes.UNKNOWN)));
                 edgeBlurIterations = this._calcEdgeBlur(
                     time,
                     currentEvent.getStyle(),
@@ -1085,18 +1359,23 @@ const renderer_prototype = global.Object.create(Object, {
                 bluring = bluring && (edgeBlurActive || gaussianBlurActive);
             }
 
+            let blendDisabled =
+                pass == sabre.RenderPasses.BACKGROUND &&
+                currentEvent.getStyle().getBorderStyle() ===
+                    sabre.BorderStyleModes.SRT_NO_OVERLAP;
+            if (blendDisabled) this._gl.disable(this._gl.BLEND);
+
             let source = !isShape ? this._textRenderer : this._shapeRenderer;
 
             this._gl.bindFramebuffer(
                 this._gl.FRAMEBUFFER,
                 bluring ? this._frameBufferA : null
             );
-            this._gl.viewport(
-                0,
-                0,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"]
-            );
+
+            if (bluring)
+                this._gl.clear(
+                    this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
+                );
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
             this._gl.texImage2D(
                 this._gl.TEXTURE_2D,
@@ -1108,7 +1387,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             let xScale = 2 / this._config.renderer["resolution_x"];
-            let yScale = 2 / this._config.renderer["resolution_Y"];
+            let yScale = 2 / this._config.renderer["resolution_y"];
             let positioningMatrix;
             {
                 let offsetMatrix;
@@ -1117,13 +1396,20 @@ const renderer_prototype = global.Object.create(Object, {
                     offsetMatrix = {
                         m00: 1,
                         m01: 0,
-                        m02: offset[0] * xScale,
+                        m02: 0,
+                        m03: offset[0] * xScale,
                         m10: 0,
                         m11: 1,
-                        m12: offset[1] * yScale,
+                        m12: 0,
+                        m13: offset[1] * yScale,
                         m20: 0,
                         m21: 0,
-                        m22: 1
+                        m22: 1,
+                        m23: 0,
+                        m30: 0,
+                        m31: 0,
+                        m32: 0,
+                        m33: 1
                     };
                 }
 
@@ -1132,46 +1418,48 @@ const renderer_prototype = global.Object.create(Object, {
                 {
                     let lineOverrides = currentEvent.getLineOverrides();
                     if (lineOverrides.getRotationOrigin() !== null) {
-                        let curPos = [0, 0];
-                        if (
-                            lineOverrides.getMovement() === null &&
-                            lineOverrides.getPosition() === null
-                        ) {
-                            curPos[0] = position.originalY;
-                            curPos[1] = position.originalX;
-                        } else if (lineOverrides.getMovement() === null) {
-                            curPos = lineOverrides.getPosition();
-                        } else {
-                            let move = lineOverrides.getMovement();
-                            curPos[0] = move[0];
-                            curPos[1] = move[1];
-                        }
-
                         let rotationOrigin = lineOverrides.getRotationOrigin();
                         let diff = [0, 0];
-                        diff[0] = rotationOrigin[0] - curPos[0];
-                        diff[1] = rotationOrigin[1] - curPos[1];
+                        diff[0] = rotationOrigin[0] - position.x;
+                        diff[1] =
+                            this._config.renderer["resolution_y"] -
+                            rotationOrigin[1] -
+                            position.y;
                         negativeRotationTranslationMatrix = {
                             m00: 1,
                             m01: 0,
-                            m02: diff[0] * xScale - 1,
+                            m02: 0,
+                            m03: diff[0] * xScale,
                             m10: 0,
                             m11: 1,
-                            m12: diff[1] * yScale - 1,
+                            m12: 0,
+                            m13: diff[1] * yScale,
                             m20: 0,
                             m21: 0,
-                            m22: 1
+                            m22: 1,
+                            m23: 0,
+                            m30: 0,
+                            m31: 0,
+                            m32: 0,
+                            m33: 1
                         };
                         positiveRotationTranslationMatrix = {
                             m00: 1,
                             m01: 0,
-                            m02: -diff[0] * xScale - 1,
+                            m02: 0,
+                            m03: -diff[0] * xScale,
                             m10: 0,
                             m11: 1,
-                            m12: -diff[1] * yScale - 1,
+                            m12: 0,
+                            m13: -diff[1] * yScale,
                             m20: 0,
                             m21: 0,
-                            m22: 1
+                            m22: 1,
+                            m23: 0,
+                            m30: 0,
+                            m31: 0,
+                            m32: 0,
+                            m33: 1
                         };
                     } else {
                         positiveRotationTranslationMatrix =
@@ -1179,12 +1467,19 @@ const renderer_prototype = global.Object.create(Object, {
                                 m00: 1,
                                 m01: 0,
                                 m02: 0,
+                                m03: 0,
                                 m10: 0,
                                 m11: 1,
                                 m12: 0,
+                                m13: 0,
                                 m20: 0,
                                 m21: 0,
-                                m22: 1
+                                m22: 1,
+                                m23: 0,
+                                m30: 0,
+                                m31: 0,
+                                m32: 0,
+                                m33: 1
                             };
                     }
                 }
@@ -1203,75 +1498,104 @@ const renderer_prototype = global.Object.create(Object, {
                         m00: 1,
                         m01: 0,
                         m02: 0,
+                        m03: 0,
                         m10: 0,
-                        m11: Math.cos(rotation.x * toRad),
-                        m12: -Math.sin(rotation.x * toRad),
+                        m11: Math.cos(rotation[0] * toRad),
+                        m12: -Math.sin(rotation[0] * toRad),
+                        m13: 0,
                         m20: 0,
-                        m21: Math.sin(rotation.x * toRad),
-                        m22: Math.cos(rotation.x * toRad)
+                        m21: Math.sin(rotation[0] * toRad),
+                        m22: Math.cos(rotation[0] * toRad),
+                        m23: 0,
+                        m30: 0,
+                        m31: 0,
+                        m32: 0,
+                        m33: 1
                     };
                     rotationMatrixY = {
-                        m00: Math.cos(rotation.x * toRad),
+                        m00: Math.cos(rotation[1] * toRad),
                         m01: 0,
-                        m02: Math.sin(rotation.x * toRad),
+                        m02: Math.sin(rotation[1] * toRad),
+                        m03: 0,
                         m10: 0,
                         m11: 1,
                         m12: 0,
-                        m20: -Math.sin(rotation.x * toRad),
+                        m13: 0,
+                        m20: -Math.sin(rotation[1] * toRad),
                         m21: 0,
-                        m22: Math.cos(rotation.x * toRad)
+                        m22: Math.cos(rotation[1] * toRad),
+                        m23: 0,
+                        m30: 0,
+                        m31: 0,
+                        m32: 0,
+                        m33: 1
                     };
                     rotationMatrixZ = {
-                        m00: Math.cos(rotation.x * toRad),
-                        m01: -Math.sin(rotation.x * toRad),
+                        m00: Math.cos(rotation[2] * toRad),
+                        m01: -Math.sin(rotation[2] * toRad),
                         m02: 0,
-                        m10: Math.sin(rotation.x * toRad),
-                        m11: Math.cos(rotation.x * toRad),
+                        m03: 0,
+                        m10: Math.sin(rotation[2] * toRad),
+                        m11: Math.cos(rotation[2] * toRad),
                         m12: 0,
+                        m13: 0,
                         m20: 0,
                         m21: 0,
-                        m22: 1
+                        m22: 1,
+                        m23: 0,
+                        m30: 0,
+                        m31: 0,
+                        m32: 0,
+                        m33: 1
                     };
                 }
 
                 let finalPositionOffsetMatrix = {
                     m00: 1,
                     m01: 0,
-                    m02: position.x * xScale - 1,
+                    m02: 0,
+                    m03: position.x * xScale,
                     m10: 0,
                     m11: 1,
-                    m12: position.y * yScale - 1,
+                    m12: 0,
+                    m13: (position.y - position.height) * yScale,
                     m20: 0,
                     m21: 0,
-                    m22: 1
+                    m22: 1,
+                    m23: 0,
+                    m30: 0,
+                    m31: 0,
+                    m32: 0,
+                    m33: 1
                 };
 
-                positioningMatrix = this._matrixMultiply3x3(
+                positioningMatrix = this._matrixMultiply4x4(
                     offsetMatrix,
                     negativeRotationTranslationMatrix
                 );
-                positioningMatrix = this._matrixMultiply3x3(
+                positioningMatrix = this._matrixMultiply4x4(
                     positioningMatrix,
                     rotationMatrixX
                 );
-                positioningMatrix = this._matrixMultiply3x3(
+                positioningMatrix = this._matrixMultiply4x4(
                     positioningMatrix,
                     rotationMatrixY
                 );
-                positioningMatrix = this._matrixMultiply3x3(
+                positioningMatrix = this._matrixMultiply4x4(
                     positioningMatrix,
                     rotationMatrixZ
                 );
-                positioningMatrix = this._matrixMultiply3x3(
+                positioningMatrix = this._matrixMultiply4x4(
                     positioningMatrix,
                     positiveRotationTranslationMatrix
                 );
-                positioningMatrix = this._matrixMultiply3x3(
+                positioningMatrix = this._matrixMultiply4x4(
                     positioningMatrix,
                     finalPositionOffsetMatrix
                 );
             }
 
+            let dimensions = source.getDimensions();
             let upperLeft = {
                 m00: -1,
                 m01: -1,
@@ -1280,19 +1604,19 @@ const renderer_prototype = global.Object.create(Object, {
 
             let lowerLeft = {
                 m00: -1,
-                m01: position.height * yScale - 1,
+                m01: dimensions[1] * yScale - 1,
                 m02: 0
             };
 
             let upperRight = {
-                m00: position.width * xScale - 1,
+                m00: dimensions[0] * xScale - 1,
                 m01: -1,
                 m02: 0
             };
 
             let lowerRight = {
-                m00: position.width * xScale - 1,
-                m01: position.height * yScale - 1,
+                m00: dimensions[0] * xScale - 1,
+                m01: dimensions[1] * yScale - 1,
                 m02: 0
             };
 
@@ -1327,10 +1651,230 @@ const renderer_prototype = global.Object.create(Object, {
                     this._gl,
                     "a_texcoord"
                 );
+                {
+                    let style = currentEvent.getStyle();
+                    let overrides = currentEvent.getOverrides();
+                    let transitionOverrides = overrides.getTransitions();
+                    let primaryColor = style.getPrimaryColor();
+                    let primaryOverride = overrides.getPrimaryColor();
+                    let secondaryColor = style.getSecondaryColor();
+                    let secondaryOverride = overrides.getSecondaryColor();
+                    let tertiaryColor = style.getTertiaryColor();
+                    let tertiaryOverride = overrides.getTertiaryColor();
+                    let quaternaryColor = style.getQuaternaryColor();
+                    let quaternaryOverride = overrides.getQuaternaryColor();
+
+                    if (primaryOverride !== null)
+                        primaryColor =
+                            primaryOverride.applyOverride(primaryColor);
+                    if (secondaryOverride !== null)
+                        secondaryColor =
+                            secondaryOverride.applyOverride(secondaryColor);
+                    if (tertiaryOverride !== null)
+                        tertiaryColor =
+                            tertiaryOverride.applyOverride(tertiaryColor);
+                    if (quaternaryOverride !== null)
+                        quaternaryColor =
+                            quaternaryOverride.applyOverride(quaternaryColor);
+
+                    //TODO: Color Transition
+                    let primaryColorArray = primaryColor.getRGBA();
+                    let secondaryColorArray = secondaryColor.getRGBA();
+                    let tertiaryColorArray = tertiaryColor.getRGBA();
+                    let quaternaryColorArray = quaternaryColor.getRGBA();
+                    for (let i = 0; i < transitionOverrides.length; i++) {
+                        let transitionStart =
+                            transitionOverrides[i].getTransitionStart();
+                        let transitionEnd =
+                            transitionOverrides[i].getTransitionEnd();
+                        let transitionAcceleration =
+                            transitionOverrides[i].getTransitionAcceleration();
+                        let primaryTransitionOverride =
+                            transitionOverrides[i].getPrimaryColor();
+                        let secondaryTransitionOverride =
+                            transitionOverrides[i].getSecondaryColor();
+                        let tertiaryTransitionOverride =
+                            transitionOverrides[i].getTertiaryColor();
+                        let quaternaryTransitionOverride =
+                            transitionOverrides[i].getQuaternaryColor();
+
+                        if (primaryTransitionOverride !== null) {
+                            let transitionColor =
+                                primaryTransitionOverride.applyOverride(
+                                    primaryColor
+                                );
+                            primaryColorArray[0] = sabre.performTransition(
+                                time,
+                                primaryColorArray[0],
+                                transitionColor.getR(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            primaryColorArray[1] = sabre.performTransition(
+                                time,
+                                primaryColorArray[1],
+                                transitionColor.getG(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            primaryColorArray[2] = sabre.performTransition(
+                                time,
+                                primaryColorArray[2],
+                                transitionColor.getB(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            primaryColorArray[3] = sabre.performTransition(
+                                time,
+                                primaryColorArray[3],
+                                transitionColor.getA(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                        }
+
+                        if (secondaryTransitionOverride !== null) {
+                            let transitionColor =
+                                secondaryTransitionOverride.applyOverride(
+                                    secondaryColor
+                                );
+                            secondaryColorArray[0] = sabre.performTransition(
+                                time,
+                                secondaryColorArray[0],
+                                transitionColor.getR(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            secondaryColorArray[1] = sabre.performTransition(
+                                time,
+                                secondaryColorArray[1],
+                                transitionColor.getG(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            secondaryColorArray[2] = sabre.performTransition(
+                                time,
+                                secondaryColorArray[2],
+                                transitionColor.getB(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            secondaryColorArray[3] = sabre.performTransition(
+                                time,
+                                secondaryColorArray[3],
+                                transitionColor.getA(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                        }
+
+                        if (tertiaryTransitionOverride !== null) {
+                            let transitionColor =
+                                tertiaryTransitionOverride.applyOverride(
+                                    tertiaryColor
+                                );
+                            tertiaryColorArray[0] = sabre.performTransition(
+                                time,
+                                tertiaryColorArray[0],
+                                transitionColor.getR(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            tertiaryColorArray[1] = sabre.performTransition(
+                                time,
+                                tertiaryColorArray[1],
+                                transitionColor.getG(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            tertiaryColorArray[2] = sabre.performTransition(
+                                time,
+                                tertiaryColorArray[2],
+                                transitionColor.getB(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            tertiaryColorArray[3] = sabre.performTransition(
+                                time,
+                                tertiaryColorArray[3],
+                                transitionColor.getA(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                        }
+
+                        if (quaternaryTransitionOverride !== null) {
+                            let transitionColor =
+                                quaternaryTransitionOverride.applyOverride(
+                                    quaternaryColor
+                                );
+                            quaternaryColorArray[0] = sabre.performTransition(
+                                time,
+                                quaternaryColorArray[0],
+                                transitionColor.getR(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            quaternaryColorArray[1] = sabre.performTransition(
+                                time,
+                                quaternaryColorArray[1],
+                                transitionColor.getG(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            quaternaryColorArray[2] = sabre.performTransition(
+                                time,
+                                quaternaryColorArray[2],
+                                transitionColor.getB(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                            quaternaryColorArray[3] = sabre.performTransition(
+                                time,
+                                quaternaryColorArray[3],
+                                transitionColor.getA(),
+                                transitionStart,
+                                transitionEnd,
+                                transitionAcceleration
+                            );
+                        }
+                    }
+                    this._positioningShader.updateOption(
+                        "u_primary_color",
+                        primaryColorArray
+                    );
+                    this._positioningShader.updateOption(
+                        "u_secondary_color",
+                        secondaryColorArray
+                    );
+                    this._positioningShader.updateOption(
+                        "u_tertiary_color",
+                        tertiaryColorArray
+                    );
+                    this._positioningShader.updateOption(
+                        "u_quaternary_color",
+                        quaternaryColorArray
+                    );
+                }
                 this._positioningShader.updateOption(
                     "u_matrix",
                     new Float32Array(
-                        this._matrixToArrayRepresentation3x3(positioningMatrix)
+                        this._matrixToArrayRepresentation4x4(positioningMatrix)
                     )
                 );
                 this._positioningShader.updateOption("u_texture", 0);
@@ -1392,6 +1936,10 @@ const renderer_prototype = global.Object.create(Object, {
                             this._gl.FRAMEBUFFER,
                             backFramebuffer
                         );
+                        this._gl.clear(
+                            this._gl.DEPTH_BUFFER_BIT |
+                                this._gl.COLOR_BUFFER_BIT
+                        );
                         this._gl.activeTexture(this._gl.TEXTURE0);
                         this._gl.bindTexture(
                             this._gl.TEXTURE_2D,
@@ -1413,6 +1961,10 @@ const renderer_prototype = global.Object.create(Object, {
                         this._gl.bindFramebuffer(
                             this._gl.FRAMEBUFFER,
                             backFramebuffer
+                        );
+                        this._gl.clear(
+                            this._gl.DEPTH_BUFFER_BIT |
+                                this._gl.COLOR_BUFFER_BIT
                         );
                     } else {
                         this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
@@ -1455,6 +2007,9 @@ const renderer_prototype = global.Object.create(Object, {
                     this._gl.bindFramebuffer(
                         this._gl.FRAMEBUFFER,
                         backFramebuffer
+                    );
+                    this._gl.clear(
+                        this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
                     );
                     this._gl.activeTexture(this._gl.TEXTURE0);
                     this._gl.bindTexture(this._gl.TEXTURE_2D, sourceTexture);
@@ -1529,6 +2084,13 @@ const renderer_prototype = global.Object.create(Object, {
                         this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
                     }
                 }
+            }
+            if (blendDisabled) {
+                this._gl.enable(this._gl.BLEND);
+                this._gl.blendFunc(
+                    this._gl.SRC_ALPHA,
+                    this._gl.ONE_MINUS_SRC_ALPHA
+                );
             }
         },
         writable: false
@@ -1605,7 +2167,7 @@ const renderer_prototype = global.Object.create(Object, {
                 false
             );
 
-            this._gl = this._compositingCanvas.getContext("webgl2", options);
+            this._gl = this._compositingCanvas.getContext("webgl", options);
             this._glSetup();
         },
         writable: false
@@ -1621,7 +2183,21 @@ const renderer_prototype = global.Object.create(Object, {
         value: function (width, height) {
             this._compositingCanvas.width = width;
             this._compositingCanvas.height = height;
-
+            this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferA);
+            this._gl.viewport(
+                0,
+                0,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"]
+            );
+            this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferB);
+            this._gl.viewport(
+                0,
+                0,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"]
+            );
+            this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
             this._gl.viewport(
                 0,
                 0,
@@ -1687,7 +2263,11 @@ const renderer_prototype = global.Object.create(Object, {
                 else return ldiff;
             });
             let currentHash = this._hashEvents(events);
-            if (currentHash === this._lastHash) return;
+            if (
+                currentHash === this._lastHash &&
+                !this._listOfEventsContainsAnimation(events)
+            )
+                return;
             this._lastHash = currentHash;
             this._gl.clear(
                 this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
@@ -1697,6 +2277,7 @@ const renderer_prototype = global.Object.create(Object, {
                 //One pass for background, one for outline and one for text.
                 for (let i = 0; i < events.length; i++) {
                     let currentEvent = events[i];
+                    if (currentEvent.getText() === "") continue;
                     if (!currentEvent.getOverrides().getDrawingMode()) {
                         this._textRenderer.renderEvent(
                             time,
@@ -1736,6 +2317,7 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Get the frame output.
          * @param {function(string):void} callback the callback to call with the URI.
+         * @returns {void}
          */
         value: function (callback) {
             this._compositingCanvas.toBlobHD((a) => {
@@ -1747,8 +2329,48 @@ const renderer_prototype = global.Object.create(Object, {
             });
         },
         writable: false
-    }
+    },
 
+    "getDisplayBitmap": {
+        /**
+         * Get an ImageBitmap containing the frame or null if ImageBitmap is unsupported.
+         * @returns {ImageBitmap} the bitmap.
+         */
+        value: function () {
+            if (!isImageBitmapSupported) return null;
+            if (this._compositingCanvas instanceof global.OffscreenCanvas) {
+                return this._compositingCanvas.transferToImageBitmap();
+            } else return null;
+        },
+        writable: false
+    },
+
+    "copyToCanvas": {
+        /**
+         * Copy the frame output to a canvas.
+         * @param {HTMLCanvasElement|OffscreenCanvas} canvas the canvas to draw to.
+         * @param {boolean} bitmap should we use bitmap context?
+         * @returns {void}
+         */
+        value: function (canvas, bitmap) {
+            let context;
+            if (bitmap) {
+                context = canvas.getContext("bitmaprenderer");
+                let bitmap = this["getDisplayBitmap"]();
+                context.transferFromImageBitmap(bitmap);
+            } else {
+                context = canvas.getContext("2d");
+                context.clearRect(
+                    0,
+                    0,
+                    this._compositingCanvas.width,
+                    this._compositingCanvas.height
+                );
+                context.drawImage(this._compositingCanvas, 0, 0);
+            }
+        },
+        writable: false
+    }
     //END PUBLIC FUNCTIONS
 });
 
