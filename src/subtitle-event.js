@@ -13,7 +13,7 @@ sabre["SSASubtitleEvent"] = function () {
         style: null,
         overrides: null,
         lineOverrides: null,
-        lineTransitionTargetOverrides: null,
+        lineTransitionTargetOverrides: [],
         text: null
     };
     return Object.create(Object, {
@@ -147,16 +147,48 @@ sabre["SSASubtitleEvent"] = function () {
 
         "setLineTransitionTargetOverrides": {
             value: function (
+                /** Array<SSALineTransitionTargetOverride> */ targets
+            ) {
+                obj.lineTransitionTargetOverrides = targets;
+            },
+            writable: false
+        },
+
+        "addLineTransitionTargetOverrides": {
+            value: function (
                 /** SSALineTransitionTargetOverride */ line_overrides
             ) {
-                obj.lineTransitionTargetOverrides = line_overrides;
+                for (
+                    let i = 0;
+                    i <= obj.lineTransitionTargetOverrides.length;
+                    i++
+                ) {
+                    if (i !== obj.lineTransitionTargetOverrides.length) {
+                        if (
+                            line_overrides.getTransitionStart() <
+                            obj.lineTransitionTargetOverrides[
+                                i
+                            ].getTransitionStart()
+                        ) {
+                            obj.lineTransitionTargetOverrides.splice(
+                                i,
+                                0,
+                                line_overrides
+                            );
+                            break;
+                        }
+                    } else {
+                        obj.lineTransitionTargetOverrides.push(line_overrides);
+                        break;
+                    }
+                }
             },
             writable: false
         },
 
         "getLineTransitionTargetOverrides": {
             value: function () {
-                return obj.lineTransitionTargetOverrides;
+                return obj.lineTransitionTargetOverrides.slice(0);
             },
             writable: false
         }

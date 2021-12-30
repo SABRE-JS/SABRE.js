@@ -17,8 +17,9 @@
  *              getOverrides:function():SSAStyleOverride,
  *              setLineOverrides:function(SSALineStyleOverride):void,
  *              getLineOverrides:function():SSALineStyleOverride,
- *              setLineTransitionTargetOverrides:function(SSALineTransitionTargetOverride):void,
- *              getLineTransitionTargetOverrides:function():SSALineTransitionTargetOverride
+ *              addLineTransitionTargetOverrides:function(SSALineTransitionTargetOverride):void,
+ *              setLineTransitionTargetOverrides:function(Array<SSALineTransitionTargetOverride>):void,
+ *              getLineTransitionTargetOverrides:function():Array<SSALineTransitionTargetOverride>
  *          }}
  */
 var SSASubtitleEvent;

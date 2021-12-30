@@ -1,5 +1,6 @@
 /**
  * @typedef {!{
+ *      toJSON:function():string,
  *      getTransitionStart:function():number,
  *      getTransitionEnd:function():number,
  *      getTransitionAcceleration:function():number,
@@ -48,6 +49,10 @@ var SSATransitionTargetOverride;
 
 /**
  * @typedef {!{
+ *      toJSON:function():string,
+ *      getTransitionStart:function():number,
+ *      getTransitionEnd:function():number,
+ *      getTransitionAcceleration:function():number,
  *      getClip:function():?Array<number>,
  *      setClip:function(number,number,number,number):void,
  *  }}
@@ -86,7 +91,7 @@ var SSALineTransitionTargetOverride;
  *      getShearY:function():number,
  *      getSpacing:function():?number,
  *      getStrikeout:function():?boolean,
- *      getTransition:function():?SSATransitionTargetOverride,
+ *      getTransitions:function():Array<SSATransitionTargetOverride>,
  *      getUnderline:function():?boolean,
  *      getWeight:function():?number,
  *      getWrapStyle:function():number,
@@ -128,7 +133,7 @@ var SSALineTransitionTargetOverride;
  *      setShearY:function(number):void,
  *      setSpacing:function(number):void,
  *      setStrikeout:function(boolean):void,
- *      setTransition:function(SSATransitionTargetOverride):void,
+ *      addTransition:function(SSATransitionTargetOverride):void,
  *      setUnderline:function(boolean):void,
  *      setWeight:function(number):void,
  *      setWrapStyle:function(number):void,

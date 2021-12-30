@@ -387,7 +387,6 @@ sabre["SSAStyleOverride"] = function () {
         karaokeStart: global.NaN,
         karaokeEnd: global.NaN,
         margins: [null, null, null],
-        movement: null,
         outlineX: null,
         outlineY: null,
         position: null,
@@ -404,7 +403,7 @@ sabre["SSAStyleOverride"] = function () {
         shearY: 0,
         spacing: null,
         strikeout: null,
-        transition: null,
+        transitions: [],
         underline: null,
         weight: null,
         wrapStyle: 0
@@ -444,7 +443,7 @@ sabre["SSAStyleOverride"] = function () {
                     sheY: obj.shearY,
                     sp: obj.spacing,
                     st: obj.strikeout,
-                    t: obj.transition,
+                    t: obj.transitions,
                     u: obj.underline,
                     w: obj.weight,
                     wS: obj.wrapStyle
@@ -945,16 +944,29 @@ sabre["SSAStyleOverride"] = function () {
             writable: false
         },
 
-        "setTransition": {
+        "addTransition": {
             value: function (/** Object */ transition) {
-                obj.transition = transition;
+                for (let i = 0; i <= obj.transitions.length; i++) {
+                    if (i !== obj.transitions.length) {
+                        if (
+                            transition["getTransitionStart"]() <
+                            obj.transitions[i]["getTransitionStart"]()
+                        ) {
+                            obj.transitions.splice(i, 0, transition);
+                            break;
+                        }
+                    } else {
+                        obj.transitions.push(transition);
+                        break;
+                    }
+                }
             },
             writable: false
         },
 
-        "getTransition": {
+        "getTransitions": {
             value: function () {
-                return obj.transition;
+                return obj.transitions.slice(0);
             },
             writable: false
         },
@@ -1020,6 +1032,12 @@ sabre["SSAStyleOverride"] = function () {
         _cloneHelper: {
             value: function (other) {
                 obj = Object.assign(obj, other);
+                let keys = Object.keys(obj);
+                for (let i = 0; i < keys.length; i++) {
+                    if (obj[keys[i]] instanceof Array) {
+                        obj[keys[i]] = obj[keys[i]].slice(0);
+                    }
+                }
             },
             writable: false
         }
@@ -1162,6 +1180,9 @@ sabre["SSALineStyleOverride"] = function () {
 
 sabre["SSALineTransitionTargetOverride"] = function () {
     const template = Object.freeze({
+        transitionStart: 0,
+        transitionEnd: 0,
+        transitionAcceleration: 1,
         clip: null
     });
     let obj = Object.assign({}, template);
@@ -1169,8 +1190,53 @@ sabre["SSALineTransitionTargetOverride"] = function () {
         "toJSON": {
             value: function () {
                 return {
+                    tS: obj.transitionStart,
+                    tE: obj.transitionEnd,
+                    tA: obj.transitionAcceleration,
                     cl: obj.clip
                 };
+            },
+            writable: false
+        },
+
+        "setTransitionStart": {
+            value: function (/** number */ start) {
+                obj.transitionStart = start;
+            },
+            writable: false
+        },
+
+        "getTransitionStart": {
+            value: function () {
+                return obj.transitionStart;
+            },
+            writable: false
+        },
+
+        "setTransitionEnd": {
+            value: function (/** number */ end) {
+                obj.transitionEnd = end;
+            },
+            writable: false
+        },
+
+        "getTransitionEnd": {
+            value: function () {
+                return obj.transitionEnd;
+            },
+            writable: false
+        },
+
+        "setTransitionAcceleration": {
+            value: function (/** number */ accel) {
+                obj.transitionAcceleration = accel;
+            },
+            writable: false
+        },
+
+        "getTransitionAcceleration": {
+            value: function () {
+                return obj.transitionAcceleration;
             },
             writable: false
         },
