@@ -33,6 +33,7 @@ sabre.import("canvas-2d-shape-renderer.min.js");
 /**
  * Is ImageBitmap Supported.
  * @type {boolean}
+ * @private
  */
 const isImageBitmapSupported = typeof global.ImageBitmap !== "undefined";
 /**

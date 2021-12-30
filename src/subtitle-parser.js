@@ -3097,6 +3097,7 @@ const main_prototype = global.Object.create(global.Object, {
 /**
  * Is Bitmap Rendering supported for canvas?
  * @type {boolean}
+ * @private
  */
 const bitmapSupported =
     typeof global.ImageBitmapRenderingContext !== "undefined" &&

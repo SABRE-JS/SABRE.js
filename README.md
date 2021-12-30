@@ -1,6 +1,8 @@
 ![SABRE.js](sabre.svg)
+
 # SABRE.js: Substation Alpha suBtitles REnderer
-A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer. 
+
+A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer.
 
 <span style="text-align:center; width:100%; display: inline-block;">[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) [![CodeFactor](https://www.codefactor.io/repository/github/sabre-js/sabre.js/badge)](https://www.codefactor.io/repository/github/sabre-js/sabre.js)</span>
 
@@ -10,24 +12,25 @@ SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substati
 
 #### Other Similar software.
 
-- Subtitles-Octopus
-- Libass
-- XY-VSFilter
+-   Subtitles-Octopus
+-   Libass
+-   XY-VSFilter
 
 ### Gallery
+
 A gallery of major milestones in the development process.
 
 To view the gallery click [here](/gallery/gallery.md) if you're using a decent browser or [here](/gallery/but_i_use_safari.md) if you like safari or internet explorer.
 
 ### Documentation
 
-
 You can retrieve a instance of the library by calling `sabre.SABRERenderer(fontLoadingFunction)` and passing
 it a function that loads fonts using the CSS Font loading API:
+
 ```js
 function loadFont(name) {
     // check if font is already loaded
-    if (!document.fonts.check("12px '" + name + "'")){
+    if (!document.fonts.check("12px '" + name + "'")) {
         // if the name has an extension, load from local fonts
         if (name.indexOf(".") !== -1) {
             const newFont = new FontFace(name, `url(./fonts/${name})`);
@@ -60,16 +63,6 @@ function loadFont(name) {
 // pass the function to the renderer
 let renderer = sabre.SABRERenderer(loadFont);
 ```
-#### Constants
-
-<dl>
-<dt><a href="#isImageBitmapSupported">isImageBitmapSupported</a> : <code>boolean</code></dt>
-<dd><p>Is ImageBitmap Supported.</p>
-</dd>
-<dt><a href="#bitmapSupported">bitmapSupported</a> : <code>boolean</code></dt>
-<dd><p>Is Bitmap Rendering supported for canvas?</p>
-</dd>
-</dl>
 
 #### Functions
 
@@ -94,44 +87,35 @@ let renderer = sabre.SABRERenderer(loadFont);
 </dd>
 </dl>
 
-<a name="isImageBitmapSupported"></a>
-
-#### isImageBitmapSupported : <code>boolean</code>
-Is ImageBitmap Supported.
-
-**Kind**: global constant  
-<a name="bitmapSupported"></a>
-
-#### bitmapSupported : <code>boolean</code>
-Is Bitmap Rendering supported for canvas?
-
-**Kind**: global constant  
 <a name="loadSubtitles"></a>
 
 #### loadSubtitles(subsText) ⇒ <code>void</code>
+
 Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
 
-**Kind**: global function  
+**Kind**: global function
 
-| Param | Type |
-| --- | --- |
-| subsText | <code>string</code> | 
+| Param    | Type                |
+| -------- | ------------------- |
+| subsText | <code>string</code> |
 
 <a name="setViewport"></a>
 
 #### setViewport(width, height) ⇒ <code>void</code>
+
 Updates the resolution at which the subtitles are rendered (if the player is resized, for example).
 
-**Kind**: global function  
+**Kind**: global function
 
-| Param | Type | Description |
-| --- | --- | --- |
-| width | <code>number</code> | the desired width of the resolution. |
+| Param  | Type                | Description                           |
+| ------ | ------------------- | ------------------------------------- |
+| width  | <code>number</code> | the desired width of the resolution.  |
 | height | <code>number</code> | the desired height of the resolution. |
 
 <a name="checkReadyToRender"></a>
 
 #### checkReadyToRender() ⇒ <code>boolean</code>
+
 Checks if the renderer is ready to render a frame.
 
 **Kind**: global function  
@@ -139,38 +123,40 @@ Checks if the renderer is ready to render a frame.
 <a name="getFrame"></a>
 
 #### getFrame(time) ⇒ <code>ImageBitmap</code>
+
 Fetches a rendered frame of subtitles as an ImageBitmap, returns null if ImageBitmap is unsupported.
 
-**Kind**: global function  
+**Kind**: global function
 
-| Param | Type | Description |
-| --- | --- | --- |
-| time | <code>number</code> | the time at which to draw subtitles. |
+| Param | Type                | Description                          |
+| ----- | ------------------- | ------------------------------------ |
+| time  | <code>number</code> | the time at which to draw subtitles. |
 
 <a name="getFrameAsUri"></a>
 
 #### getFrameAsUri(time, callback) ⇒ <code>void</code>
+
 Fetches a rendered frame of subtitles as an object uri.
 
-**Kind**: global function  
+**Kind**: global function
 
-| Param | Type | Description |
-| --- | --- | --- |
-| time | <code>number</code> | the time at which to draw subtitles. |
+| Param    | Type                  | Description                                               |
+| -------- | --------------------- | --------------------------------------------------------- |
+| time     | <code>number</code>   | the time at which to draw subtitles.                      |
 | callback | <code>function</code> | a callback that provides the URI for the image generated. |
 
 <a name="drawFrame"></a>
 
 #### drawFrame(time, canvas, [contextType]) ⇒ <code>void</code>
+
 Fetches a rendered frame of subtitles to a canvas.
 
-**Kind**: global function  
+**Kind**: global function
 
-| Param | Type | Description |
-| --- | --- | --- |
-| time | <code>number</code> | the time at which to draw subtitles. |
-| canvas | <code>HTMLCanvasElement</code> \| <code>OffscreenCanvas</code> | the target canvas |
-| [contextType] | <code>string</code> | the context type to use (must be one of "bitmap" or "2d"), defaults to "bitmap" unless unsupported by the browser, in which case "2d" is the default. |
-
+| Param         | Type                                                           | Description                                                                                                                                           |
+| ------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| time          | <code>number</code>                                            | the time at which to draw subtitles.                                                                                                                  |
+| canvas        | <code>HTMLCanvasElement</code> \| <code>OffscreenCanvas</code> | the target canvas                                                                                                                                     |
+| [contextType] | <code>string</code>                                            | the context type to use (must be one of "bitmap" or "2d"), defaults to "bitmap" unless unsupported by the browser, in which case "2d" is the default. |
 
 &copy; 2012-2021 Patrick "ILOVEPIE" Rhodes Martin.
