@@ -21,6 +21,7 @@ fi
 TEMPVAR_1="$PWD"
 cd "$PROJECT_SOURCE_DIR"
 FILES_TO_COMPILE="$(find ./ -type f -name "*.js" ! -name "*.min.js" ! -name "*.test.js" ! -path "*__tests__*" )"
+FILES_TO_COPY="$(find ./ -type f ! -name ".gitignore" ! -name "*.js" ! -name "*.min.js" ! -name "*.test.js" ! -path "*__tests__*")"
 FILE_COUNT=$(echo "$FILES_TO_COMPILE" | wc -l)
 cd "$TEMPVAR_1"
 unset TEMPVAR_1
@@ -45,9 +46,23 @@ do
 				INCLUDE_LIST="$INCLUDE_LIST --externs '$PROJECT_INCLUDE_DIR/$include'"
 			fi
 		done
-        $SCRIPT_BIN_DIR/helpers/execute-java.sh -jar "\"$TOOL_BIN_DIR/closure.jar\"" $CLOSURE_TYPE_INF --jscomp_off=globalThis --jscomp_error=visibility --assume_function_wrapper --compilation_level=$CLOSURE_COMPILATION_LEVEL --warning_level=$CLOSURE_LOGGING_DETAIL --language_in=$CLOSURE_INPUT_LANGUAGE_VERSION --language_out=$CLOSURE_OUTPUT_LANGUAGE_VERSION --use_types_for_optimization=$CLOSURE_ENABLE_TYPED_OPTIMIZATION --assume_function_wrapper --output_wrapper="\"$CLOSURE_OUTPUT_WRAPPER_PREFIX$FILE_COUNT$CLOSURE_OUTPUT_WRAPPER_SUFFIX\"" $INCLUDE_LIST --js "\"$PROJECT_SOURCE_DIR/$f\"" --create_source_map "\"$OUTPUT_SOURCEMAP\"" --js_output_file "\"$OUTPUT_FILE\"" 2>&1 | $SCRIPT_BIN_DIR/helpers/error_formatter.sh closure | tee -a $LOG_FILE 
+        $SCRIPT_BIN_DIR/helpers/execute-java.sh -jar "\"$TOOL_BIN_DIR/closure.jar\"" $CLOSURE_TYPE_INF --jscomp_off=globalThis --jscomp_error=visibility --assume_function_wrapper --compilation_level=$CLOSURE_COMPILATION_LEVEL --warning_level=$CLOSURE_LOGGING_DETAIL --language_in=$CLOSURE_INPUT_LANGUAGE_VERSION --language_out=$CLOSURE_OUTPUT_LANGUAGE_VERSION --use_types_for_optimization=$CLOSURE_ENABLE_TYPED_OPTIMIZATION --assume_function_wrapper --output_wrapper="\"$CLOSURE_OUTPUT_WRAPPER_PREFIX$FILE_COUNT$CLOSURE_OUTPUT_WRAPPER_SUFFIX\"" $INCLUDE_LIST --js "\"$PROJECT_SOURCE_DIR/$f\"" --create_source_map "\"$OUTPUT_SOURCEMAP\"" --js_output_file "\"$OUTPUT_FILE\"" 2>&1 | $SCRIPT_BIN_DIR/helpers/error_formatter.sh closure | tee -a $LOG_FILE
+        
+        sed -i "s|$OUTPUT_FILE|$(basename $OUTPUT_FILE)|g" "$OUTPUT_SOURCEMAP"
+        sed -i "s|$PROJECT_SOURCE_DIR/$f|$(basename $f)|g" "$OUTPUT_SOURCEMAP"
+
+        echo "" >> "$OUTPUT_FILE"
+        echo "//# sourceMappingURL=$(basename "$OUTPUT_SOURCEMAP")" >> "$OUTPUT_FILE"
     else
         echo "$f was not modified and theirfore was not recompiled." | tee -a $LOG_FILE
     fi
+done
+for f in $FILES_TO_COPY
+do
+    INPUT_FILE="$PROJECT_SOURCE_DIR/$f"
+    OUTPUT_FILE="$BIN_DIR/$f"
+    rm -rf "$OUTPUT_FILE" > /dev/null 2>&1
+    mkdir -p "$(dirname "$OUTPUT_FILE")" > /dev/null 2>&1
+    cp "$INPUT_FILE" "$OUTPUT_FILE"
 done
 $SCRIPT_BIN_DIR/helpers/file-modification-test.sh init "$FILES_TO_COMPILE"
