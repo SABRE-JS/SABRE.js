@@ -24,6 +24,17 @@ sabre["KaraokeModes"] = Object.freeze({
     "OUTLINE_TOGGLE": 3
 });
 /**
+ * Defines different border style modes.
+ * @enum {number}
+ */
+sabre["BorderStyleModes"] = Object.freeze({
+    "NONE": 0,
+    "NORMAL": 1,
+    "UNKNOWN": 2,
+    "SRT_STYLE": 3,
+    "SRT_NO_OVERLAP": 4
+});
+/**
  * Defines passes.
  * @enum {number}
  */
