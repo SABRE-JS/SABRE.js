@@ -300,17 +300,18 @@ const renderer_prototype = global.Object.create(Object, {
          * @returns {boolean} do they use animation?
          */
         value: function (events) {
-            let result = false;
-            for (let i = 0; i < events.length && !result; i++) {
-                result =
-                    result ||
+            for (let i = 0; i < events.length; i++) {
+                if (
                     events[i].getLineOverrides().getMovement() !== null ||
+                    events[i].getLineOverrides().getFade() !== null ||
                     events[i].getLineTransitionTargetOverrides() !== null ||
-                    events[i].getOverrides().getKaraokeMode() ===
+                    events[i].getOverrides().getKaraokeMode() !==
                         sabre.KaraokeModes.OFF ||
-                    events[i].getOverrides().getTransitions().length === 0;
+                    events[i].getOverrides().getTransitions().length === 0
+                )
+                    return true;
             }
-            return result;
+            return false;
         },
         writable: false
     },
@@ -1360,6 +1361,7 @@ const renderer_prototype = global.Object.create(Object, {
                 bluring = bluring && (edgeBlurActive || gaussianBlurActive);
             }
 
+            //This is to disable blending of SRT_NO_OVERLAP backgrounds so there's no overlap showing.
             let blendDisabled =
                 pass == sabre.RenderPasses.BACKGROUND &&
                 currentEvent.getStyle().getBorderStyle() ===
@@ -1855,6 +1857,46 @@ const renderer_prototype = global.Object.create(Object, {
                             );
                         }
                     }
+                    {
+                        let alpha = 1;
+                        let fade = currentEvent.getLineOverrides().getFade();
+                        if (fade != null) {
+                            if (time < fade[3]) {
+                                //Before Fade in.
+                                alpha = fade[0];
+                            } else if (time < fade[4]) {
+                                //Fade In.
+                                alpha = sabre.performTransition(
+                                    time,
+                                    fade[0],
+                                    fade[1],
+                                    fade[3],
+                                    fade[4],
+                                    1
+                                );
+                            } else if (time < fade[5]) {
+                                //After fade in, before fade out.
+                                alpha = fade[1];
+                            } else if (time < fade[6]) {
+                                //Fade out.
+                                alpha = sabre.performTransition(
+                                    time,
+                                    fade[1],
+                                    fade[2],
+                                    fade[5],
+                                    fade[6],
+                                    1
+                                );
+                            } else {
+                                //After Fade out.
+                                alpha = fade[2];
+                            }
+                        }
+                        primaryColorArray[3] *= alpha;
+                        secondaryColorArray[3] *= alpha;
+                        tertiaryColorArray[3] *= alpha;
+                        quaternaryColorArray[3] *= alpha;
+                    }
                     this._positioningShader.updateOption(
                         "u_primary_color",
                         primaryColorArray
@@ -1872,6 +1914,7 @@ const renderer_prototype = global.Object.create(Object, {
                         quaternaryColorArray
                     );
                 }
+
                 this._positioningShader.updateOption(
                     "u_matrix",
                     new Float32Array(
