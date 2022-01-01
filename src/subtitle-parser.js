@@ -1594,12 +1594,12 @@ const main_prototype = global.Object.create(global.Object, {
                         return;
                     t1 = timeInfo.start + t1 / 1000;
                     t2 = timeInfo.start + t2 / 1000;
-                    t3 = timeInfo.start + t3 / 1000;
-                    t4 = timeInfo.start + t4 / 1000;
+                    t3 = timeInfo.end - t3 / 1000;
+                    t4 = timeInfo.end - t4 / 1000;
                     lineGlobalOverrides.setFade(
-                        (a1 & 0xff) / 255,
-                        (a2 & 0xff) / 255,
-                        (a3 & 0xff) / 255,
+                        1 - (a1 & 0xff) / 255,
+                        1 - (a2 & 0xff) / 255,
+                        1 - (a3 & 0xff) / 255,
                         t1,
                         t2,
                         t3,
