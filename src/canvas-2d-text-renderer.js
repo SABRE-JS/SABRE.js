@@ -21,8 +21,6 @@ sabre.import("style.min.js");
 sabre.import("style-override.min.js");
 sabre.import("subtitle-event.min.js");
 
-const lineSpacing = 1.2;
-
 const text_renderer_prototype = global.Object.create(Object, {
     _initialized: {
         /**
@@ -229,9 +227,8 @@ const text_renderer_prototype = global.Object.create(Object, {
             pass
         ) {
             let outline = this._calcOutline(time, style, overrides);
-            if (pass === sabre.RenderPasses.OUTLINE)
-                this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
-            else this._ctx.lineWidth = 0;
+
+            this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
         },
         writable: false
     },
@@ -331,6 +328,23 @@ const text_renderer_prototype = global.Object.create(Object, {
                         sabre.KaraokeModes.COLOR_SWEEP &&
                     time < overrides.getKaraokeEnd()
                 ) {
+                    let progress =
+                        Math.max(time - overrides.getKaraokeStart(), 0) /
+                        (overrides.getKaraokeEnd() -
+                            overrides.getKaraokeStart());
+                    let gradient = this._ctx.createLinearGradient(
+                        0,
+                        0,
+                        this._width,
+                        0
+                    );
+                    gradient.addColorStop(0, "rgba(255,0,0,1)");
+                    gradient.addColorStop(progress, "rgba(255,0,0,1)");
+                    gradient.addColorStop(
+                        progress + 1 / this._width,
+                        "rgba(0,255,0,1)"
+                    );
+                    gradient.addColorStop(1, "rgba(255,0,0,1)");
                 } else {
                     this._ctx.fillStyle = "rgba(255,0,0,1)";
                 }
@@ -807,6 +821,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                                 offsetXUnscaled,
                                 offsetYUnscaled
                             );
+                            //TEST CODE
+                            /*this._ctx.globalCompositeOperation = "source-over";
+                            this._ctx.fillStyle = this._ctx.strokeStyle;
+                            this._ctx.fillText(
+                                text,
+                                offsetXUnscaled,
+                                offsetYUnscaled
+                            );*/
                         } else {
                             // Smear outline
                             if (outline_x_bigger) {
@@ -882,6 +904,16 @@ const text_renderer_prototype = global.Object.create(Object, {
                                 spacing,
                                 false
                             );
+                            //TEST CODE
+                            /*this._ctx.globalCompositeOperation = "source-over";
+                            this._ctx.fillStyle = this._ctx.strokeStyle;
+                            this._drawTextWithRelativeKerning(
+                                text,
+                                offsetXUnscaled,
+                                offsetYUnscaled,
+                                spacing,
+                                false
+                            );*/
                         }
                     } else {
                         if (spacing === 0)
@@ -912,7 +944,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} dpi the DPI to use for rendering text.
          */
         value: function (dpi) {
-            this._dpi = dpi;
+            this._dpi = (dpi * 72) / 96;
         },
         writable: false
     },
