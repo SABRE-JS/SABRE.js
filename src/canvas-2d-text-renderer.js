@@ -36,7 +36,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Dpt to pixel Ratio
          * @type {number}
          */
-        value: 72 / 96,
+        value: 1,
         writable: false
     },
 
@@ -105,9 +105,9 @@ const text_renderer_prototype = global.Object.create(Object, {
             });
             if (typeof global.OffscreenCanvas === "undefined") {
                 this._canvas = global.document.createElement("canvas");
-                this._canvas.height = this._canvas.width = 1;
+                this._canvas.height = this._canvas.width = 64;
             } else {
-                this._canvas = new global.OffscreenCanvas(1, 1);
+                this._canvas = new global.OffscreenCanvas(64, 64);
             }
             this._height = this._width = 1;
             this._ctx = this._canvas.getContext("2d", options);
@@ -282,7 +282,17 @@ const text_renderer_prototype = global.Object.create(Object, {
             let fontName = overrides.getFontName() ?? style.getFontName();
             let fontWeight = overrides.getWeight() ?? style.getWeight();
             let fontItalicized = overrides.getItalic() ?? style.getItalic();
-            let font = fontSize + "px '" + fontName + "', 'Arial', 'Open Sans'";
+            let font = "100px '" + fontName + "', 'Arial', 'Open Sans'";
+            font = fontWeight + " " + font;
+            if (fontItalicized) font = "italic " + font;
+            this._ctx.font = font;
+            let fontSizeRatio =
+                100 / this._ctx.measureText("jI").actualBoundingBoxDescent;
+            font =
+                fontSize * fontSizeRatio +
+                "px '" +
+                fontName +
+                "', 'Arial', 'Open Sans'";
             font = fontWeight + " " + font;
             if (fontItalicized) font = "italic " + font;
             this._ctx.font = font;
@@ -309,7 +319,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             pass
         ) {
             if (
-                pass == sabre.RenderPasses.BACKGROUND &&
+                pass === sabre.RenderPasses.BACKGROUND &&
                 style.getBorderStyle() !== sabre.BorderStyleModes.SRT_STYLE &&
                 style.getBorderStyle() !== sabre.BorderStyleModes.SRT_NO_OVERLAP
             ) {
@@ -564,8 +574,14 @@ const text_renderer_prototype = global.Object.create(Object, {
             }
 
             if (!dryRun) {
-                this._canvas.width = Math.ceil(this._width);
-                this._canvas.height = Math.ceil(this._height);
+                this._canvas.width = Math.max(
+                    Math.max(Math.ceil(this._width), 64),
+                    this._canvas.width
+                );
+                this._canvas.height = Math.max(
+                    Math.max(Math.ceil(this._height), 64),
+                    this._canvas.height
+                );
                 this._handleStyling(
                     time,
                     style,
@@ -822,13 +838,13 @@ const text_renderer_prototype = global.Object.create(Object, {
                                 offsetYUnscaled
                             );
                             //TEST CODE
-                            /*this._ctx.globalCompositeOperation = "source-over";
+                            this._ctx.globalCompositeOperation = "source-over";
                             this._ctx.fillStyle = this._ctx.strokeStyle;
                             this._ctx.fillText(
                                 text,
                                 offsetXUnscaled,
                                 offsetYUnscaled
-                            );*/
+                            );
                         } else {
                             // Smear outline
                             if (outline_x_bigger) {
@@ -905,7 +921,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                                 false
                             );
                             //TEST CODE
-                            /*this._ctx.globalCompositeOperation = "source-over";
+                            this._ctx.globalCompositeOperation = "source-over";
                             this._ctx.fillStyle = this._ctx.strokeStyle;
                             this._drawTextWithRelativeKerning(
                                 text,
@@ -913,7 +929,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                                 offsetYUnscaled,
                                 spacing,
                                 false
-                            );*/
+                            );
                         }
                     } else {
                         if (spacing === 0)
@@ -944,7 +960,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} dpi the DPI to use for rendering text.
          */
         value: function (dpi) {
-            this._dpi = (dpi * 72) / 96;
+            this._dpi = dpi;
         },
         writable: false
     },
@@ -967,6 +983,26 @@ const text_renderer_prototype = global.Object.create(Object, {
          */
         value: function () {
             return [this._width, this._height];
+        },
+        writable: false
+    },
+
+    "getExtents": {
+        /**
+         * Gets the dimensions of the canvas.
+         * @returns {Array<number>} dimensions of the canvas
+         */
+        value: function () {
+            return [
+                Math.max(
+                    Math.max(Math.ceil(this._width), 64),
+                    this._canvas.width
+                ),
+                Math.max(
+                    Math.max(Math.ceil(this._height), 64),
+                    this._canvas.height
+                )
+            ];
         },
         writable: false
     },

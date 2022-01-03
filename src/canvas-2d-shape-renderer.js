@@ -48,12 +48,12 @@ const shape_renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
-    _pixelsPerDpt: {
+    _dpi: {
         /**
          * Pixel to Dpt Ratio
          * @type {number}
          */
-        value: 72 / 96,
+        value: 1,
         writable: false
     },
 
@@ -116,17 +116,18 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * Initializes the rendering canvas.
          */
         value: function () {
-            if (typeof global.OffscreenCanvas === "undefined") {
-                this._canvas = global.document.createElement("canvas");
-                this._canvas.height = this._canvas.width = 1;
-            } else {
-                this._canvas = new global.OffscreenCanvas(1, 1);
-            }
-            this._height = this._width = 1;
-            this._ctx = this._canvas.getContext("2d", {
+            const options = Object.freeze({
                 "alpha": true,
                 "desynchronized": true
             });
+            if (typeof global.OffscreenCanvas === "undefined") {
+                this._canvas = global.document.createElement("canvas");
+                this._canvas.height = this._canvas.width = 64;
+            } else {
+                this._canvas = new global.OffscreenCanvas(64, 64);
+            }
+            this._height = this._width = 1;
+            this._ctx = this._canvas.getContext("2d", options);
             this._initialized = true;
         },
         writable: false
@@ -186,8 +187,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
         ) {
             let scale = this._calcScale(time, style, overrides);
             this._ctx.scale(
-                scale.x * overrides.getDrawingScale() * this._pixelsPerDpt,
-                scale.y * overrides.getDrawingScale() * this._pixelsPerDpt
+                scale.x * overrides.getDrawingScale() * this._dpi,
+                scale.y * overrides.getDrawingScale() * this._dpi
             );
         },
         writable: false
@@ -247,8 +248,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
         ) {
             //TODO: Figgure out a good way to do dimension specific line widths.
             let outline = this._calcOutline(time, style, overrides);
-            if (pass === sabre.RenderPasses.OUTLINE)
-                this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
+            this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
         },
         writable: false
     },
@@ -270,7 +270,18 @@ const shape_renderer_prototype = global.Object.create(Object, {
             lineOverrides,
             lineTransitionTargetOverrides,
             pass
-        ) {},
+        ) {
+            if (
+                pass === sabre.RenderPasses.BACKGROUND &&
+                style.getBorderStyle() !== sabre.BorderStyleModes.SRT_STYLE &&
+                style.getBorderStyle() !== sabre.BorderStyleModes.SRT_NO_OVERLAP
+            ) {
+                this._ctx.fillStyle = "rgba(255,0,255,1)";
+            } else {
+                this._ctx.fillStyle = "rgba(255,0,0,1)";
+                this._ctx.strokeStyle = "rgba(0,0,255,1)";
+            }
+        },
         writable: false
     },
 
@@ -623,23 +634,29 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 outline_y = outline.y;
             }
 
-            let offsetXUnscaled = this._offsetX;
-            let offsetYUnscaled = this._offsetY;
+            let offsetXUnscaled = -this._offsetX;
+            let offsetYUnscaled = -this._offsetY;
             {
                 let scale = this._calcScale(time, style, overrides);
                 this._offsetX *=
-                    scale.x * overrides.getDrawingScale() * this._pixelsPerDpt;
+                    scale.x * overrides.getDrawingScale() * this._dpi;
                 this._offsetY *=
-                    scale.y * overrides.getDrawingScale() * this._pixelsPerDpt;
+                    scale.y * overrides.getDrawingScale() * this._dpi;
                 this._width *=
-                    scale.x * overrides.getDrawingScale() * this._pixelsPerDpt;
+                    scale.x * overrides.getDrawingScale() * this._dpi;
                 this._height *=
-                    scale.y * overrides.getDrawingScale() * this._pixelsPerDpt;
+                    scale.y * overrides.getDrawingScale() * this._dpi;
             }
 
             if (!dryRun) {
-                this._canvas.width = this._width;
-                this._canvas.height = this._height;
+                this._canvas.width = Math.max(
+                    Math.max(Math.ceil(this._width), 64),
+                    this._canvas.width
+                );
+                this._canvas.height = Math.max(
+                    Math.max(Math.ceil(this._height), 64),
+                    this._canvas.height
+                );
                 this._handleStyling(
                     time,
                     style,
@@ -714,6 +731,15 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             offsetYUnscaled,
                             false
                         );
+                        //TEST CODE
+                        this._ctx.globalCompositeOperation = "source-over";
+                        this._ctx.fillStyle = this._ctx.strokeStyle;
+                        this._drawShape(
+                            cmds,
+                            offsetXUnscaled,
+                            offsetYUnscaled,
+                            false
+                        );
                     } else {
                         this._drawShape(
                             cmds,
@@ -734,7 +760,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {number} dpi the DPI to use for rendering shapes.
          */
         value: function (dpi) {
-            this._pixelsPerDpt = dpi * (72 / 96);
+            this._dpi = dpi;
         },
         writable: false
     },
@@ -745,7 +771,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @returns {Array<number>} offset of the resulting image
          */
         value: function () {
-            return [-this._offsetX, -this._offsetY];
+            return [this._offsetX, this._offsetY];
         },
         writable: false
     },
@@ -757,6 +783,26 @@ const shape_renderer_prototype = global.Object.create(Object, {
          */
         value: function () {
             return [this._width, this._height];
+        },
+        writable: false
+    },
+
+    "getExtents": {
+        /**
+         * Gets the dimensions of the canvas.
+         * @returns {Array<number>} dimensions of the canvas
+         */
+        value: function () {
+            return [
+                Math.max(
+                    Math.max(Math.ceil(this._width), 64),
+                    this._canvas.width
+                ),
+                Math.max(
+                    Math.max(Math.ceil(this._height), 64),
+                    this._canvas.height
+                )
+            ];
         },
         writable: false
     },

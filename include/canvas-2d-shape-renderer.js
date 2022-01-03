@@ -4,7 +4,8 @@
  *              setDPI:function(number):void,
  *              getOffset:function():Array<number>,
  *              getDimensions:function():Array<number>,
- *              getImage:function():HTMLCanvasElement
+ *              getExtents:function():Array<number>,
+ *              getImage:function():(HTMLCanvasElement|OffscreenCanvas)
  *          }}
  */
 var Canvas2DShapeRenderer;

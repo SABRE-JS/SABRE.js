@@ -522,10 +522,10 @@ const renderer_prototype = global.Object.create(Object, {
                 if (
                     (overrideMargins[0] === 0 &&
                         overrideMargins[1] === 0 &&
-                        overrideMargins[2] == 0) ||
+                        overrideMargins[2] === 0) ||
                     (overrideMargins[0] === null &&
                         overrideMargins[1] === null &&
-                        overrideMargins[2] == null)
+                        overrideMargins[2] === null)
                 ) {
                     result.marginLeft = styleMargins[0];
                     result.marginRight = styleMargins[1];
@@ -782,7 +782,7 @@ const renderer_prototype = global.Object.create(Object, {
 
     _collideEvent: {
         /**
-         * Collides two events.
+         * Collides two events. This function ensures that events that are not supposed to overlap, if they are overlapping, get moved out of the way in a manner consistant with the standard.
          * @private
          * @param {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} positionInfo1 current event's position info.
          * @param {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
@@ -903,7 +903,7 @@ const renderer_prototype = global.Object.create(Object, {
 
     _collideEventWithViewport: {
         /**
-         * Collides an event with the viewport.
+         * Collides an event with the viewport. This ensures that the events are visible onscreen.
          * @private
          * @param {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} positionInfo current event's position info.
          * @param {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} posInfosForMatchingId position infos for events who's id matches the current event's id.
@@ -1049,7 +1049,7 @@ const renderer_prototype = global.Object.create(Object, {
 
     _glSetup: {
         value: function () {
-            const tex_coords = new Float32Array([
+            const default_tex_coords = new Float32Array([
                 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1
             ]);
             const fullscreen_coordinates = new Float32Array([
@@ -1080,8 +1080,8 @@ const renderer_prototype = global.Object.create(Object, {
             );
             this._gl.bufferData(
                 this._gl.ARRAY_BUFFER,
-                tex_coords,
-                this._gl.STATIC_DRAW
+                default_tex_coords,
+                this._gl.DYNAMIC_DRAW
             );
 
             this._gl.bindBuffer(
@@ -1363,7 +1363,7 @@ const renderer_prototype = global.Object.create(Object, {
 
             //This is to disable blending of SRT_NO_OVERLAP backgrounds so there's no overlap showing.
             let blendDisabled =
-                pass == sabre.RenderPasses.BACKGROUND &&
+                pass === sabre.RenderPasses.BACKGROUND &&
                 currentEvent.getStyle().getBorderStyle() ===
                     sabre.BorderStyleModes.SRT_NO_OVERLAP;
             if (blendDisabled) this._gl.disable(this._gl.BLEND);
@@ -1599,6 +1599,8 @@ const renderer_prototype = global.Object.create(Object, {
             }
 
             let dimensions = source.getDimensions();
+            let extents = source.getExtents();
+
             let upperLeft = {
                 m00: -1,
                 m01: -1,
@@ -1642,6 +1644,21 @@ const renderer_prototype = global.Object.create(Object, {
                 lowerRight.m00,
                 lowerRight.m01,
                 lowerRight.m02
+            ]);
+
+            let tex_coords = new Float32Array([
+                0,
+                1 - dimensions[1] / extents[1],
+                dimensions[0] / extents[0],
+                1 - dimensions[1] / extents[1],
+                0,
+                1,
+                0,
+                1,
+                dimensions[0] / extents[0],
+                1 - dimensions[1] / extents[1],
+                dimensions[0] / extents[0],
+                1
             ]);
 
             //Draw background or outline or text depending on pass to destination
@@ -1936,14 +1953,15 @@ const renderer_prototype = global.Object.create(Object, {
                     0,
                     0
                 );
+
+                this._gl.bufferData(
+                    this._gl.ARRAY_BUFFER,
+                    tex_coords,
+                    this._gl.DYNAMIC_DRAW
+                );
                 this._gl.bindBuffer(
                     this._gl.ARRAY_BUFFER,
                     this._subtitlePositioningBuffer
-                );
-                this._gl.bufferData(
-                    this._gl.ARRAY_BUFFER,
-                    coordinates,
-                    this._gl.DYNAMIC_DRAW
                 );
                 this._gl.enableVertexAttribArray(positionAttrib);
                 this._gl.vertexAttribPointer(
@@ -1953,6 +1971,11 @@ const renderer_prototype = global.Object.create(Object, {
                     false,
                     0,
                     0
+                );
+                this._gl.bufferData(
+                    this._gl.ARRAY_BUFFER,
+                    coordinates,
+                    this._gl.DYNAMIC_DRAW
                 );
                 this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
             }
@@ -2306,13 +2329,13 @@ const renderer_prototype = global.Object.create(Object, {
                 if (ldiff === 0) return a.getId() - b.getId();
                 else return ldiff;
             });
-            let currentHash = this._hashEvents(events);
-            if (
-                currentHash === this._lastHash &&
-                !this._listOfEventsContainsAnimation(events)
-            )
-                return;
-            this._lastHash = currentHash;
+
+            if (!this._listOfEventsContainsAnimation(events)) {
+                let currentHash = this._hashEvents(events);
+                if (currentHash === this._lastHash) return;
+                this._lastHash = currentHash;
+            }
+
             this._gl.clear(
                 this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
             );
