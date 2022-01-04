@@ -84,7 +84,7 @@ Dialogue: 0,0:01:02.00,0:01:04.00,Default,,0000,0000,0000,,{\an5\t()\clip(69,215
             let stopbutton = document.getElementById("stop");
 
             function displayImage(){
-                renderer.drawFrame(Date.now()-startTime,display,"2d");
+                renderer.drawFrame((Date.now()-startTime)/1000,display,"2d");
                 if(playing){
                     window.requestAnimationFrame(displayImage);
                 }
@@ -92,7 +92,7 @@ Dialogue: 0,0:01:02.00,0:01:04.00,Default,,0000,0000,0000,,{\an5\t()\clip(69,215
 
             function play(){
                 playing = true;
-                startTime = Date.now()/1000;
+                startTime = Date.now();
                 window.requestAnimationFrame(displayImage);
             }
 
