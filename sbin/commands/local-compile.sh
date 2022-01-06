@@ -8,7 +8,7 @@ rm -f $LOG_FILE
 if [ ! -f "$TOOL_BIN_DIR/closure.jar" ]; then
     echo "Closure compiler is not installed, downloading..." > $LOG_FILE
 #    $SCRIPT_BIN_DIR/helpers/download.sh "$CLOSURE_LATEST" "$TEMP_DIR/closure.tar.gz" 1>>/dev/null 2>>/dev/stdout | tee -a $LOG_FILE | cat 1>&2
-    $SCRIPT_BIN_DIR/helpers/download.sh "$CLOSURE_LATEST" "$TEMP_DIR/closure.jar" 1>>/dev/null 2>>/dev/stdout
+    $SCRIPT_BIN_DIR/helpers/download.sh "$CLOSURE_LATEST" "$TEMP_DIR/closure.jar" 1>>/dev/null 2>>/dev/stdout | tee -a $LOG_FILE | cat 1>&2
     TEMPVAR_1="$PWD"
     cd "$TEMP_DIR"
 #    tar xzf ./closure.tar.gz 
