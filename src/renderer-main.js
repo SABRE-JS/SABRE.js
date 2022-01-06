@@ -170,17 +170,28 @@ const renderer_prototype = global.Object.create(Object, {
 
     _lastTime: {
         /**
+         * Timestamp of last frame rendered.
          * @type {number}
          */
         value: -1,
         writable: true
     },
 
+    _lastAnimating: {
+        /**
+         * Was last frame an animation frame?
+         * @type {boolean}
+         */
+        value: false,
+        writable: true
+    },
+
     _lastHash: {
         /**
+         * Hash of last non-animating frame of subtitles.
          * @type {number}
          */
-        value: 0,
+        value: NaN,
         writable: true
     },
 
@@ -501,6 +512,8 @@ const renderer_prototype = global.Object.create(Object, {
             let alignment =
                 (event.getOverrides().getAlignment() ??
                     event.getStyle().getAlignment()) - 1;
+            let verticalAlignment = Math.floor(alignment / 3);
+            let horizontalAlignment = Math.floor(alignment % 3);
             let result = {
                 x: 0,
                 y: 0,
@@ -543,8 +556,8 @@ const renderer_prototype = global.Object.create(Object, {
                     time,
                     event,
                     sabre.RenderPasses.FILL,
-                    textAnchorOffset,
-                    this._config.renderer["resolution_x"],
+                    /*textAnchorOffset,
+                    this._config.renderer["resolution_x"],*/
                     true
                 );
                 let dim = this._textRenderer.getDimensions();
@@ -553,7 +566,8 @@ const renderer_prototype = global.Object.create(Object, {
                     lineOverrides.getMovement() === null
                 ) {
                     let anchorPoint = [0, 0];
-                    switch (Math.floor(alignment / 3)) {
+
+                    switch (verticalAlignment) {
                         case 2:
                             //TOP
                             anchorPoint[1] =
@@ -571,7 +585,7 @@ const renderer_prototype = global.Object.create(Object, {
                             anchorPoint[1] = dim[1];
                             break;
                     }
-                    switch (Math.floor(alignment % 3)) {
+                    switch (horizontalAlignment) {
                         case 2:
                             //RIGHT
                             anchorPoint[0] =
@@ -595,7 +609,7 @@ const renderer_prototype = global.Object.create(Object, {
                     let curPos = [0, 0];
                     if (lineOverrides.getMovement() === null) {
                         curPos = lineOverrides.getPosition();
-                        switch (Math.floor(alignment / 3)) {
+                        switch (verticalAlignment) {
                             case 2:
                                 //TOP
                                 // Do nothing. The subtitle is already top aligned.
@@ -609,7 +623,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 curPos[1] -= dim[1]; // bottom align the subtitle
                                 break;
                         }
-                        switch (Math.floor(alignment % 3)) {
+                        switch (horizontalAlignment) {
                             case 2:
                                 //RIGHT
                                 curPos[0] -= dim[0]; // right align the subtitle
@@ -628,7 +642,7 @@ const renderer_prototype = global.Object.create(Object, {
                             this._config.renderer["resolution_y"] - curPos[1];
                     } else {
                         let move = lineOverrides.getMovement();
-                        switch (Math.floor(alignment / 3)) {
+                        switch (verticalAlignment) {
                             case 2:
                                 //TOP
                                 // Do nothing. The subtitle is already top aligned.
@@ -644,7 +658,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 move[3] -= dim[1]; // bottom align the subtitle
                                 break;
                         }
-                        switch (Math.floor(alignment % 3)) {
+                        switch (horizontalAlignment) {
                             case 2:
                                 //RIGHT
                                 move[0] -= dim[0]; // right align the subtitle
@@ -691,8 +705,6 @@ const renderer_prototype = global.Object.create(Object, {
                     time,
                     event,
                     sabre.RenderPasses.FILL,
-                    textAnchorOffset,
-                    this._config.renderer["resolution_x"],
                     true
                 );
                 let dim = this._shapeRenderer.getDimensions();
@@ -701,7 +713,7 @@ const renderer_prototype = global.Object.create(Object, {
                     lineOverrides.getMovement() === null
                 ) {
                     let anchorPoint = [0, 0];
-                    switch (Math.floor(alignment / 3)) {
+                    switch (verticalAlignment) {
                         case 2:
                             //TOP
                             anchorPoint[1] =
@@ -719,7 +731,7 @@ const renderer_prototype = global.Object.create(Object, {
                             anchorPoint[1] = dim[1];
                             break;
                     }
-                    switch (Math.floor(alignment % 3)) {
+                    switch (horizontalAlignment) {
                         case 2:
                             //RIGHT
                             anchorPoint[0] =
@@ -910,7 +922,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @returns {boolean} did we move something?
          */
         value: function (positionInfo, posInfosForMatchingId) {
-            let horizontalAlignment = positionInfo.alignment % 3;
+            let horizontalAlignment = Math.floor(positionInfo.alignment % 3);
             let verticalAlignment = Math.floor(positionInfo.alignment / 3);
             let xshouldmove = false;
             let xdistance = 0;
@@ -1552,7 +1564,6 @@ const renderer_prototype = global.Object.create(Object, {
                         m33: 1
                     };
                 }
-
                 let finalPositionOffsetMatrix = {
                     m00: 1,
                     m01: 0,
@@ -1908,11 +1919,11 @@ const renderer_prototype = global.Object.create(Object, {
                                 //After Fade out.
                                 alpha = fade[2];
                             }
+                            primaryColorArray[3] *= alpha;
+                            secondaryColorArray[3] *= alpha;
+                            tertiaryColorArray[3] *= alpha;
+                            quaternaryColorArray[3] *= alpha;
                         }
-                        primaryColorArray[3] *= alpha;
-                        secondaryColorArray[3] *= alpha;
-                        tertiaryColorArray[3] *= alpha;
-                        quaternaryColorArray[3] *= alpha;
                     }
                     this._positioningShader.updateOption(
                         "u_primary_color",
@@ -2251,26 +2262,11 @@ const renderer_prototype = global.Object.create(Object, {
             this._compositingCanvas.width = width;
             this._compositingCanvas.height = height;
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferA);
-            this._gl.viewport(
-                0,
-                0,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"]
-            );
+            this._gl.viewport(0, 0, width, height);
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferB);
-            this._gl.viewport(
-                0,
-                0,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"]
-            );
+            this._gl.viewport(0, 0, width, height);
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
-            this._gl.viewport(
-                0,
-                0,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"]
-            );
+            this._gl.viewport(0, 0, width, height);
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
             this._gl.texImage2D(
                 this._gl.TEXTURE_2D,
@@ -2332,8 +2328,12 @@ const renderer_prototype = global.Object.create(Object, {
 
             if (!this._listOfEventsContainsAnimation(events)) {
                 let currentHash = this._hashEvents(events);
-                if (currentHash === this._lastHash) return;
+                if (currentHash === this._lastHash && !this._lastAnimating)
+                    return;
+                this._lastAnimating = false;
                 this._lastHash = currentHash;
+            } else {
+                this._lastAnimating = true;
             }
 
             this._gl.clear(
@@ -2350,6 +2350,8 @@ const renderer_prototype = global.Object.create(Object, {
                             time,
                             currentEvent,
                             pass,
+                            /*textAnchorOffset,
+                    this._config.renderer["resolution_x"],*/
                             false
                         );
                         this._compositeSubtitle(
