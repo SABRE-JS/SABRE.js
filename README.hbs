@@ -23,7 +23,7 @@ To view the gallery click [here](/gallery/gallery.md) if you're using a decent b
 ### Documentation
 
 
-You can retrieve a instance of the library by calling `sabre.SABRERenderer(fontLoadingFunction)` and passing
+You can retrieve an instance of the library by calling `sabre.SABRERenderer(fontLoadingFunction)` and passing
 it a function that loads fonts using the CSS Font loading API:
 ```js
 function loadFont(name) {
