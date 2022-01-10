@@ -683,7 +683,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             heightUnscaled
                         );
                     } else {
-                        if (this._canvas.width == cwidth) {
+                        if (this._canvas.width === cwidth) {
                             this._canvas.height = cheight;
                         } else {
                             this._canvas.width = cwidth;

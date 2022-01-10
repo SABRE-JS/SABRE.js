@@ -309,7 +309,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             if (fontItalicized) font = "italic " + font;
             let fontSizeRatio = this._fontSizeRatios[font] ?? null;
             let badFont = false;
-            if (fontSizeRatio == null) {
+            if (fontSizeRatio === null) {
                 badFont = true;
                 this._ctx.font = font;
                 fontSizeRatio =
@@ -628,7 +628,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                             heightUnscaled
                         );
                     } else {
-                        if (this._canvas.width == cwidth) {
+                        if (this._canvas.width === cwidth) {
                             this._canvas.height = cheight;
                             this._lastFont = "";
                         } else {
