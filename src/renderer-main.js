@@ -2032,7 +2032,7 @@ const renderer_prototype = global.Object.create(Object, {
                     {
                         let alpha = 1;
                         let fade = currentEvent.getLineOverrides().getFade();
-                        if (fade != null) {
+                        if (fade !== null) {
                             if (time < fade[3]) {
                                 //Before Fade in.
                                 alpha = fade[0];
