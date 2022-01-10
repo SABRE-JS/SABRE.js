@@ -1,12 +1,14 @@
 //@include [color.js]
 //@include [style.js]
 //@include [style-override.js]
-sabre.import("color.min.js");
-sabre.import("style.min.js");
-sabre.import("style-override.min.js");
+sabre.import("color");
+sabre.import("style");
+sabre.import("style-override");
 sabre["SSASubtitleEvent"] = function () {
     let obj = {
         id: NaN,
+        order: NaN,
+        newLine: false,
         layer: 0,
         start: 0,
         end: 0,
@@ -21,6 +23,8 @@ sabre["SSASubtitleEvent"] = function () {
             value: function () {
                 return {
                     id: obj.id,
+                    or: obj.order,
+                    nl: obj.newLine,
                     l: obj.layer,
                     s: obj.start,
                     e: obj.end,
@@ -44,6 +48,34 @@ sabre["SSASubtitleEvent"] = function () {
         "getId": {
             value: function () {
                 return obj.id;
+            },
+            writable: false
+        },
+
+        "setOrder": {
+            value: function (/** number */ order) {
+                obj.order = order;
+            },
+            writable: false
+        },
+
+        "getOrder": {
+            value: function () {
+                return obj.order;
+            },
+            writable: false
+        },
+
+        "setNewLine": {
+            value: function (/** boolean */ newLine) {
+                obj.newLine = newLine;
+            },
+            writable: false
+        },
+
+        "isNewLine": {
+            value: function () {
+                return obj.newLine;
             },
             writable: false
         },

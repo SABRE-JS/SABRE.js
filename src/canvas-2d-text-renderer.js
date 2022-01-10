@@ -14,12 +14,12 @@
 //@include [style.js]
 //@include [style-override.js]
 //@include [subtitle-event.js]
-sabre.import("util.min.js");
-sabre.import("global-constants.min.js");
-sabre.import("color.min.js");
-sabre.import("style.min.js");
-sabre.import("style-override.min.js");
-sabre.import("subtitle-event.min.js");
+sabre.import("util");
+sabre.import("global-constants");
+sabre.import("color");
+sabre.import("style");
+sabre.import("style-override");
+sabre.import("subtitle-event");
 
 const text_renderer_prototype = global.Object.create(Object, {
     _initialized: {
@@ -31,13 +31,13 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
-    _dpi: {
+    _pixelScaleRatio: {
         /**
-         * Dpt to pixel Ratio
-         * @type {number}
+         * ratio to scale pixels by due to resolution differences between script pixels and actual pixels.
+         * @type {{xratio:number,yratio:number}}
          */
-        value: 1,
-        writable: false
+        value: { xratio: 1, yratio: 1 },
+        writable: true
     },
 
     _canvas: {
@@ -53,6 +53,24 @@ const text_renderer_prototype = global.Object.create(Object, {
         /**
          * The canvas context for the text renderer.
          * @type {CanvasRenderingContext2D}
+         */
+        value: null,
+        writable: true
+    },
+
+    _lastFont: {
+        /**
+         * Cache the last font so that if it's the same we don't need to re-set the font as that's expensive (apparently).
+         * @type {string}
+         */
+        value: "",
+        writable: true
+    },
+
+    _fontSizeRatios: {
+        /**
+         * Cache of font size ratios, because we don't want to set the font size twice.
+         * @type {Object<string,number>}
          */
         value: null,
         writable: true
@@ -111,6 +129,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             }
             this._height = this._width = 1;
             this._ctx = this._canvas.getContext("2d", options);
+            this._fontSizeRatios = {};
             this._initialized = true;
         },
         writable: false
@@ -169,7 +188,10 @@ const text_renderer_prototype = global.Object.create(Object, {
             pass
         ) {
             let scale = this._calcScale(time, style, overrides);
-            this._ctx.scale(scale.x * this._dpi, scale.y * this._dpi);
+            this._ctx.scale(
+                scale.x * this._pixelScaleRatio.xratio,
+                scale.y * this._pixelScaleRatio.yratio
+            );
         },
         writable: false
     },
@@ -285,9 +307,15 @@ const text_renderer_prototype = global.Object.create(Object, {
             let font = "100px '" + fontName + "', 'Arial', 'Open Sans'";
             font = fontWeight + " " + font;
             if (fontItalicized) font = "italic " + font;
-            this._ctx.font = font;
-            let fontSizeRatio =
-                100 / this._ctx.measureText("jI").actualBoundingBoxDescent;
+            let fontSizeRatio = this._fontSizeRatios[font] ?? null;
+            let badFont = false;
+            if (fontSizeRatio == null) {
+                badFont = true;
+                this._ctx.font = font;
+                fontSizeRatio =
+                    100 / this._ctx.measureText("jI").actualBoundingBoxDescent;
+                this._fontSizeRatios[font] = fontSizeRatio;
+            }
             font =
                 fontSize * fontSizeRatio +
                 "px '" +
@@ -295,7 +323,10 @@ const text_renderer_prototype = global.Object.create(Object, {
                 "', 'Arial', 'Open Sans'";
             font = fontWeight + " " + font;
             if (fontItalicized) font = "italic " + font;
-            this._ctx.font = font;
+            if (this._lastFont !== font || badFont) {
+                this._ctx.font = font;
+                this._lastFont = font;
+            }
         },
         writable: false
     },
@@ -331,9 +362,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                         overrides.getKaraokeMode() ===
                             sabre.KaraokeModes.COLOR_SWEEP) &&
                     time < overrides.getKaraokeStart()
-                )
+                ) {
                     this._ctx.fillStyle = "rgba(0,255,0,1)";
-                else if (
+                } else if (
                     overrides.getKaraokeMode() ===
                         sabre.KaraokeModes.COLOR_SWEEP &&
                     time < overrides.getKaraokeEnd()
@@ -351,10 +382,11 @@ const text_renderer_prototype = global.Object.create(Object, {
                     gradient.addColorStop(0, "rgba(255,0,0,1)");
                     gradient.addColorStop(progress, "rgba(255,0,0,1)");
                     gradient.addColorStop(
-                        progress + 1 / this._width,
+                        Math.min(progress + 1 / this._width, 1),
                         "rgba(0,255,0,1)"
                     );
                     gradient.addColorStop(1, "rgba(255,0,0,1)");
+                    this._ctx.fillStyle = gradient;
                 } else {
                     this._ctx.fillStyle = "rgba(255,0,0,1)";
                 }
@@ -542,14 +574,16 @@ const text_renderer_prototype = global.Object.create(Object, {
                 let outline = this._calcOutline(time, style, overrides);
                 this._width += outline.x * 2;
                 this._height += outline.y * 2;
-                this._offsetX -= outline.x;
-                this._offsetY -= outline.y;
+                this._offsetX += outline.x;
+                this._offsetY += outline.y;
                 outline_x = outline.x;
                 outline_y = outline.y;
             }
 
-            let offsetXUnscaled = -this._offsetX;
-            let offsetYUnscaled = -this._offsetY;
+            let offsetXUnscaled = this._offsetX;
+            let offsetYUnscaled = this._offsetY;
+            let widthUnscaled = this._width;
+            let heightUnscaled = this._height;
 
             if (pass === sabre.RenderPasses.BACKGROUND) {
                 if (
@@ -561,27 +595,48 @@ const text_renderer_prototype = global.Object.create(Object, {
                         Math.sign(style.getShadow()) *
                         Math.sqrt(Math.pow(style.getShadow(), 2) / 2);
 
-                    this._offsetX += overrides.getShadowX() ?? shadowComponent;
-                    this._offsetY += overrides.getShadowY() ?? shadowComponent;
+                    this._offsetX -= overrides.getShadowX() ?? shadowComponent;
+                    this._offsetY -= overrides.getShadowY() ?? shadowComponent;
                 }
             }
 
             {
-                this._offsetX *= scale.x * this._dpi;
-                this._offsetY *= scale.y * this._dpi;
-                this._width *= scale.x * this._dpi;
-                this._height *= scale.y * this._dpi;
+                this._offsetX *= scale.x * this._pixelScaleRatio.xratio;
+                this._offsetY *= scale.y * this._pixelScaleRatio.yratio;
+                this._width *= scale.x * this._pixelScaleRatio.xratio;
+                this._height *= scale.y * this._pixelScaleRatio.yratio;
             }
 
             if (!dryRun) {
-                this._canvas.width = Math.max(
-                    Math.max(Math.ceil(this._width), 64),
-                    this._canvas.width
-                );
-                this._canvas.height = Math.max(
-                    Math.max(Math.ceil(this._height), 64),
-                    this._canvas.height
-                );
+                {
+                    let cwidth = Math.max(
+                        Math.max(Math.ceil(this._width), 320),
+                        this._canvas.width
+                    );
+                    let cheight = Math.max(
+                        Math.max(Math.ceil(this._height), 128),
+                        this._canvas.height
+                    );
+                    if (
+                        this._canvas.width >= cwidth &&
+                        this._canvas.height >= cheight
+                    ) {
+                        this._ctx.clearRect(
+                            0,
+                            0,
+                            widthUnscaled,
+                            heightUnscaled
+                        );
+                    } else {
+                        if (this._canvas.width == cwidth) {
+                            this._canvas.height = cheight;
+                            this._lastFont = "";
+                        } else {
+                            this._canvas.width = cwidth;
+                            this._lastFont = "";
+                        }
+                    }
+                }
                 this._handleStyling(
                     time,
                     style,
@@ -603,145 +658,13 @@ const text_renderer_prototype = global.Object.create(Object, {
                             case sabre.BorderStyleModes.NORMAL:
                             default:
                                 {
-                                    let outline_x_bigger =
-                                        outline_x > outline_y;
-                                    let outline_gt_zero =
-                                        outline_x > 0 && outline_y > 0;
                                     if (spacing === 0) {
-                                        // Smear outline
-                                        if (outline_x_bigger) {
-                                            if (outline_gt_zero) {
-                                                for (
-                                                    let i =
-                                                        -outline_x / outline_y;
-                                                    i <= outline_x / outline_y;
-                                                    i += outline_y / outline_x
-                                                ) {
-                                                    this._ctx.strokeText(
-                                                        text,
-                                                        offsetXUnscaled + i,
-                                                        offsetYUnscaled
-                                                    );
-                                                }
-                                            } else {
-                                                this._ctx.fillStyle =
-                                                    this._ctx.strokeStyle;
-                                                for (
-                                                    let i = -outline_x;
-                                                    i <= outline_x;
-                                                    i++
-                                                ) {
-                                                    this._ctx.fillText(
-                                                        text,
-                                                        offsetXUnscaled + i,
-                                                        offsetYUnscaled
-                                                    );
-                                                }
-                                            }
-                                        } else {
-                                            if (outline_gt_zero) {
-                                                for (
-                                                    let i =
-                                                        -outline_y / outline_x;
-                                                    i <= outline_y / outline_x;
-                                                    i += outline_x / outline_y
-                                                ) {
-                                                    this._ctx.strokeText(
-                                                        text,
-                                                        offsetXUnscaled,
-                                                        offsetYUnscaled + i
-                                                    );
-                                                }
-                                            } else {
-                                                this._ctx.fillStyle =
-                                                    this._ctx.strokeStyle;
-                                                for (
-                                                    let i = -outline_y;
-                                                    i <= outline_y;
-                                                    i++
-                                                ) {
-                                                    this._ctx.fillText(
-                                                        text,
-                                                        offsetXUnscaled,
-                                                        offsetYUnscaled + i
-                                                    );
-                                                }
-                                            }
-                                        }
                                         this._ctx.fillText(
                                             text,
                                             offsetXUnscaled,
                                             offsetYUnscaled
                                         );
                                     } else {
-                                        // Smear outline
-                                        if (outline_x_bigger) {
-                                            if (outline_gt_zero) {
-                                                for (
-                                                    let i =
-                                                        -outline_x / outline_y;
-                                                    i <= outline_x / outline_y;
-                                                    i += outline_y / outline_x
-                                                ) {
-                                                    this._drawTextWithRelativeKerning(
-                                                        text,
-                                                        offsetXUnscaled + i,
-                                                        offsetYUnscaled,
-                                                        spacing,
-                                                        true
-                                                    );
-                                                }
-                                            } else {
-                                                this._ctx.fillStyle =
-                                                    this._ctx.strokeStyle;
-                                                for (
-                                                    let i = -outline_x;
-                                                    i <= outline_x;
-                                                    i++
-                                                ) {
-                                                    this._drawTextWithRelativeKerning(
-                                                        text,
-                                                        offsetXUnscaled + i,
-                                                        offsetYUnscaled,
-                                                        spacing,
-                                                        false
-                                                    );
-                                                }
-                                            }
-                                        } else {
-                                            if (outline_gt_zero) {
-                                                for (
-                                                    let i =
-                                                        -outline_y / outline_x;
-                                                    i <= outline_y / outline_x;
-                                                    i += outline_x / outline_y
-                                                ) {
-                                                    this._drawTextWithRelativeKerning(
-                                                        text,
-                                                        offsetXUnscaled,
-                                                        offsetYUnscaled + i,
-                                                        spacing,
-                                                        true
-                                                    );
-                                                }
-                                            } else {
-                                                this._ctx.fillStyle =
-                                                    this._ctx.strokeStyle;
-                                                for (
-                                                    let i = -outline_y;
-                                                    i <= outline_y;
-                                                    i++
-                                                ) {
-                                                    this._drawTextWithRelativeKerning(
-                                                        text,
-                                                        offsetXUnscaled,
-                                                        offsetYUnscaled + i,
-                                                        spacing,
-                                                        false
-                                                    );
-                                                }
-                                            }
-                                        }
                                         this._drawTextWithRelativeKerning(
                                             text,
                                             offsetXUnscaled,
@@ -954,13 +877,14 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    "setDPI": {
+    "setPixelScaleRatio": {
         /**
-         * Sets the DPI for Rendering text
-         * @param {number} dpi the DPI to use for rendering text.
+         * Sets the scale ratio for pixels to account for differences between script pixels and pixels.
+         * @param {number} xratio the ratio in the x coordinate.
+         * @param {number} yratio the ratio in the y coordinate.
          */
-        value: function (dpi) {
-            this._dpi = dpi;
+        value: function (xratio, yratio) {
+            this._pixelScaleRatio = { xratio: xratio, yratio: yratio };
         },
         writable: false
     },
@@ -971,7 +895,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @returns {Array<number>} offset of the resulting image
          */
         value: function () {
-            return [this._offsetX, this._offsetY];
+            return [-this._offsetX, -this._offsetY];
         },
         writable: false
     },

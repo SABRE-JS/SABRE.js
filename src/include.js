@@ -1,4 +1,4 @@
-﻿/*
+/*
  |   include.js
  |----------------
  |  include.js is copyright Patrick Rhodes Martin 2013,2016,2019.
@@ -13,12 +13,24 @@ let scriptpath = "";
     let curscript = new global.URL(scripts[scripts.length - 1].src);
     scriptpath = curscript.pathname.match(/^(.*\/).*?$/)[1];
 }
+
+/**
+ * Determines if we import *.min.js or *.js
+ * @define {boolean}
+ * */
+const ENABLE_DEBUG = true;
+
 /**
  * includes a ecmascript file asynchronously.
  * @param {string} scriptUrl The URL or URI of the script.
  * @param {function(boolean)=} callback Callback on success or failure.
  */
 sabre["import"] = function (scriptUrl, callback) {
+    if (!ENABLE_DEBUG) {
+        scriptUrl += ".min.js";
+    } else {
+        scriptUrl += ".js";
+    }
     if (typeof callback === "undefined" || callback === null)
         callback = function () {};
     if (
@@ -60,6 +72,11 @@ sabre["import"] = function (scriptUrl, callback) {
  * @param {function(boolean)=} callback Callback on success or failure.
  */
 sabre["include"] = function (scriptUrl, callback) {
+    if (!ENABLE_DEBUG) {
+        scriptUrl += ".min.js";
+    } else {
+        scriptUrl += ".js";
+    }
     if (typeof callback === "undefined" || callback === null)
         callback = function () {};
     if (

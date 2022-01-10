@@ -16,20 +16,24 @@
 //@include [canvas-2d-text-renderer.js]
 //@include [canvas-2d-shape-renderer.js]
 //@include [shader.js]
-sabre.import("util.min.js");
-sabre.import("global-constants.min.js");
-sabre.import("color.min.js");
-sabre.import("style.min.js");
-sabre.import("style-override.min.js");
-sabre.import("subtitle-event.min.js");
-sabre.import("subtitle-parser.min.js");
-sabre.import("scheduler.min.js");
-sabre.import("shader.min.js");
-sabre.import("canvas-2d-text-renderer.min.js");
-sabre.import("canvas-2d-shape-renderer.min.js");
+sabre.import("util");
+sabre.import("global-constants");
+sabre.import("color");
+sabre.import("style");
+sabre.import("style-override");
+sabre.import("subtitle-event");
+sabre.import("subtitle-parser");
+sabre.import("scheduler");
+sabre.import("shader");
+sabre.import("canvas-2d-text-renderer");
+sabre.import("canvas-2d-shape-renderer");
 /**
  * @fileoverview webgl subtitle compositing code.
  */
+/**
+ * @typedef {!{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}}
+ */
+var CollisionInfo;
 /**
  * Is ImageBitmap Supported.
  * @type {boolean}
@@ -106,6 +110,12 @@ const renderer_prototype = global.Object.create(Object, {
 
     _textureSubtitle: {
         /** @type{?WebGLTexture} */
+        value: null,
+        writable: true
+    },
+
+    _textureSubtitleBounds: {
+        /** @type{?Array<number>} */
         value: null,
         writable: true
     },
@@ -318,7 +328,7 @@ const renderer_prototype = global.Object.create(Object, {
                     events[i].getLineTransitionTargetOverrides() !== null ||
                     events[i].getOverrides().getKaraokeMode() !==
                         sabre.KaraokeModes.OFF ||
-                    events[i].getOverrides().getTransitions().length === 0
+                    events[i].getOverrides().getTransitions().length > 0
                 )
                     return true;
             }
@@ -405,7 +415,7 @@ const renderer_prototype = global.Object.create(Object, {
 
     _calcGaussianBlur: {
         value: function (time, style, overrides) {
-            const blurConstant = 1.17741002251547469;
+            const blurConstant = 1; //1.17741002251547469;
             let transitionOverrides = overrides.getTransitions();
             let factor = overrides.getGaussianEdgeBlur() ?? 0;
             for (let i = 0; i < transitionOverrides.length; i++)
@@ -505,10 +515,9 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} time time of the current frame.
          * @param {number} index the index of the event we're positioning.
          * @param {SSASubtitleEvent} event the current event we're positioning.
-         * @param {{hoffset:number,voffset:number}} textAnchorOffset the offset from the anchor point of the text.
-         * @returns {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} the positioning info of the event.
+         * @returns {CollisionInfo} the positioning info of the event.
          */
-        value: function (time, index, event, textAnchorOffset) {
+        value: function (time, index, event) {
             let alignment =
                 (event.getOverrides().getAlignment() ??
                     event.getStyle().getAlignment()) - 1;
@@ -556,8 +565,6 @@ const renderer_prototype = global.Object.create(Object, {
                     time,
                     event,
                     sabre.RenderPasses.FILL,
-                    /*textAnchorOffset,
-                    this._config.renderer["resolution_x"],*/
                     true
                 );
                 let dim = this._textRenderer.getDimensions();
@@ -792,14 +799,119 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _collideInternally: {
+        /**
+         * Collides within a single subtitle.
+         * @private
+         * @param {boolean} newLine is this a new line?.
+         * @param {Array<Array<CollisionInfo>>} lines prior lines.
+         * @param {CollisionInfo} localPositionInfo the current position info.
+         * @param {Array<CollisionInfo>} lineInfos the current line's infos.
+         */
+        value: function (newLine, lines, localPositionInfo, lineInfos) {
+            let horizontalAlignment = Math.floor(
+                localPositionInfo.alignment % 3
+            );
+            let verticalAlignment = Math.floor(localPositionInfo.alignment / 3);
+            let lineWidth = 0;
+            for (let i = 0; i < lineInfos.length; i++) {
+                lineWidth += lineInfos.width;
+            }
+            if (
+                newLine ||
+                lineWidth +
+                    localPositionInfo.marginLeft +
+                    localPositionInfo.marginRight +
+                    localPositionInfo.width >
+                    this._config.renderer["resolution_x"]
+            ) {
+                lines.push(lineInfos);
+                switch (verticalAlignment) {
+                    case 2:
+                        //TOP
+                        for (let i = 0; i < lines.length; i++) {
+                            let max = 0;
+                            for (let j = 0; j < lines[i].length; j++) {
+                                max = Math.max(lines[i][j].height, max);
+                            }
+                            localPositionInfo.y -= max;
+                            localPositionInfo.originalY -= max;
+                        }
+                        break;
+                    case 1:
+                        //CENTER
+                        for (let i = 0; i < lines.length; i++) {
+                            let max = 0;
+                            for (let j = 0; j < lines[i].length; j++) {
+                                max = Math.max(lines[i][j].height, max);
+                            }
+                            localPositionInfo.y -= max / 2;
+                            localPositionInfo.originalY -= max / 2;
+                        }
+                        for (let i = 0; i < lines.length; i++) {
+                            for (let j = 0; j < lines[i].length; j++) {
+                                lines[i][j].y += localPositionInfo.height / 2;
+                                lines[i][j].originalY +=
+                                    localPositionInfo.height / 2;
+                            }
+                        }
+                        break;
+                    case 0:
+                        //BOTTOM
+                        for (let i = 0; i < lines.length; i++) {
+                            for (let j = 0; j < lines[i].length; j++) {
+                                lines[i][j].y += localPositionInfo.height;
+                                lines[i][j].originalY +=
+                                    localPositionInfo.height;
+                            }
+                        }
+                        break;
+                }
+                return true;
+            } else {
+                switch (horizontalAlignment) {
+                    case 2:
+                        //RIGHT
+                        for (let i = 0; i < lineInfos.length; i++) {
+                            lineInfos[i].x -= localPositionInfo.width;
+                            lineInfos[i].originalX -= localPositionInfo.width;
+                        }
+                        break;
+                    case 1:
+                        //CENTER
+                        for (let i = 0; i < lineInfos.length; i++) {
+                            lineInfos[i].x -= localPositionInfo.width / 2;
+                            lineInfos[i].originalX -=
+                                localPositionInfo.width / 2;
+                        }
+                        for (let i = 0; i < lineInfos.length; i++) {
+                            localPositionInfo.x += lineInfos[i].width / 2;
+                            localPositionInfo.originalX +=
+                                lineInfos[i].width / 2;
+                        }
+                        break;
+                    case 0:
+                        //LEFT
+                        for (let i = 0; i < lineInfos.length; i++) {
+                            localPositionInfo.x += lineInfos[i].width;
+                            localPositionInfo.originalX += lineInfos[i].width;
+                        }
+                        break;
+                }
+                return false;
+            }
+        },
+        writable: false
+    },
+
     _collideEvent: {
         /**
          * Collides two events. This function ensures that events that are not supposed to overlap, if they are overlapping, get moved out of the way in a manner consistant with the standard.
          * @private
-         * @param {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} positionInfo1 current event's position info.
-         * @param {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
-         * @param {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} positionInfo2 the position info of the event we're colliding with.
-         * @param {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
+         * @param {CollisionInfo} positionInfo1 current event's position info.
+         * @param {Array<CollisionInfo>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
+         * @param {CollisionInfo} positionInfo2 the position info of the event we're colliding with.
+         * @param {Array<CollisionInfo>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
          * @returns {boolean} did we move something?
          */
         value: function (
@@ -917,8 +1029,8 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Collides an event with the viewport. This ensures that the events are visible onscreen.
          * @private
-         * @param {{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}} positionInfo current event's position info.
-         * @param {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} posInfosForMatchingId position infos for events who's id matches the current event's id.
+         * @param {CollisionInfo} positionInfo current event's position info.
+         * @param {Array<CollisionInfo>} posInfosForMatchingId position infos for events who's id matches the current event's id.
          * @returns {boolean} did we move something?
          */
         value: function (positionInfo, posInfosForMatchingId) {
@@ -990,29 +1102,42 @@ const renderer_prototype = global.Object.create(Object, {
          * @private
          * @param {number} time time of current frame.
          * @param {Array<SSASubtitleEvent>} events list of onscreen subtitle events for this frame in order of layer.
-         * @returns {Array<{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}>} each event's position onscreen.
+         * @returns {Array<CollisionInfo>} each event's position onscreen.
          */
         value: function (time, events) {
             let result = new Array(events.length);
             let resultsForId = {};
             {
+                let lines = [];
+                let lineInfos = [];
                 let lastId = -1;
-                let textAnchor = { hoffset: 0, voffset: 0 };
                 for (let i = 0; i < events.length; i++) {
                     let id = events[i].getId();
-                    resultsForId[id] = resultsForId[id] ?? [];
-                    if (id !== lastId) {
-                        textAnchor.voffset = 0;
-                        textAnchor.hoffset = 0;
+                    let newLineForced = events[i].isNewLine();
+                    if (lastId !== id) {
+                        resultsForId[id] = [];
+                        lines = [];
+                        lineInfos = [];
+                        lastId = id;
                     }
-                    result[i] = this._positionEvent(
-                        time,
-                        i,
-                        events[i],
-                        textAnchor
-                    );
+                    result[i] = this._positionEvent(time, i, events[i]);
+                    if (lineInfos.length >= 1) {
+                        if (
+                            this._collideInternally(
+                                newLineForced,
+                                lines,
+                                result[i],
+                                lineInfos
+                            )
+                        ) {
+                            lineInfos = [result[i]];
+                        } else {
+                            lineInfos.push(result[i]);
+                        }
+                    } else {
+                        lineInfos.push(result[i]);
+                    }
                     resultsForId[id].push(result[i]);
-                    lastId = id;
                 }
             }
             let moved = false;
@@ -1140,6 +1265,7 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.UNSIGNED_BYTE,
                 null
             );
+            this._textureSubtitleBounds = [1, 1];
 
             this._fbTextureA = this._gl.createTexture();
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
@@ -1392,14 +1518,33 @@ const renderer_prototype = global.Object.create(Object, {
                     this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
                 );
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
-            this._gl.texImage2D(
-                this._gl.TEXTURE_2D,
-                0,
-                this._gl.RGBA,
-                this._gl.RGBA,
-                this._gl.UNSIGNED_BYTE,
-                source.getImage()
-            );
+
+            let extents = source.getExtents();
+            if (
+                extents[0] <= this._textureSubtitleBounds[0] &&
+                extents[1] <= this._textureSubtitleBounds[1]
+            ) {
+                this._gl.texSubImage2D(
+                    this._gl.TEXTURE_2D,
+                    0,
+                    0,
+                    0,
+                    this._gl.RGBA,
+                    this._gl.UNSIGNED_BYTE,
+                    source.getImage()
+                );
+            } else {
+                this._gl.texImage2D(
+                    this._gl.TEXTURE_2D,
+                    0,
+                    this._gl.RGBA,
+                    this._gl.RGBA,
+                    this._gl.UNSIGNED_BYTE,
+                    source.getImage()
+                );
+                this._textureSubtitleBounds[0] = extents[0];
+                this._textureSubtitleBounds[1] = extents[1];
+            }
 
             let xScale = 2 / this._config.renderer["resolution_x"];
             let yScale = 2 / this._config.renderer["resolution_y"];
@@ -1610,7 +1755,6 @@ const renderer_prototype = global.Object.create(Object, {
             }
 
             let dimensions = source.getDimensions();
-            let extents = source.getExtents();
 
             let upperLeft = {
                 m00: -1,
@@ -2322,8 +2466,11 @@ const renderer_prototype = global.Object.create(Object, {
                 /** SSASubtitleEvent */ b
             ) {
                 let ldiff = a.getLayer() - b.getLayer();
-                if (ldiff === 0) return a.getId() - b.getId();
-                else return ldiff;
+                if (ldiff === 0) {
+                    let idiff = a.getId() - b.getId();
+                    if (idiff === 0) return a.getOrder() - b.getOrder();
+                    return idiff;
+                } else return ldiff;
             });
 
             if (!this._listOfEventsContainsAnimation(events)) {
@@ -2350,8 +2497,6 @@ const renderer_prototype = global.Object.create(Object, {
                             time,
                             currentEvent,
                             pass,
-                            /*textAnchorOffset,
-                    this._config.renderer["resolution_x"],*/
                             false
                         );
                         this._compositeSubtitle(

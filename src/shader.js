@@ -1,4 +1,4 @@
-﻿/*
+/*
  |   shader.js
  |----------------
  |  shader.js is copyright Patrick Rhodes Martin 2013,2017, used with permission.

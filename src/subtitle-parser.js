@@ -12,13 +12,13 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 //@include [renderer-main.js]
-sabre.import("util.min.js");
-sabre.import("global-constants.min.js");
-sabre.import("color.min.js");
-sabre.import("style.min.js");
-sabre.import("style-override.min.js");
-sabre.import("subtitle-event.min.js");
-sabre.import("renderer-main.min.js");
+sabre.import("util");
+sabre.import("global-constants");
+sabre.import("color");
+sabre.import("style");
+sabre.import("style-override");
+sabre.import("subtitle-event");
+sabre.import("renderer-main");
 
 /**
  * @fileoverview subtitle parser code for Substation Alpha and Advanced Substation Alpha.
@@ -799,6 +799,15 @@ const main_prototype = global.Object.create(global.Object, {
             let match;
             for (let i = 0; i < events.length; i++) {
                 event = events[i];
+                event.setOrder(i);
+                match = /^([^{}]*?)\\([nN])(.*)$/.exec(event.getText());
+                if (match !== null) {
+                    let new_event = this._cloneEventWithoutText(event);
+                    event.setText(match[1]);
+                    new_event.setText(match[3]);
+                    new_event.setNewLine(match[2] === "N");
+                    events.splice(i + 1, 0, new_event);
+                }
                 match = /^([^{}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
                 if (match !== null) {
                     let new_event = this._cloneEventWithoutText(event);
@@ -824,9 +833,7 @@ const main_prototype = global.Object.create(global.Object, {
                         )
                     );
                     new_event.setText(match[3]);
-                    events = events
-                        .slice(0, i + 1)
-                        .concat([new_event], events.slice(i + 1));
+                    events.splice(i + 1, 0, new_event);
                 }
             }
             return events;
@@ -2079,7 +2086,7 @@ const main_prototype = global.Object.create(global.Object, {
                     let karaoke_tag = parameters[0];
                     let param = parseFloat(parameters[1]);
                     if (isNaN(param)) return;
-                    param = param * 10; //Convert from centiseconds (why?) to milliseconds.
+                    param = param / 100; //Convert from centiseconds (why?) to seconds.
                     let kstart = overrides.getKaraokeEnd();
                     let kend = kstart + param;
                     switch (karaoke_tag) {

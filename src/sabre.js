@@ -1,2 +1,2 @@
 //This is a stub file to help with loading.
-sabre.import("renderer-main.min.js");
+sabre.import("renderer-main");

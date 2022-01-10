@@ -15,13 +15,13 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 //@include [lib/BSpline.js]
-sabre.import("util.min.js");
-sabre.import("global-constants.min.js");
-sabre.import("color.min.js");
-sabre.import("style.min.js");
-sabre.import("style-override.min.js");
-sabre.import("subtitle-event.min.js");
-sabre.import("lib/BSpline.min.js");
+sabre.import("util");
+sabre.import("global-constants");
+sabre.import("color");
+sabre.import("style");
+sabre.import("style-override");
+sabre.import("subtitle-event");
+sabre.import("lib/BSpline");
 
 /**
  * Expands bounds if a point is outside them.
@@ -48,13 +48,13 @@ const shape_renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
-    _dpi: {
+    _pixelScaleRatio: {
         /**
-         * Pixel to Dpt Ratio
-         * @type {number}
+         * ratio to scale pixels by due to resolution differences between script pixels and actual pixels.
+         * @type {{xratio:number,yratio:number}}
          */
-        value: 1,
-        writable: false
+        value: { xratio: 1, yratio: 1 },
+        writable: true
     },
 
     _canvas: {
@@ -187,8 +187,12 @@ const shape_renderer_prototype = global.Object.create(Object, {
         ) {
             let scale = this._calcScale(time, style, overrides);
             this._ctx.scale(
-                scale.x * overrides.getDrawingScale() * this._dpi,
-                scale.y * overrides.getDrawingScale() * this._dpi
+                scale.x *
+                    overrides.getDrawingScale() *
+                    this._pixelScaleRatio.xratio,
+                scale.y *
+                    overrides.getDrawingScale() *
+                    this._pixelScaleRatio.yratio
             );
         },
         writable: false
@@ -634,29 +638,58 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 outline_y = outline.y;
             }
 
-            let offsetXUnscaled = -this._offsetX;
-            let offsetYUnscaled = -this._offsetY;
+            let offsetXUnscaled = this._offsetX;
+            let offsetYUnscaled = this._offsetY;
+            let widthUnscaled = this._width;
+            let heightUnscaled = this._height;
             {
                 let scale = this._calcScale(time, style, overrides);
                 this._offsetX *=
-                    scale.x * overrides.getDrawingScale() * this._dpi;
+                    scale.x *
+                    overrides.getDrawingScale() *
+                    this._pixelScaleRatio.xratio;
                 this._offsetY *=
-                    scale.y * overrides.getDrawingScale() * this._dpi;
+                    scale.y *
+                    overrides.getDrawingScale() *
+                    this._pixelScaleRatio.yratio;
                 this._width *=
-                    scale.x * overrides.getDrawingScale() * this._dpi;
+                    scale.x *
+                    overrides.getDrawingScale() *
+                    this._pixelScaleRatio.xratio;
                 this._height *=
-                    scale.y * overrides.getDrawingScale() * this._dpi;
+                    scale.y *
+                    overrides.getDrawingScale() *
+                    this._pixelScaleRatio.yratio;
             }
 
             if (!dryRun) {
-                this._canvas.width = Math.max(
-                    Math.max(Math.ceil(this._width), 64),
-                    this._canvas.width
-                );
-                this._canvas.height = Math.max(
-                    Math.max(Math.ceil(this._height), 64),
-                    this._canvas.height
-                );
+                {
+                    let cwidth = Math.max(
+                        Math.max(Math.ceil(this._width), 64),
+                        this._canvas.width
+                    );
+                    let cheight = Math.max(
+                        Math.max(Math.ceil(this._height), 64),
+                        this._canvas.height
+                    );
+                    if (
+                        this._canvas.width >= cwidth &&
+                        this._canvas.height >= cheight
+                    ) {
+                        this._ctx.clearRect(
+                            0,
+                            0,
+                            widthUnscaled,
+                            heightUnscaled
+                        );
+                    } else {
+                        if (this._canvas.width == cwidth) {
+                            this._canvas.height = cheight;
+                        } else {
+                            this._canvas.width = cwidth;
+                        }
+                    }
+                }
                 this._handleStyling(
                     time,
                     style,
@@ -754,13 +787,14 @@ const shape_renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    "setDPI": {
+    "setPixelScaleRatio": {
         /**
-         * Sets the DPI for Rendering text
-         * @param {number} dpi the DPI to use for rendering shapes.
+         * Sets the scale ratio for pixels to account for differences between script pixels and pixels.
+         * @param {number} xratio the ratio in the x coordinate.
+         * @param {number} yratio the ratio in the y coordinate.
          */
-        value: function (dpi) {
-            this._dpi = dpi;
+        value: function (xratio, yratio) {
+            this._pixelScaleRatio = { xratio: xratio, yratio: yratio };
         },
         writable: false
     },
@@ -771,7 +805,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @returns {Array<number>} offset of the resulting image
          */
         value: function () {
-            return [this._offsetX, this._offsetY];
+            return [-this._offsetX, -this._offsetY];
         },
         writable: false
     },

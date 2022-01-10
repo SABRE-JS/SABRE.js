@@ -1,4 +1,4 @@
-﻿/*
+/*
  |   sabre-util.js
  |----------------
  |  sabre-util.js is copyright Patrick Rhodes Martin 2020.
