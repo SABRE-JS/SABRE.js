@@ -240,11 +240,11 @@ sabre["pixelRatio"] = global.devicePixelRatio || 1;
  */
 sabre["getBackingRatio"] = function (context) {
     return (
+        context.backingStorePixelRatio ??
         context.webkitBackingStorePixelRatio ??
         context.mozBackingStorePixelRatio ??
         context.msBackingStorePixelRatio ??
         context.oBackingStorePixelRatio ??
-        context.backingStorePixelRatio ??
         1
     );
 };
