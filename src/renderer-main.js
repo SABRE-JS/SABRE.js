@@ -1580,11 +1580,13 @@ const renderer_prototype = global.Object.create(Object, {
                     if (lineOverrides.getRotationOrigin() !== null) {
                         let rotationOrigin = lineOverrides.getRotationOrigin();
                         let diff = [0, 0];
-                        diff[0] = rotationOrigin[0] - position.x;
+                        diff[0] = position.x - (rotationOrigin[0] * xScale - 1);
                         diff[1] =
-                            this._config.renderer["resolution_y"] -
-                            rotationOrigin[1] -
-                            position.y;
+                            position.y -
+                            ((this._config.renderer["resolution_y"] -
+                                rotationOrigin[1]) *
+                                yScale -
+                                1);
                         negativeRotationTranslationMatrix = {
                             m00: 1,
                             m01: 0,
@@ -2487,9 +2489,9 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
             );
             let positions = this._organizeEvents(time, events);
-            for (let pass = 0; pass < 3; pass++) {
+            for (let i = 0; i < events.length; i++) {
                 //One pass for background, one for outline and one for text.
-                for (let i = 0; i < events.length; i++) {
+                for (let pass = 0; pass < 3; pass++) {
                     let currentEvent = events[i];
                     if (currentEvent.getText() === "") continue;
                     if (!currentEvent.getOverrides().getDrawingMode()) {
@@ -2574,13 +2576,14 @@ const renderer_prototype = global.Object.create(Object, {
                 context.transferFromImageBitmap(bitmap);
             } else {
                 context = canvas.getContext("2d");
-                context.clearRect(
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(
+                    this._compositingCanvas,
                     0,
                     0,
-                    this._compositingCanvas.width,
-                    this._compositingCanvas.height
+                    canvas.width,
+                    canvas.height
                 );
-                context.drawImage(this._compositingCanvas, 0, 0);
             }
         },
         writable: false
