@@ -1797,7 +1797,6 @@ const main_prototype = global.Object.create(global.Object, {
                     let rotation_axis = "z";
                     if (parameters[0] !== null) rotation_axis = parameters[0];
                     let value = parseFloat(parameters[1]);
-                    value = ((value + 180) % 360) - 180;
                     if (isNaN(value)) return;
                     if (!isInTransition) {
                         switch (rotation_axis) {
