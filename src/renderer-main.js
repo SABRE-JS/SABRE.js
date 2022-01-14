@@ -478,30 +478,34 @@ const renderer_prototype = global.Object.create(Object, {
             let rotation = overrides.getRotation();
             for (let i = 0; i < transitionOverrides.length; i++) {
                 let rotationTarget = transitionOverrides[i].getRotation();
-                rotation[0] = sabre.performTransition(
-                    time,
-                    rotation[0],
-                    rotationTarget[0],
-                    transitionOverrides[i].getTransitionStart(),
-                    transitionOverrides[i].getTransitionEnd(),
-                    transitionOverrides[i].getTransitionAcceleration()
-                );
-                rotation[1] = sabre.performTransition(
-                    time,
-                    rotation[1],
-                    rotationTarget[1],
-                    transitionOverrides[i].getTransitionStart(),
-                    transitionOverrides[i].getTransitionEnd(),
-                    transitionOverrides[i].getTransitionAcceleration()
-                );
-                rotation[2] = sabre.performTransition(
-                    time,
-                    rotation[2],
-                    rotationTarget[2],
-                    transitionOverrides[i].getTransitionStart(),
-                    transitionOverrides[i].getTransitionEnd(),
-                    transitionOverrides[i].getTransitionAcceleration()
-                );
+                console.log(rotation, rotationTarget);
+                rotation[0] =
+                    sabre.performTransition(
+                        time,
+                        rotation[0],
+                        rotationTarget[0],
+                        transitionOverrides[i].getTransitionStart(),
+                        transitionOverrides[i].getTransitionEnd(),
+                        transitionOverrides[i].getTransitionAcceleration()
+                    ) % 360;
+                rotation[1] =
+                    sabre.performTransition(
+                        time,
+                        rotation[1],
+                        rotationTarget[1],
+                        transitionOverrides[i].getTransitionStart(),
+                        transitionOverrides[i].getTransitionEnd(),
+                        transitionOverrides[i].getTransitionAcceleration()
+                    ) % 360;
+                rotation[2] =
+                    sabre.performTransition(
+                        time,
+                        rotation[2],
+                        rotationTarget[2],
+                        transitionOverrides[i].getTransitionStart(),
+                        transitionOverrides[i].getTransitionEnd(),
+                        transitionOverrides[i].getTransitionAcceleration()
+                    ) % 360;
             }
             return rotation;
         },
@@ -528,6 +532,8 @@ const renderer_prototype = global.Object.create(Object, {
                 y: 0,
                 originalX: 0,
                 originalY: 0,
+                alignmentOffsetX: 0,
+                alignmentOffsetY: 0,
                 width: 0,
                 height: 0,
                 index: index,
@@ -541,22 +547,11 @@ const renderer_prototype = global.Object.create(Object, {
                 let overrides = event.getOverrides();
                 let styleMargins = style.getMargins();
                 let overrideMargins = overrides.getMargins();
-                if (
-                    (overrideMargins[0] === 0 &&
-                        overrideMargins[1] === 0 &&
-                        overrideMargins[2] === 0) ||
-                    (overrideMargins[0] === null &&
-                        overrideMargins[1] === null &&
-                        overrideMargins[2] === null)
-                ) {
-                    result.marginLeft = styleMargins[0];
-                    result.marginRight = styleMargins[1];
-                    result.marginVertical = styleMargins[2];
-                } else {
-                    result.marginLeft = overrideMargins[0] ?? styleMargins[0];
-                    result.marginRight = overrideMargins[1] ?? styleMargins[1];
+                {
+                    result.marginLeft = overrideMargins[0] || styleMargins[0];
+                    result.marginRight = overrideMargins[1] || styleMargins[1];
                     result.marginVertical =
-                        overrideMargins[2] ?? styleMargins[2];
+                        overrideMargins[2] || styleMargins[2];
                 }
             }
             let lineOverrides = event.getLineOverrides();
@@ -573,23 +568,27 @@ const renderer_prototype = global.Object.create(Object, {
                     lineOverrides.getMovement() === null
                 ) {
                     let anchorPoint = [0, 0];
-
+                    let alignmentOffsetX = 0;
+                    let alignmentOffsetY = 0;
                     switch (verticalAlignment) {
                         case 2:
                             //TOP
-                            anchorPoint[1] =
-                                this._config.renderer["resolution_y"];
+                            anchorPoint[1] = 0;
+                            alignmentOffsetY = 0;
                             break;
                         case 1:
                             //MIDDLE
                             anchorPoint[1] =
-                                (this._config.renderer["resolution_y"] +
+                                (this._config.renderer["resolution_y"] -
                                     dim[1]) /
                                 2;
+                            alignmentOffsetY = dim[1] / 2;
                             break;
                         case 0:
                             //BOTTOM
-                            anchorPoint[1] = dim[1];
+                            anchorPoint[1] =
+                                this._config.renderer["resolution_y"] - dim[1];
+                            alignmentOffsetY = dim[1];
                             break;
                     }
                     switch (horizontalAlignment) {
@@ -597,6 +596,7 @@ const renderer_prototype = global.Object.create(Object, {
                             //RIGHT
                             anchorPoint[0] =
                                 this._config.renderer["resolution_x"] - dim[0];
+                            alignmentOffsetX = dim[0];
                             break;
                         case 1:
                             //CENTER
@@ -604,6 +604,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 (this._config.renderer["resolution_x"] -
                                     dim[0]) /
                                 2;
+                            alignmentOffsetX = dim[0] / 2;
                             break;
                         case 0:
                             //LEFT
@@ -612,8 +613,12 @@ const renderer_prototype = global.Object.create(Object, {
                     }
                     result.originalX = result.x = anchorPoint[0];
                     result.originalY = result.y = anchorPoint[1];
+                    result.alignmentOffsetX = alignmentOffsetX;
+                    result.alignmentOffsetY = alignmentOffsetY;
                 } else {
                     let curPos = [0, 0];
+                    let alignmentOffsetX = 0;
+                    let alignmentOffsetY = 0;
                     if (lineOverrides.getMovement() === null) {
                         curPos = lineOverrides.getPosition();
                         switch (verticalAlignment) {
@@ -624,29 +629,32 @@ const renderer_prototype = global.Object.create(Object, {
                             case 1:
                                 //MIDDLE
                                 curPos[1] -= dim[1] / 2; // middle align the subtitle
+                                alignmentOffsetY = dim[1] / 2;
                                 break;
                             case 0:
                                 //BOTTOM
                                 curPos[1] -= dim[1]; // bottom align the subtitle
+                                alignmentOffsetY = dim[1];
                                 break;
                         }
                         switch (horizontalAlignment) {
                             case 2:
                                 //RIGHT
                                 curPos[0] -= dim[0]; // right align the subtitle
+                                alignmentOffsetX = dim[0];
                                 break;
                             case 1:
                                 //CENTER
                                 curPos[0] -= dim[0] / 2; // middle align the subtitle.
+                                alignmentOffsetY = dim[0] / 2;
                                 break;
                             case 0:
                                 //LEFT
                                 // Do nothing. The subtitle is already left aligned.
                                 break;
                         }
-                        result.originalX = curPos[0];
-                        result.originalY =
-                            this._config.renderer["resolution_y"] - curPos[1];
+                        result.originalX = result.x = curPos[0];
+                        result.originalY = result.y = curPos[1];
                     } else {
                         let move = lineOverrides.getMovement();
                         switch (verticalAlignment) {
@@ -658,11 +666,13 @@ const renderer_prototype = global.Object.create(Object, {
                                 //MIDDLE
                                 move[1] -= dim[1] / 2; // middle align the subtitle
                                 move[3] -= dim[1] / 2; // middle align the subtitle
+                                alignmentOffsetY = dim[1] / 2;
                                 break;
                             case 0:
                                 //BOTTOM
                                 move[1] -= dim[1]; // bottom align the subtitle
                                 move[3] -= dim[1]; // bottom align the subtitle
+                                alignmentOffsetY = dim[1] / 2;
                                 break;
                         }
                         switch (horizontalAlignment) {
@@ -670,11 +680,13 @@ const renderer_prototype = global.Object.create(Object, {
                                 //RIGHT
                                 move[0] -= dim[0]; // right align the subtitle
                                 move[2] -= dim[0]; // right align the subtitle
+                                alignmentOffsetX = dim[0];
                                 break;
                             case 1:
                                 //CENTER
                                 move[0] -= dim[0] / 2; // center align the subtitle.
                                 move[2] -= dim[0] / 2; // center align the subtitle.
+                                alignmentOffsetX = dim[0] / 2;
                                 break;
                             case 0:
                                 //LEFT
@@ -690,8 +702,7 @@ const renderer_prototype = global.Object.create(Object, {
                             move[5],
                             1
                         );
-                        result.originalY =
-                            this._config.renderer["resolution_y"] - move[1];
+                        result.originalY = move[1];
                         curPos[1] = sabre.performTransition(
                             time,
                             move[1],
@@ -702,8 +713,9 @@ const renderer_prototype = global.Object.create(Object, {
                         );
                     }
                     result.x = curPos[0];
-                    result.y =
-                        this._config.renderer["resolution_y"] - curPos[1];
+                    result.y = curPos[1];
+                    result.alignmentOffsetX = alignmentOffsetX;
+                    result.alignmentOffsetY = alignmentOffsetY;
                 }
                 result.width = dim[0];
                 result.height = dim[1];
@@ -720,22 +732,27 @@ const renderer_prototype = global.Object.create(Object, {
                     lineOverrides.getMovement() === null
                 ) {
                     let anchorPoint = [0, 0];
+                    let alignmentOffsetX = 0;
+                    let alignmentOffsetY = 0;
                     switch (verticalAlignment) {
                         case 2:
                             //TOP
-                            anchorPoint[1] =
-                                this._config.renderer["resolution_y"];
+                            anchorPoint[1] = 0;
+                            alignmentOffsetY = 0;
                             break;
                         case 1:
                             //MIDDLE
                             anchorPoint[1] =
-                                (this._config.renderer["resolution_y"] +
+                                (this._config.renderer["resolution_y"] -
                                     dim[1]) /
                                 2;
+                            alignmentOffsetY = dim[1] / 2;
                             break;
                         case 0:
                             //BOTTOM
-                            anchorPoint[1] = dim[1];
+                            anchorPoint[1] =
+                                this._config.renderer["resolution_y"] - dim[1];
+                            alignmentOffsetY = dim[1];
                             break;
                     }
                     switch (horizontalAlignment) {
@@ -743,6 +760,7 @@ const renderer_prototype = global.Object.create(Object, {
                             //RIGHT
                             anchorPoint[0] =
                                 this._config.renderer["resolution_x"] - dim[0];
+                            alignmentOffsetX = dim[0];
                             break;
                         case 1:
                             //CENTER
@@ -750,6 +768,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 (this._config.renderer["resolution_x"] -
                                     dim[0]) /
                                 2;
+                            alignmentOffsetX = dim[0] / 2;
                             break;
                         case 0:
                             //LEFT
@@ -758,13 +777,14 @@ const renderer_prototype = global.Object.create(Object, {
                     }
                     result.originalX = result.x = anchorPoint[0];
                     result.originalY = result.y = anchorPoint[1];
+                    result.alignmentOffsetX = alignmentOffsetX;
+                    result.alignmentOffsetY = alignmentOffsetY;
                 } else {
                     let curPos = [0, 0];
                     if (lineOverrides.getMovement() === null) {
                         curPos = lineOverrides.getPosition();
-                        result.originalX = curPos[0];
-                        result.originalY =
-                            this._config.renderer["resolution_y"] - curPos[1];
+                        result.originalX = result.x = curPos[0];
+                        result.originalY = result.y = curPos[1];
                     } else {
                         let move = lineOverrides.getMovement();
                         result.originalX = move[0];
@@ -776,8 +796,7 @@ const renderer_prototype = global.Object.create(Object, {
                             move[5],
                             1
                         );
-                        result.originalY =
-                            this._config.renderer["resolution_y"] - move[1];
+                        result.originalY = move[1];
                         curPos[1] = sabre.performTransition(
                             time,
                             move[1],
@@ -788,8 +807,7 @@ const renderer_prototype = global.Object.create(Object, {
                         );
                     }
                     result.x = curPos[0];
-                    result.y =
-                        this._config.renderer["resolution_y"] - curPos[1];
+                    result.y = curPos[1];
                 }
                 result.width = dim[0];
                 result.height = dim[1];
@@ -834,8 +852,8 @@ const renderer_prototype = global.Object.create(Object, {
                             for (let j = 0; j < lines[i].length; j++) {
                                 max = Math.max(lines[i][j].height, max);
                             }
-                            localPositionInfo.y -= max;
-                            localPositionInfo.originalY -= max;
+                            localPositionInfo.y += max;
+                            localPositionInfo.originalY += max;
                         }
                         break;
                     case 1:
@@ -845,13 +863,13 @@ const renderer_prototype = global.Object.create(Object, {
                             for (let j = 0; j < lines[i].length; j++) {
                                 max = Math.max(lines[i][j].height, max);
                             }
-                            localPositionInfo.y -= max / 2;
-                            localPositionInfo.originalY -= max / 2;
+                            localPositionInfo.y += max / 2;
+                            localPositionInfo.originalY += max / 2;
                         }
                         for (let i = 0; i < lines.length; i++) {
                             for (let j = 0; j < lines[i].length; j++) {
                                 lines[i][j].y += localPositionInfo.height / 2;
-                                lines[i][j].originalY +=
+                                lines[i][j].originalY -=
                                     localPositionInfo.height / 2;
                             }
                         }
@@ -860,8 +878,8 @@ const renderer_prototype = global.Object.create(Object, {
                         //BOTTOM
                         for (let i = 0; i < lines.length; i++) {
                             for (let j = 0; j < lines[i].length; j++) {
-                                lines[i][j].y += localPositionInfo.height;
-                                lines[i][j].originalY +=
+                                lines[i][j].y -= localPositionInfo.height;
+                                lines[i][j].originalY -=
                                     localPositionInfo.height;
                             }
                         }
@@ -935,33 +953,15 @@ const renderer_prototype = global.Object.create(Object, {
                     this._config.renderer["default_collision_mode"] ===
                     sabre.CollisionModes.NORMAL
                 ) {
-                    if (overlap[1] < 0) {
+                    if (overlap[1] > 0) {
                         if (positionInfo1.index < positionInfo2.index) {
                             for (
                                 let i = 0;
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
-                                posInfosForMatchingId2[i].y -=
+                                posInfosForMatchingId2[i].y +=
                                     posInfosForMatchingId1[i].height;
-                                posInfosForMatchingId2[i].y -= overlap[1];
-                            }
-                        } else {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId1.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId1[i].y += overlap[1];
-                            }
-                        }
-                    } else if (overlap[1] > 0) {
-                        if (positionInfo1.index < positionInfo2.index) {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId2.length;
-                                i++
-                            ) {
                                 posInfosForMatchingId2[i].y += overlap[1];
                             }
                         } else {
@@ -970,40 +970,40 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId1.length;
                                 i++
                             ) {
-                                posInfosForMatchingId1[i].y -=
-                                    positionInfo2.height;
                                 posInfosForMatchingId1[i].y -= overlap[1];
+                            }
+                        }
+                    } else if (overlap[1] < 0) {
+                        if (positionInfo1.index < positionInfo2.index) {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId2.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId2[i].y -= overlap[1];
+                            }
+                        } else {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId1.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId1[i].y +=
+                                    positionInfo2.height;
+                                posInfosForMatchingId1[i].y += overlap[1];
                             }
                         }
                     }
                 } else {
-                    if (overlap[1] > 0) {
+                    if (overlap[1] < 0) {
                         if (positionInfo1.index > positionInfo2.index) {
                             for (
                                 let i = 0;
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
-                                posInfosForMatchingId2[i].y -=
+                                posInfosForMatchingId2[i].y +=
                                     posInfosForMatchingId1[i].height;
-                                posInfosForMatchingId2[i].y -= overlap[1];
-                            }
-                        } else {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId1.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId1[i].y += overlap[1];
-                            }
-                        }
-                    } else if (overlap[1] < 0) {
-                        if (positionInfo1.index > positionInfo2.index) {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId2.length;
-                                i++
-                            ) {
                                 posInfosForMatchingId2[i].y += overlap[1];
                             }
                         } else {
@@ -1012,9 +1012,27 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId1.length;
                                 i++
                             ) {
-                                posInfosForMatchingId1[i].y -=
-                                    positionInfo2.height;
                                 posInfosForMatchingId1[i].y -= overlap[1];
+                            }
+                        }
+                    } else if (overlap[1] > 0) {
+                        if (positionInfo1.index > positionInfo2.index) {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId2.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId2[i].y -= overlap[1];
+                            }
+                        } else {
+                            for (
+                                let i = 0;
+                                i < posInfosForMatchingId1.length;
+                                i++
+                            ) {
+                                posInfosForMatchingId1[i].y +=
+                                    positionInfo2.height;
+                                posInfosForMatchingId1[i].y += overlap[1];
                             }
                         }
                     }
@@ -1063,10 +1081,8 @@ const renderer_prototype = global.Object.create(Object, {
             switch (verticalAlignment) {
                 case 2:
                     //TOP
-                    ydistance =
-                        this._config.renderer["resolution_y"] -
-                        (positionInfo.y + positionInfo.marginVertical);
-                    yshouldmove = ydistance < 0;
+                    ydistance = -(positionInfo.y - positionInfo.marginVertical);
+                    yshouldmove = ydistance > 0;
                     break;
                 case 1:
                     //CENTER
@@ -1074,11 +1090,12 @@ const renderer_prototype = global.Object.create(Object, {
                     break;
                 case 0:
                     //BOTTOM
-                    ydistance = -(
-                        positionInfo.y -
-                        (positionInfo.height + positionInfo.marginVertical)
-                    );
-                    yshouldmove = ydistance > 0;
+                    ydistance =
+                        this._config.renderer["resolution_y"] -
+                        (positionInfo.y +
+                            positionInfo.height +
+                            positionInfo.marginVertical);
+                    yshouldmove = ydistance < 0;
                     break;
             }
             if (xshouldmove) {
@@ -1557,7 +1574,7 @@ const renderer_prototype = global.Object.create(Object, {
                         m00: 1,
                         m01: 0,
                         m02: 0,
-                        m03: offset[0] * xScale,
+                        m03: -(offset[0] * xScale),
                         m10: 0,
                         m11: 1,
                         m12: 0,
@@ -1580,22 +1597,36 @@ const renderer_prototype = global.Object.create(Object, {
                     if (lineOverrides.getRotationOrigin() !== null) {
                         let rotationOrigin = lineOverrides.getRotationOrigin();
                         let diff = [0, 0];
-                        diff[0] = position.x - (rotationOrigin[0] * xScale - 1);
+                        //console.log("Origin Offset: ",position.alignmentOffsetX,position.alignmentOffsetY);
+                        //console.log("Difference: ", position.x+position.alignmentOffsetX - rotationOrigin[0], position.y+position.alignmentOffsetY - rotationOrigin[1]);
+                        diff[0] =
+                            -(
+                                (position.x + position.alignmentOffsetX) *
+                                    xScale -
+                                1
+                            ) -
+                            (rotationOrigin[0] * xScale - 1);
                         diff[1] =
-                            position.y -
+                            -(
+                                (this._config.renderer["resolution_y"] -
+                                    (position.y + position.alignmentOffsetY)) *
+                                    yScale -
+                                1
+                            ) -
                             ((this._config.renderer["resolution_y"] -
                                 rotationOrigin[1]) *
                                 yScale -
                                 1);
+                        //console.log("Final Offset: ",diff[0]/xScale,diff[1]/yScale);
                         negativeRotationTranslationMatrix = {
                             m00: 1,
                             m01: 0,
                             m02: 0,
-                            m03: diff[0] * xScale,
+                            m03: diff[0],
                             m10: 0,
                             m11: 1,
                             m12: 0,
-                            m13: diff[1] * yScale,
+                            m13: diff[1],
                             m20: 0,
                             m21: 0,
                             m22: 1,
@@ -1609,11 +1640,11 @@ const renderer_prototype = global.Object.create(Object, {
                             m00: 1,
                             m01: 0,
                             m02: 0,
-                            m03: -diff[0] * xScale,
+                            m03: -diff[0],
                             m10: 0,
                             m11: 1,
                             m12: 0,
-                            m13: -diff[1] * yScale,
+                            m13: -diff[1],
                             m20: 0,
                             m21: 0,
                             m22: 1,
@@ -1624,25 +1655,43 @@ const renderer_prototype = global.Object.create(Object, {
                             m33: 1
                         };
                     } else {
-                        positiveRotationTranslationMatrix =
-                            negativeRotationTranslationMatrix = {
-                                m00: 1,
-                                m01: 0,
-                                m02: 0,
-                                m03: 0,
-                                m10: 0,
-                                m11: 1,
-                                m12: 0,
-                                m13: 0,
-                                m20: 0,
-                                m21: 0,
-                                m22: 1,
-                                m23: 0,
-                                m30: 0,
-                                m31: 0,
-                                m32: 0,
-                                m33: 1
-                            };
+                        negativeRotationTranslationMatrix = {
+                            m00: 1,
+                            m01: 0,
+                            m02: 0,
+                            m03: position.alignmentOffsetX * xScale,
+                            m10: 0,
+                            m11: 1,
+                            m12: 0,
+                            m13: position.alignmentOffsetY * yScale,
+                            m20: 0,
+                            m21: 0,
+                            m22: 1,
+                            m23: 0,
+                            m30: 0,
+                            m31: 0,
+                            m32: 0,
+                            m33: 1
+                        };
+
+                        positiveRotationTranslationMatrix = {
+                            m00: 1,
+                            m01: 0,
+                            m02: 0,
+                            m03: -position.alignmentOffsetX * xScale,
+                            m10: 0,
+                            m11: 1,
+                            m12: 0,
+                            m13: -position.alignmentOffsetY * yScale,
+                            m20: 0,
+                            m21: 0,
+                            m22: 1,
+                            m23: 0,
+                            m30: 0,
+                            m31: 0,
+                            m32: 0,
+                            m33: 1
+                        };
                     }
                 }
 
@@ -1715,11 +1764,14 @@ const renderer_prototype = global.Object.create(Object, {
                     m00: 1,
                     m01: 0,
                     m02: 0,
-                    m03: position.x * xScale,
+                    m03: position.x * xScale - 1,
                     m10: 0,
                     m11: 1,
                     m12: 0,
-                    m13: (position.y - position.height) * yScale,
+                    m13:
+                        (this._config.renderer["resolution_y"] - position.y) *
+                            yScale -
+                        1,
                     m20: 0,
                     m21: 0,
                     m22: 1,
@@ -1759,26 +1811,26 @@ const renderer_prototype = global.Object.create(Object, {
             let dimensions = source.getDimensions();
 
             let upperLeft = {
-                m00: -1,
-                m01: -1,
+                m00: 0,
+                m01: 0,
                 m02: 0
             };
 
             let lowerLeft = {
-                m00: -1,
-                m01: dimensions[1] * yScale - 1,
+                m00: 0,
+                m01: -(dimensions[1] * yScale),
                 m02: 0
             };
 
             let upperRight = {
-                m00: dimensions[0] * xScale - 1,
-                m01: -1,
+                m00: dimensions[0] * xScale,
+                m01: 0,
                 m02: 0
             };
 
             let lowerRight = {
-                m00: dimensions[0] * xScale - 1,
-                m01: dimensions[1] * yScale - 1,
+                m00: dimensions[0] * xScale,
+                m01: -(dimensions[1] * yScale),
                 m02: 0
             };
 
@@ -1803,21 +1855,25 @@ const renderer_prototype = global.Object.create(Object, {
                 lowerRight.m02
             ]);
 
-            let tex_coords = new Float32Array([
-                0,
-                1 - dimensions[1] / extents[1],
-                dimensions[0] / extents[0],
-                1 - dimensions[1] / extents[1],
-                0,
-                1,
-                0,
-                1,
-                dimensions[0] / extents[0],
-                1 - dimensions[1] / extents[1],
-                dimensions[0] / extents[0],
-                1
-            ]);
-
+            let tex_coords;
+            {
+                let width = dimensions[0] / extents[0];
+                let height = dimensions[1] / extents[1];
+                tex_coords = new Float32Array([
+                    0,
+                    1,
+                    width,
+                    1,
+                    0,
+                    1 - height,
+                    0,
+                    1 - height,
+                    width,
+                    1,
+                    width,
+                    1 - height
+                ]);
+            }
             //Draw background or outline or text depending on pass to destination
             {
                 let positionAttrib = this._positioningShader.getAttribute(

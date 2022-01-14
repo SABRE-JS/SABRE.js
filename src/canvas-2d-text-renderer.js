@@ -895,7 +895,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @returns {Array<number>} offset of the resulting image
          */
         value: function () {
-            return [-this._offsetX, -this._offsetY];
+            return [this._offsetX, this._offsetY];
         },
         writable: false
     },
