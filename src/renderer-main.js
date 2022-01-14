@@ -953,7 +953,7 @@ const renderer_prototype = global.Object.create(Object, {
                     this._config.renderer["default_collision_mode"] ===
                     sabre.CollisionModes.NORMAL
                 ) {
-                    if (overlap[1] > 0) {
+                    if (overlap[1] < 0) {
                         if (positionInfo1.index < positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -973,7 +973,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
-                    } else if (overlap[1] < 0) {
+                    } else if (overlap[1] > 0) {
                         if (positionInfo1.index < positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -995,7 +995,7 @@ const renderer_prototype = global.Object.create(Object, {
                         }
                     }
                 } else {
-                    if (overlap[1] < 0) {
+                    if (overlap[1] > 0) {
                         if (positionInfo1.index > positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -1015,7 +1015,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
-                    } else if (overlap[1] > 0) {
+                    } else if (overlap[1] < 0) {
                         if (positionInfo1.index > positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -1597,8 +1597,6 @@ const renderer_prototype = global.Object.create(Object, {
                     if (lineOverrides.getRotationOrigin() !== null) {
                         let rotationOrigin = lineOverrides.getRotationOrigin();
                         let diff = [0, 0];
-                        //console.log("Origin Offset: ",position.alignmentOffsetX,position.alignmentOffsetY);
-                        //console.log("Difference: ", position.x+position.alignmentOffsetX - rotationOrigin[0], position.y+position.alignmentOffsetY - rotationOrigin[1]);
                         diff[0] =
                             -(
                                 (position.x + position.alignmentOffsetX) *
@@ -1617,7 +1615,6 @@ const renderer_prototype = global.Object.create(Object, {
                                 rotationOrigin[1]) *
                                 yScale -
                                 1);
-                        //console.log("Final Offset: ",diff[0]/xScale,diff[1]/yScale);
                         negativeRotationTranslationMatrix = {
                             m00: 1,
                             m01: 0,
