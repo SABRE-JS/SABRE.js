@@ -478,7 +478,6 @@ const renderer_prototype = global.Object.create(Object, {
             let rotation = overrides.getRotation();
             for (let i = 0; i < transitionOverrides.length; i++) {
                 let rotationTarget = transitionOverrides[i].getRotation();
-                console.log(rotation, rotationTarget);
                 rotation[0] =
                     sabre.performTransition(
                         time,
@@ -953,7 +952,7 @@ const renderer_prototype = global.Object.create(Object, {
                     this._config.renderer["default_collision_mode"] ===
                     sabre.CollisionModes.NORMAL
                 ) {
-                    if (overlap[1] < 0) {
+                    if (overlap[1] > 0) {
                         if (positionInfo1.index < positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -973,7 +972,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
-                    } else if (overlap[1] > 0) {
+                    } else if (overlap[1] < 0) {
                         if (positionInfo1.index < positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -995,7 +994,7 @@ const renderer_prototype = global.Object.create(Object, {
                         }
                     }
                 } else {
-                    if (overlap[1] > 0) {
+                    if (overlap[1] < 0) {
                         if (positionInfo1.index > positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -1015,7 +1014,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
-                    } else if (overlap[1] < 0) {
+                    } else if (overlap[1] > 0) {
                         if (positionInfo1.index > positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -1472,70 +1471,67 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    _compositeSubtitle: {
+    _getBlurInfoForCompositing: {
         /**
-         * Performs the actual compositing of the subtitles onscreen.
-         * @param {number} time The time the subtitle must be rendered at.
-         * @param {SSASubtitleEvent} currentEvent The properties of the subtitle.
-         * @param {number} pass the current render pass we are on.
-         * @param {boolean} isShape is the subtitle we are compositing a shape?
+         * Gets the blur information required for compositing.
+         * @param {number} time the current time we're rendering at.
+         * @param {SSASubtitleEvent} currentEvent the current subtitle event.
+         * @param {number} pass the render pass we're on.
+         * @returns {?{blur:number,gaussBlur:number}}
          */
-        value: function (time, currentEvent, pass, position, isShape) {
-            let bluring;
-            let edgeBlurActive;
-            let gaussianBlurActive;
-            let edgeBlurIterations = 0;
-            let gaussianBlurFactor = 0;
-            {
-                let outline = this._calcOutline(
-                    time,
-                    currentEvent.getStyle(),
-                    currentEvent.getOverrides()
-                );
-                let borderStyle = currentEvent.getStyle().getBorderStyle();
-                bluring =
-                    (pass === sabre.RenderPasses.OUTLINE &&
-                        (outline.x > 0 || outline.y > 0)) ||
-                    (pass === sabre.RenderPasses.FILL &&
-                        ((outline.x === 0 && outline.y === 0) ||
-                            (borderStyle !== sabre.BorderStyleModes.NORMAL &&
-                                borderStyle !==
-                                    sabre.BorderStyleModes.UNKNOWN)));
-                edgeBlurIterations = this._calcEdgeBlur(
-                    time,
-                    currentEvent.getStyle(),
-                    currentEvent.getOverrides()
-                );
-                gaussianBlurFactor = this._calcGaussianBlur(
-                    time,
-                    currentEvent.getStyle(),
-                    currentEvent.getOverrides()
-                );
-                edgeBlurActive = edgeBlurIterations > 0;
-                gaussianBlurActive = gaussianBlurFactor > 0;
-                bluring = bluring && (edgeBlurActive || gaussianBlurActive);
+        value: function (time, currentEvent, pass) {
+            let borderStyle = currentEvent.getStyle().getBorderStyle();
+            let outline = this._calcOutline(
+                time,
+                currentEvent.getStyle(),
+                currentEvent.getOverrides()
+            );
+            if (
+                borderStyle === sabre.BorderStyleModes.NORMAL ||
+                borderStyle === sabre.BorderStyleModes.UNKNOWN
+            ) {
+                if (
+                    pass === sabre.RenderPasses.OUTLINE &&
+                    outline.x === 0 &&
+                    outline.y === 0
+                )
+                    return null;
+                if (
+                    pass === sabre.RenderPasses.FILL &&
+                    (outline.x > 0 || outline.y > 0)
+                )
+                    return null;
             }
+            let info = {};
+            info.blur = this._calcEdgeBlur(
+                time,
+                currentEvent.getStyle(),
+                currentEvent.getOverrides()
+            );
+            info.gaussBlur = this._calcGaussianBlur(
+                time,
+                currentEvent.getStyle(),
+                currentEvent.getOverrides()
+            );
+            if (info.blur == 0 && info.gaussBlur == 0) return null;
+            return info;
+        },
+        writable: false
+    },
 
-            //This is to disable blending of SRT_NO_OVERLAP backgrounds so there's no overlap showing.
-            let blendDisabled =
+    _shouldDisableBlendForCompositePass: {
+        value: function (currentEvent, pass) {
+            return (
                 pass === sabre.RenderPasses.BACKGROUND &&
                 currentEvent.getStyle().getBorderStyle() ===
-                    sabre.BorderStyleModes.SRT_NO_OVERLAP;
-            if (blendDisabled) this._gl.disable(this._gl.BLEND);
-
-            let source = !isShape ? this._textRenderer : this._shapeRenderer;
-
-            this._gl.bindFramebuffer(
-                this._gl.FRAMEBUFFER,
-                bluring ? this._frameBufferA : null
+                    sabre.BorderStyleModes.SRT_NO_OVERLAP
             );
+        },
+        writable: false
+    },
 
-            if (bluring)
-                this._gl.clear(
-                    this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
-                );
-            this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
-
+    _loadSubtitleToVram: {
+        value: function (source) {
             let extents = source.getExtents();
             if (
                 extents[0] <= this._textureSubtitleBounds[0] &&
@@ -1562,6 +1558,49 @@ const renderer_prototype = global.Object.create(Object, {
                 this._textureSubtitleBounds[0] = extents[0];
                 this._textureSubtitleBounds[1] = extents[1];
             }
+        },
+        writable: false
+    },
+
+    _compositeSubtitle: {
+        /**
+         * Performs the actual compositing of the subtitles onscreen.
+         * @param {number} time The time the subtitle must be rendered at.
+         * @param {SSASubtitleEvent} currentEvent The properties of the subtitle.
+         * @param {number} pass the current render pass we are on.
+         * @param {boolean} isShape is the subtitle we are compositing a shape?
+         */
+        value: function (time, currentEvent, pass, position, isShape) {
+            let blurInfo = this._getBlurInfoForCompositing(
+                time,
+                currentEvent,
+                pass
+            );
+
+            //This is to disable blending of SRT_NO_OVERLAP backgrounds so there's no overlap showing.
+            let blendDisabled = this._shouldDisableBlendForCompositePass(
+                currentEvent,
+                pass
+            );
+            if (blendDisabled) this._gl.disable(this._gl.BLEND);
+
+            let source = !isShape ? this._textRenderer : this._shapeRenderer;
+
+            if (blurInfo === null) {
+                this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+            } else {
+                this._gl.bindFramebuffer(
+                    this._gl.FRAMEBUFFER,
+                    this._frameBufferA
+                );
+                this._gl.clear(
+                    this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
+                );
+            }
+
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
+
+            this._loadSubtitleToVram(source);
 
             let xScale = 2 / this._config.renderer["resolution_x"];
             let yScale = 2 / this._config.renderer["resolution_y"];
@@ -1570,23 +1609,12 @@ const renderer_prototype = global.Object.create(Object, {
                 let offsetMatrix;
                 {
                     let offset = source.getOffset();
+                    // prettier-ignore
                     offsetMatrix = {
-                        m00: 1,
-                        m01: 0,
-                        m02: 0,
-                        m03: -(offset[0] * xScale),
-                        m10: 0,
-                        m11: 1,
-                        m12: 0,
-                        m13: offset[1] * yScale,
-                        m20: 0,
-                        m21: 0,
-                        m22: 1,
-                        m23: 0,
-                        m30: 0,
-                        m31: 0,
-                        m32: 0,
-                        m33: 1
+                        m00: 1, m01: 0, m02: 0, m03: -(offset[0] * xScale),
+                        m10: 0, m11: 1, m12: 0, m13: offset[1] * yScale,
+                        m20: 0, m21: 0, m22: 1, m23: 0,
+                        m30: 0, m31: 0, m32: 0, m33: 1
                     };
                 }
 
@@ -1597,97 +1625,49 @@ const renderer_prototype = global.Object.create(Object, {
                     if (lineOverrides.getRotationOrigin() !== null) {
                         let rotationOrigin = lineOverrides.getRotationOrigin();
                         let diff = [0, 0];
-                        diff[0] =
-                            -(
-                                (position.x + position.alignmentOffsetX) *
-                                    xScale -
-                                1
-                            ) -
-                            (rotationOrigin[0] * xScale - 1);
-                        diff[1] =
-                            -(
-                                (this._config.renderer["resolution_y"] -
-                                    (position.y + position.alignmentOffsetY)) *
-                                    yScale -
-                                1
-                            ) -
+                        diff[0] = -(
+                            (position.x + position.alignmentOffsetX) * xScale -
+                            1 -
+                            (rotationOrigin[0] * xScale - 1)
+                        );
+                        diff[1] = -(
+                            (this._config.renderer["resolution_y"] -
+                                (position.y + position.alignmentOffsetY)) *
+                                yScale -
+                            1 -
                             ((this._config.renderer["resolution_y"] -
                                 rotationOrigin[1]) *
                                 yScale -
-                                1);
+                                1)
+                        );
+                        // prettier-ignore
                         negativeRotationTranslationMatrix = {
-                            m00: 1,
-                            m01: 0,
-                            m02: 0,
-                            m03: diff[0],
-                            m10: 0,
-                            m11: 1,
-                            m12: 0,
-                            m13: diff[1],
-                            m20: 0,
-                            m21: 0,
-                            m22: 1,
-                            m23: 0,
-                            m30: 0,
-                            m31: 0,
-                            m32: 0,
-                            m33: 1
+                            m00: 1, m01: 0, m02: 0, m03: diff[0],
+                            m10: 0, m11: 1, m12: 0, m13: diff[1],
+                            m20: 0, m21: 0, m22: 1, m23: 0,
+                            m30: 0, m31: 0, m32: 0, m33: 1
                         };
+                        // prettier-ignore
                         positiveRotationTranslationMatrix = {
-                            m00: 1,
-                            m01: 0,
-                            m02: 0,
-                            m03: -diff[0],
-                            m10: 0,
-                            m11: 1,
-                            m12: 0,
-                            m13: -diff[1],
-                            m20: 0,
-                            m21: 0,
-                            m22: 1,
-                            m23: 0,
-                            m30: 0,
-                            m31: 0,
-                            m32: 0,
-                            m33: 1
+                            m00: 1, m01: 0, m02: 0, m03: -diff[0],
+                            m10: 0, m11: 1, m12: 0, m13: -diff[1],
+                            m20: 0, m21: 0, m22: 1, m23: 0,
+                            m30: 0, m31: 0, m32: 0, m33: 1
                         };
                     } else {
+                        // prettier-ignore
                         negativeRotationTranslationMatrix = {
-                            m00: 1,
-                            m01: 0,
-                            m02: 0,
-                            m03: position.alignmentOffsetX * xScale,
-                            m10: 0,
-                            m11: 1,
-                            m12: 0,
-                            m13: position.alignmentOffsetY * yScale,
-                            m20: 0,
-                            m21: 0,
-                            m22: 1,
-                            m23: 0,
-                            m30: 0,
-                            m31: 0,
-                            m32: 0,
-                            m33: 1
+                            m00: 1, m01: 0, m02: 0, m03: -position.alignmentOffsetX * xScale,
+                            m10: 0, m11: 1, m12: 0, m13: position.alignmentOffsetY * yScale,
+                            m20: 0, m21: 0, m22: 1, m23: 0,
+                            m30: 0, m31: 0, m32: 0, m33: 1
                         };
-
+                        // prettier-ignore
                         positiveRotationTranslationMatrix = {
-                            m00: 1,
-                            m01: 0,
-                            m02: 0,
-                            m03: -position.alignmentOffsetX * xScale,
-                            m10: 0,
-                            m11: 1,
-                            m12: 0,
-                            m13: -position.alignmentOffsetY * yScale,
-                            m20: 0,
-                            m21: 0,
-                            m22: 1,
-                            m23: 0,
-                            m30: 0,
-                            m31: 0,
-                            m32: 0,
-                            m33: 1
+                            m00: 1, m01: 0, m02: 0, m03: position.alignmentOffsetX * xScale,
+                            m10: 0, m11: 1, m12: 0, m13: -position.alignmentOffsetY * yScale,
+                            m20: 0, m21: 0, m22: 1, m23: 0,
+                            m30: 0, m31: 0, m32: 0, m33: 1
                         };
                     }
                 }
@@ -1702,81 +1682,35 @@ const renderer_prototype = global.Object.create(Object, {
                         currentEvent.getStyle(),
                         currentEvent.getOverrides()
                     );
+                    // prettier-ignore
                     rotationMatrixX = {
-                        m00: 1,
-                        m01: 0,
-                        m02: 0,
-                        m03: 0,
-                        m10: 0,
-                        m11: Math.cos(rotation[0] * toRad),
-                        m12: -Math.sin(rotation[0] * toRad),
-                        m13: 0,
-                        m20: 0,
-                        m21: Math.sin(rotation[0] * toRad),
-                        m22: Math.cos(rotation[0] * toRad),
-                        m23: 0,
-                        m30: 0,
-                        m31: 0,
-                        m32: 0,
-                        m33: 1
+                        m00: 1, m01: 0,                             m02: 0,                                 m03: 0,
+                        m10: 0, m11: Math.cos(rotation[0] * toRad), m12: -Math.sin(rotation[0] * toRad),    m13: 0,
+                        m20: 0, m21: Math.sin(rotation[0] * toRad), m22: Math.cos(rotation[0] * toRad),     m23: 0,
+                        m30: 0, m31: 0,                             m32: 0,                                 m33: 1
                     };
+                    // prettier-ignore
                     rotationMatrixY = {
-                        m00: Math.cos(rotation[1] * toRad),
-                        m01: 0,
-                        m02: Math.sin(rotation[1] * toRad),
-                        m03: 0,
-                        m10: 0,
-                        m11: 1,
-                        m12: 0,
-                        m13: 0,
-                        m20: -Math.sin(rotation[1] * toRad),
-                        m21: 0,
-                        m22: Math.cos(rotation[1] * toRad),
-                        m23: 0,
-                        m30: 0,
-                        m31: 0,
-                        m32: 0,
-                        m33: 1
+                        m00: Math.cos(rotation[1] * toRad),     m01: 0, m02: Math.sin(rotation[1] * toRad), m03: 0,
+                        m10: 0,                                 m11: 1, m12: 0,                             m13: 0,
+                        m20: -Math.sin(rotation[1] * toRad),    m21: 0, m22: Math.cos(rotation[1] * toRad), m23: 0,
+                        m30: 0,                                 m31: 0, m32: 0,                             m33: 1
                     };
+                    // prettier-ignore
                     rotationMatrixZ = {
-                        m00: Math.cos(rotation[2] * toRad),
-                        m01: -Math.sin(rotation[2] * toRad),
-                        m02: 0,
-                        m03: 0,
-                        m10: Math.sin(rotation[2] * toRad),
-                        m11: Math.cos(rotation[2] * toRad),
-                        m12: 0,
-                        m13: 0,
-                        m20: 0,
-                        m21: 0,
-                        m22: 1,
-                        m23: 0,
-                        m30: 0,
-                        m31: 0,
-                        m32: 0,
-                        m33: 1
+                        m00: Math.cos(rotation[2] * toRad), m01: -Math.sin(rotation[2] * toRad),    m02: 0, m03: 0,
+                        m10: Math.sin(rotation[2] * toRad), m11: Math.cos(rotation[2] * toRad),     m12: 0, m13: 0,
+                        m20: 0,                             m21: 0,                                 m22: 1, m23: 0,
+                        m30: 0,                             m31: 0,                                 m32: 0, m33: 1
                     };
                 }
+
+                // prettier-ignore
                 let finalPositionOffsetMatrix = {
-                    m00: 1,
-                    m01: 0,
-                    m02: 0,
-                    m03: position.x * xScale - 1,
-                    m10: 0,
-                    m11: 1,
-                    m12: 0,
-                    m13:
-                        (this._config.renderer["resolution_y"] - position.y) *
-                            yScale -
-                        1,
-                    m20: 0,
-                    m21: 0,
-                    m22: 1,
-                    m23: 0,
-                    m30: 0,
-                    m31: 0,
-                    m32: 0,
-                    m33: 1
+                    m00: 1, m01: 0, m02: 0, m03: position.x * xScale - 1,
+                    m10: 0, m11: 1, m12: 0, m13: (this._config.renderer["resolution_y"] - position.y) * yScale - 1,
+                    m20: 0, m21: 0, m22: 1, m23: 0,
+                    m30: 0, m31: 0, m32: 0, m33: 1
                 };
 
                 positioningMatrix = this._matrixMultiply4x4(
@@ -1831,44 +1765,29 @@ const renderer_prototype = global.Object.create(Object, {
                 m02: 0
             };
 
+            // prettier-ignore
             let coordinates = new Float32Array([
-                upperLeft.m00,
-                upperLeft.m01,
-                upperLeft.m02,
-                upperRight.m00,
-                upperRight.m01,
-                upperRight.m02,
-                lowerLeft.m00,
-                lowerLeft.m01,
-                lowerLeft.m02,
-                lowerLeft.m00,
-                lowerLeft.m01,
-                lowerLeft.m02,
-                upperRight.m00,
-                upperRight.m01,
-                upperRight.m02,
-                lowerRight.m00,
-                lowerRight.m01,
-                lowerRight.m02
+                upperLeft.m00,  upperLeft.m01,  upperLeft.m02,
+                upperRight.m00, upperRight.m01, upperRight.m02,
+                lowerLeft.m00,  lowerLeft.m01,  lowerLeft.m02,
+                lowerLeft.m00,  lowerLeft.m01,  lowerLeft.m02,
+                upperRight.m00, upperRight.m01, upperRight.m02,
+                lowerRight.m00, lowerRight.m01, lowerRight.m02
             ]);
 
             let tex_coords;
             {
+                let extents = source.getExtents();
                 let width = dimensions[0] / extents[0];
                 let height = dimensions[1] / extents[1];
+                // prettier-ignore
                 tex_coords = new Float32Array([
-                    0,
-                    1,
-                    width,
-                    1,
-                    0,
-                    1 - height,
-                    0,
-                    1 - height,
-                    width,
-                    1,
-                    width,
-                    1 - height
+                    0,      1,
+                    width,  1,
+                    0,      1 - height,
+                    0,      1 - height,
+                    width,  1,
+                    width,  1 - height
                 ]);
             }
             //Draw background or outline or text depending on pass to destination
@@ -2190,12 +2109,12 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
             }
 
-            if (bluring) {
+            if (blurInfo !== null) {
                 let backFramebuffer = this._frameBufferB;
                 let sourceFramebuffer = this._frameBufferA;
                 let backTexture = this._fbTextureB;
                 let sourceTexture = this._fbTextureA;
-                if (edgeBlurActive) {
+                if (blurInfo.blur > 0) {
                     this._convEdgeBlurShader.updateOption(
                         "u_resolution_x",
                         this._config.renderer["resolution_x"]
@@ -2208,7 +2127,7 @@ const renderer_prototype = global.Object.create(Object, {
                     this._convEdgeBlurShader.bindShader(this._gl);
                     //Draw framebuffer to destination
                     let swap;
-                    for (let i = 0; i < edgeBlurIterations - 1; i++) {
+                    for (let i = 0; i < blurInfo.blur - 1; i++) {
                         this._gl.bindFramebuffer(
                             this._gl.FRAMEBUFFER,
                             backFramebuffer
@@ -2234,7 +2153,7 @@ const renderer_prototype = global.Object.create(Object, {
                         backFramebuffer = sourceFramebuffer;
                         sourceFramebuffer = swap;
                     }
-                    if (gaussianBlurActive) {
+                    if (blurInfo.gaussBlur > 0) {
                         this._gl.bindFramebuffer(
                             this._gl.FRAMEBUFFER,
                             backFramebuffer
@@ -2280,7 +2199,7 @@ const renderer_prototype = global.Object.create(Object, {
                     sourceFramebuffer = swap;
                 }
 
-                if (gaussianBlurActive) {
+                if (blurInfo.gaussBlur > 0) {
                     this._gl.bindFramebuffer(
                         this._gl.FRAMEBUFFER,
                         backFramebuffer
@@ -2297,7 +2216,7 @@ const renderer_prototype = global.Object.create(Object, {
                     );
                     this._gaussEdgeBlurPass1Shader.updateOption(
                         "u_sigma",
-                        gaussianBlurFactor
+                        blurInfo.gaussBlur
                     );
                     this._gaussEdgeBlurPass1Shader.updateOption("u_texture", 0);
                     this._gaussEdgeBlurPass1Shader.bindShader(this._gl);
@@ -2334,7 +2253,7 @@ const renderer_prototype = global.Object.create(Object, {
                     );
                     this._gaussEdgeBlurPass2Shader.updateOption(
                         "u_sigma",
-                        gaussianBlurFactor
+                        blurInfo.gaussBlur
                     );
                     this._gaussEdgeBlurPass2Shader.updateOption("u_texture", 0);
                     this._gaussEdgeBlurPass2Shader.bindShader(this._gl);
@@ -2542,40 +2461,49 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
             );
             let positions = this._organizeEvents(time, events);
-            for (let i = 0; i < events.length; i++) {
-                //One pass for background, one for outline and one for text.
+            for (let i = 0; i < events.length; ) {
                 for (let pass = 0; pass < 3; pass++) {
-                    let currentEvent = events[i];
-                    if (currentEvent.getText() === "") continue;
-                    if (!currentEvent.getOverrides().getDrawingMode()) {
-                        this._textRenderer.renderEvent(
-                            time,
-                            currentEvent,
-                            pass,
-                            false
-                        );
-                        this._compositeSubtitle(
-                            time,
-                            currentEvent,
-                            pass,
-                            positions[i],
-                            false
-                        );
-                    } else {
-                        this._shapeRenderer.renderEvent(
-                            time,
-                            currentEvent,
-                            pass,
-                            false
-                        );
-                        this._compositeSubtitle(
-                            time,
-                            currentEvent,
-                            pass,
-                            positions[i],
-                            true
-                        );
+                    //One pass for background, one for outline and one for text.
+                    let j = 0;
+                    for (
+                        ;
+                        i + j < events.length &&
+                        events[i + j].getLayer() === events[i].getLayer();
+                        j++
+                    ) {
+                        let currentEvent = events[i + j];
+                        if (currentEvent.getText() === "") continue;
+                        if (!currentEvent.getOverrides().getDrawingMode()) {
+                            this._textRenderer.renderEvent(
+                                time,
+                                currentEvent,
+                                pass,
+                                false
+                            );
+                            this._compositeSubtitle(
+                                time,
+                                currentEvent,
+                                pass,
+                                positions[i + j],
+                                false
+                            );
+                        } else {
+                            this._shapeRenderer.renderEvent(
+                                time,
+                                currentEvent,
+                                pass,
+                                false
+                            );
+                            this._compositeSubtitle(
+                                time,
+                                currentEvent,
+                                pass,
+                                positions[i + j],
+                                true
+                            );
+                        }
                     }
+                    if (pass == 2) i += j;
                 }
             }
         },
