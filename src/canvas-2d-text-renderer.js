@@ -312,8 +312,11 @@ const text_renderer_prototype = global.Object.create(Object, {
             if (fontSizeRatio === null) {
                 badFont = true;
                 this._ctx.font = font;
+                let measurements = this._ctx.measureText("Ij?!");
                 fontSizeRatio =
-                    100 / this._ctx.measureText("jI").actualBoundingBoxDescent;
+                    100 /
+                    (measurements.actualBoundingBoxDescent +
+                        measurements.actualBoundingBoxAscent);
                 this._fontSizeRatios[font] = fontSizeRatio;
             }
             font =
@@ -551,11 +554,21 @@ const text_renderer_prototype = global.Object.create(Object, {
             {
                 let fontSize = this._calcFontSize(time, style, overrides);
                 if (spacing === 0) {
-                    this._width = this._ctx.measureText(text).width;
+                    let measurements = this._ctx.measureText(text);
+                    this._offsetY += measurements.actualBoundingBoxAscent;
+                    this._width = measurements.width;
                 } else {
                     this._width = 0;
-                    for (let i = 0; i < text.length; i++)
-                        this._width += this._ctx.measureText(text[i]).width;
+                    let topSpace = 0;
+                    for (let i = 0; i < text.length; i++) {
+                        let measurements = this._ctx.measureText(text[i]);
+                        topSpace =
+                            topSpace >= measurements.actualBoundingBoxAscent
+                                ? topSpace
+                                : measurements.actualBoundingBoxAscent;
+                        this._width += measurements.width;
+                    }
+                    this._offsetY += topSpace;
                     this._width += spacing * (text.length - 1);
                 }
                 this._height = fontSize;
