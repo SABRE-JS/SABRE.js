@@ -31,7 +31,7 @@ sabre.import("canvas-2d-shape-renderer");
  * @fileoverview webgl subtitle compositing code.
  */
 /**
- * @typedef {!{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number}}
+ * @typedef {!{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number,alignmentOffsetX:number,alignmentOffsetY:number}}
  */
 var CollisionInfo;
 /**
@@ -77,7 +77,7 @@ const renderer_prototype = global.Object.create(Object, {
     //BEGIN LOCAL VARIABLES
 
     _compositingCanvas: {
-        /** @type{?HTMLCanvasElement|?OffscreenCanvas} */
+        /** @type{?(HTMLCanvasElement|OffscreenCanvas)} */
         value: null,
         writable: true
     },
@@ -295,25 +295,6 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    _matrixMultiply1x4and4x4: {
-        /**
-         * Matrix multiplication for 1x4 vector and 4x4 matrix.
-         */
-        value: function (a, b) {
-            let result = {};
-            result.m00 =
-                a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20 + a.m03 * b.m30;
-            result.m01 =
-                a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21 + a.m03 * b.m31;
-            result.m02 =
-                a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22 + a.m03 * b.m32;
-            result.m03 =
-                a.m00 * b.m03 + a.m01 * b.m13 + a.m02 * b.m23 + a.m03 * b.m33;
-            return result;
-        },
-        writable: false
-    },
-
     _listOfEventsContainsAnimation: {
         /**
          * Determines if a list of SSASubtitleEvent objects contains use any animation features.
@@ -466,6 +447,41 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _calcShear: {
+        /**
+         * Calc shear, handling transitions.
+         * @param {number} time
+         * @param {SSAStyleDefinition} style
+         * @param {SSAStyleOverride} overrides
+         */
+        value: function (time, style, overrides) {
+            let transitionOverrides = overrides.getTransitions();
+            let shearX = overrides.getShearX() ?? 0;
+            let shearY = overrides.getShearY() ?? 0;
+
+            for (let i = 0; i < transitionOverrides.length; i++) {
+                shearX = sabre.performTransition(
+                    time,
+                    shearX,
+                    transitionOverrides[i].getShearX(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
+                );
+                shearY = sabre.performTransition(
+                    time,
+                    shearY,
+                    transitionOverrides[i].getShearY(),
+                    transitionOverrides[i].getTransitionStart(),
+                    transitionOverrides[i].getTransitionEnd(),
+                    transitionOverrides[i].getTransitionAcceleration()
+                );
+            }
+            return { x: shearX, y: shearY };
+        },
+        writable: true
+    },
+
     _calcRotation: {
         /**
          * Calc rotation, handing transitions.
@@ -607,7 +623,8 @@ const renderer_prototype = global.Object.create(Object, {
                             break;
                         case 0:
                             //LEFT
-                            //Nothing needs to be done, the x coordinate is already zero.
+                            anchorPoint[0] = 0;
+                            alignmentOffsetX = 0;
                             break;
                     }
                     result.originalX = result.x = anchorPoint[0];
@@ -623,7 +640,7 @@ const renderer_prototype = global.Object.create(Object, {
                         switch (verticalAlignment) {
                             case 2:
                                 //TOP
-                                // Do nothing. The subtitle is already top aligned.
+                                alignmentOffsetY = 0;
                                 break;
                             case 1:
                                 //MIDDLE
@@ -645,11 +662,11 @@ const renderer_prototype = global.Object.create(Object, {
                             case 1:
                                 //CENTER
                                 curPos[0] -= dim[0] / 2; // middle align the subtitle.
-                                alignmentOffsetY = dim[0] / 2;
+                                alignmentOffsetX = dim[0] / 2;
                                 break;
                             case 0:
                                 //LEFT
-                                // Do nothing. The subtitle is already left aligned.
+                                alignmentOffsetX = 0;
                                 break;
                         }
                         result.originalX = result.x = curPos[0];
@@ -659,7 +676,7 @@ const renderer_prototype = global.Object.create(Object, {
                         switch (verticalAlignment) {
                             case 2:
                                 //TOP
-                                // Do nothing. The subtitle is already top aligned.
+                                alignmentOffsetY = 0;
                                 break;
                             case 1:
                                 //MIDDLE
@@ -689,7 +706,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 break;
                             case 0:
                                 //LEFT
-                                // Do nothing. The subtitle is already left aligned.
+                                alignmentOffsetX = 0;
                                 break;
                         }
                         result.originalX = move[0];
@@ -771,7 +788,7 @@ const renderer_prototype = global.Object.create(Object, {
                             break;
                         case 0:
                             //LEFT
-                            //Nothing needs to be done, the x coordinate is already zero.
+                            alignmentOffsetX = 0;
                             break;
                     }
                     result.originalX = result.x = anchorPoint[0];
@@ -780,12 +797,81 @@ const renderer_prototype = global.Object.create(Object, {
                     result.alignmentOffsetY = alignmentOffsetY;
                 } else {
                     let curPos = [0, 0];
+                    let alignmentOffsetX = 0;
+                    let alignmentOffsetY = 0;
                     if (lineOverrides.getMovement() === null) {
                         curPos = lineOverrides.getPosition();
-                        result.originalX = result.x = curPos[0];
-                        result.originalY = result.y = curPos[1];
+                        switch (verticalAlignment) {
+                            case 2:
+                                //TOP
+                                alignmentOffsetY = 0;
+                                break;
+                            case 1:
+                                //MIDDLE
+                                curPos[1] -= dim[1] / 2;
+                                alignmentOffsetY = dim[1] / 2;
+                                break;
+                            case 0:
+                                //BOTTOM
+                                curPos[1] -= dim[1];
+                                alignmentOffsetY = dim[1];
+                                break;
+                        }
+                        switch (horizontalAlignment) {
+                            case 2:
+                                //RIGHT
+                                curPos[0] -= dim[0];
+                                alignmentOffsetX = dim[0];
+                                break;
+                            case 1:
+                                //CENTER
+                                curPos[0] -= dim[0] / 2;
+                                alignmentOffsetX = dim[0] / 2;
+                                break;
+                            case 0:
+                                //LEFT
+                                alignmentOffsetX = 0;
+                                break;
+                        }
+                        result.originalX = curPos[0];
+                        result.originalY = curPos[1];
+                        result.alignmentOffsetX = alignmentOffsetX;
+                        result.alignmentOffsetY = alignmentOffsetY;
                     } else {
                         let move = lineOverrides.getMovement();
+                        switch (verticalAlignment) {
+                            case 2:
+                                //TOP
+                                alignmentOffsetY = 0;
+                                break;
+                            case 1:
+                                //MIDDLE
+                                move[1] -= dim[1] / 2;
+                                move[3] -= dim[1] / 2;
+                                alignmentOffsetY = dim[1] / 2;
+                                break;
+                            case 0:
+                                move[1] -= dim[1];
+                                move[3] -= dim[1];
+                                alignmentOffsetY = dim[1];
+                                break;
+                        }
+                        switch (horizontalAlignment) {
+                            case 2:
+                                //RIGHT
+                                move[0] -= dim[0];
+                                move[2] -= dim[0];
+                                alignmentOffsetX = dim[0];
+                            case 1:
+                                //CENTER
+                                move[0] -= dim[0] / 2;
+                                move[2] -= dim[0] / 2;
+                                alignmentOffsetX = dim[0] / 2;
+                                break;
+                            case 0:
+                                alignmentOffsetX = 0;
+                                break;
+                        }
                         result.originalX = move[0];
                         curPos[0] = sabre.performTransition(
                             time,
@@ -804,6 +890,8 @@ const renderer_prototype = global.Object.create(Object, {
                             move[5],
                             1
                         );
+                        result.alignmentOffsetX = alignmentOffsetX;
+                        result.alignmentOffsetY = alignmentOffsetY;
                     }
                     result.x = curPos[0];
                     result.y = curPos[1];
@@ -952,7 +1040,7 @@ const renderer_prototype = global.Object.create(Object, {
                     this._config.renderer["default_collision_mode"] ===
                     sabre.CollisionModes.NORMAL
                 ) {
-                    if (overlap[1] > 0) {
+                    if (overlap[1] < 0) {
                         if (positionInfo1.index < positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -972,7 +1060,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
-                    } else if (overlap[1] < 0) {
+                    } else if (overlap[1] > 0) {
                         if (positionInfo1.index < positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -994,7 +1082,7 @@ const renderer_prototype = global.Object.create(Object, {
                         }
                     }
                 } else {
-                    if (overlap[1] < 0) {
+                    if (overlap[1] > 0) {
                         if (positionInfo1.index > positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -1014,7 +1102,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
-                    } else if (overlap[1] > 0) {
+                    } else if (overlap[1] < 0) {
                         if (positionInfo1.index > positionInfo2.index) {
                             for (
                                 let i = 0;
@@ -1391,7 +1479,26 @@ const renderer_prototype = global.Object.create(Object, {
             );
             this._positioningShader.compile(this._gl);
             this._positioningShader.addOption(
-                "u_matrix",
+                "u_aspectscale",
+                new Float32Array([1, 1]),
+                "2f"
+            );
+            this._positioningShader.addOption(
+                "u_pre_rotation_matrix",
+                new Float32Array([
+                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+                ]),
+                "Matrix4fv"
+            );
+            this._positioningShader.addOption(
+                "u_rotation_matrix",
+                new Float32Array([
+                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+                ]),
+                "Matrix4fv"
+            );
+            this._positioningShader.addOption(
+                "u_post_rotation_matrix",
                 new Float32Array([
                     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
                 ]),
@@ -1520,6 +1627,12 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _shouldDisableBlendForCompositePass: {
+        /**
+         * Test if we should disable the blend for compositing.
+         * @param {SSASubtitleEvent} currentEvent
+         * @param {number} pass
+         * @returns {boolean} should we disable blend?
+         */
         value: function (currentEvent, pass) {
             return (
                 pass === sabre.RenderPasses.BACKGROUND &&
@@ -1530,7 +1643,198 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _calcPositioningMatrices: {
+        /**
+         * Calculates the matrix used to position the subtitle
+         * @param {number} time the current frame's time.
+         * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source the source.
+         * @param {CollisionInfo} position the collision and positiong info of the event.
+         * @param {SSASubtitleEvent} event the event we're working on.
+         * @returns {Object} the resulting matrix.
+         */
+        value: function (time, source, position, event) {
+            const toRad = Math.PI / 180;
+
+            let rotation = this._calcRotation(
+                time,
+                event.getStyle(),
+                event.getOverrides()
+            );
+            rotation[0] *= toRad;
+            rotation[1] *= toRad;
+            rotation[2] *= toRad;
+
+            let sinx = Math.sin(rotation[0]);
+            let siny = Math.sin(rotation[1]);
+            let sinz = Math.sin(rotation[2]);
+
+            let cosx = Math.cos(rotation[0]);
+            let cosy = Math.cos(rotation[1]);
+            let cosz = Math.cos(rotation[2]);
+
+            let preRotationMatrix;
+            {
+                let offset = source.getOffset();
+                // prettier-ignore
+                preRotationMatrix = {
+                    m00: 1, m01: 0, m02: 0, m03: -offset[0],
+                    m10: 0, m11: 1, m12: 0, m13: offset[1],
+                    m20: 0, m21: 0, m22: 1, m23: 0,
+                    m30: 0, m31: 0, m32: 0, m33: 1
+                };
+            }
+            //NOTE: Shear the subtitle.
+            {
+                let shear = this._calcShear(
+                    time,
+                    event.getStyle(),
+                    event.getOverrides()
+                );
+
+                let shearMatrix = {
+                    m00: 1 + shear.x * shear.y,
+                    m01: shear.x,
+                    m02: 0,
+                    m03: 0,
+                    m10: shear.y,
+                    m11: 1,
+                    m12: 0,
+                    m13: 0,
+                    m20: 0,
+                    m21: 0,
+                    m22: 1,
+                    m23: 0,
+                    m30: 0,
+                    m31: 0,
+                    m32: 0,
+                    m33: 1
+                };
+
+                preRotationMatrix = this._matrixMultiply4x4(
+                    preRotationMatrix,
+                    shearMatrix
+                );
+            }
+
+            let rotationOrigin = event.getLineOverrides().getRotationOrigin();
+
+            let rotationOffset;
+            if (rotationOrigin == null)
+                rotationOffset = [
+                    -position.alignmentOffsetX,
+                    -position.alignmentOffsetY
+                ];
+            else
+                rotationOffset = [
+                    position.x - rotationOrigin[0],
+                    position.y - rotationOrigin[1]
+                ];
+
+            //NOTE: Position the subtitle for rotation.
+            let postRotationMatrix;
+            {
+                /*console.log("----------------");
+                console.log("Event: ",event.getText())
+                console.log("Position: ",position.x,position.y);
+                console.log("AlignmentOffset: ",position.alignmentOffsetX,position.alignmentOffsetY);
+                console.log("RotationOrigin: ",rotationOrigin);
+                console.log("RotationOffset: ",rotationOffset);*/
+
+                // prettier-ignore
+                let preRotationTranslationMatrix = {
+                    m00: 1, m01: 0, m02: 0, m03: rotationOffset[0],
+                    m10: 0, m11: 1, m12: 0, m13: -rotationOffset[1],
+                    m20: 0, m21: 0, m22: 1, m23: 0,
+                    m30: 0, m31: 0, m32: 0, m33: 1,
+                };
+
+                // prettier-ignore
+                postRotationMatrix = {
+                    m00: 1, m01: 0, m02: 0, m03: -rotationOffset[0],
+                    m10: 0, m11: 1, m12: 0, m13: rotationOffset[1],
+                    m20: 0, m21: 0, m22: 1, m23: 0,
+                    m30: 0, m31: 0, m32: 0, m33: 1
+                };
+
+                preRotationMatrix = this._matrixMultiply4x4(
+                    preRotationMatrix,
+                    preRotationTranslationMatrix
+                );
+            }
+
+            let rotationMatrix;
+            //NOTE: Rotate the subtitle.
+            {
+                // prettier-ignore
+                let rotationMatrixX = {
+                    m00: 1, m01: 0,     m02: 0,     m03: 0,
+                    m10: 0, m11: cosx,  m12: -sinx, m13: 0,
+                    m20: 0, m21: sinx,  m22: cosx,  m23: 0,
+                    m30: 0, m31: 0,     m32: 0,     m33: 1
+                };
+
+                rotationMatrix = rotationMatrixX;
+            }
+
+            {
+                // prettier-ignore
+                let rotationMatrixY = {
+                    m00: cosy,  m01: 0, m02: siny,  m03: 0,
+                    m10: 0,     m11: 1, m12: 0,     m13: 0,
+                    m20: -siny, m21: 0, m22: cosy,  m23: 0,
+                    m30: 0,     m31: 0, m32: 0,     m33: 1
+                };
+
+                rotationMatrix = this._matrixMultiply4x4(
+                    rotationMatrix,
+                    rotationMatrixY
+                );
+            }
+
+            {
+                // prettier-ignore
+                let rotationMatrixZ = {
+                    m00: cosz,  m01: -sinz, m02: 0, m03: 0,
+                    m10: sinz,  m11: cosz,  m12: 0, m13: 0,
+                    m20: 0,     m21: 0,     m22: 1, m23: 0,
+                    m30: 0,     m31: 0,     m32: 0, m33: 1,
+                };
+
+                rotationMatrix = this._matrixMultiply4x4(
+                    rotationMatrix,
+                    rotationMatrixZ
+                );
+            }
+
+            //NOTE: Position for display.
+            {
+                let translatedPositionY =
+                    this._config.renderer["resolution_y"] - position.y;
+
+                // prettier-ignore
+                let finalOffsetMatrix = {
+                    m00: 1, m01: 0, m02: 0, m03: position.x,
+                    m10: 0, m11: 1, m12: 0, m13: translatedPositionY,
+                    m20: 0, m21: 0, m22: 1, m23: 0,
+                    m30: 0, m31: 0, m32: 0, m33: 1
+                };
+
+                postRotationMatrix = this._matrixMultiply4x4(
+                    postRotationMatrix,
+                    finalOffsetMatrix
+                );
+            }
+
+            return [preRotationMatrix, rotationMatrix, postRotationMatrix];
+        },
+        writable: false
+    },
+
     _loadSubtitleToVram: {
+        /**
+         * Loads a subtitle into graphics card's VRAM.
+         * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source the source.
+         */
         value: function (source) {
             let extents = source.getExtents();
             if (
@@ -1568,6 +1872,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} time The time the subtitle must be rendered at.
          * @param {SSASubtitleEvent} currentEvent The properties of the subtitle.
          * @param {number} pass the current render pass we are on.
+         * @param {CollisionInfo} position the positioning info of the subtitle.
          * @param {boolean} isShape is the subtitle we are compositing a shape?
          */
         value: function (time, currentEvent, pass, position, isShape) {
@@ -1604,140 +1909,13 @@ const renderer_prototype = global.Object.create(Object, {
 
             let xScale = 2 / this._config.renderer["resolution_x"];
             let yScale = 2 / this._config.renderer["resolution_y"];
-            let positioningMatrix;
-            {
-                let offsetMatrix;
-                {
-                    let offset = source.getOffset();
-                    // prettier-ignore
-                    offsetMatrix = {
-                        m00: 1, m01: 0, m02: 0, m03: -(offset[0] * xScale),
-                        m10: 0, m11: 1, m12: 0, m13: offset[1] * yScale,
-                        m20: 0, m21: 0, m22: 1, m23: 0,
-                        m30: 0, m31: 0, m32: 0, m33: 1
-                    };
-                }
 
-                let negativeRotationTranslationMatrix;
-                let positiveRotationTranslationMatrix;
-                {
-                    let lineOverrides = currentEvent.getLineOverrides();
-                    if (lineOverrides.getRotationOrigin() !== null) {
-                        let rotationOrigin = lineOverrides.getRotationOrigin();
-                        let diff = [0, 0];
-                        diff[0] = -(
-                            (position.x + position.alignmentOffsetX) * xScale -
-                            1 -
-                            (rotationOrigin[0] * xScale - 1)
-                        );
-                        diff[1] = -(
-                            (this._config.renderer["resolution_y"] -
-                                (position.y + position.alignmentOffsetY)) *
-                                yScale -
-                            1 -
-                            ((this._config.renderer["resolution_y"] -
-                                rotationOrigin[1]) *
-                                yScale -
-                                1)
-                        );
-                        // prettier-ignore
-                        negativeRotationTranslationMatrix = {
-                            m00: 1, m01: 0, m02: 0, m03: diff[0],
-                            m10: 0, m11: 1, m12: 0, m13: diff[1],
-                            m20: 0, m21: 0, m22: 1, m23: 0,
-                            m30: 0, m31: 0, m32: 0, m33: 1
-                        };
-                        // prettier-ignore
-                        positiveRotationTranslationMatrix = {
-                            m00: 1, m01: 0, m02: 0, m03: -diff[0],
-                            m10: 0, m11: 1, m12: 0, m13: -diff[1],
-                            m20: 0, m21: 0, m22: 1, m23: 0,
-                            m30: 0, m31: 0, m32: 0, m33: 1
-                        };
-                    } else {
-                        // prettier-ignore
-                        negativeRotationTranslationMatrix = {
-                            m00: 1, m01: 0, m02: 0, m03: -position.alignmentOffsetX * xScale,
-                            m10: 0, m11: 1, m12: 0, m13: position.alignmentOffsetY * yScale,
-                            m20: 0, m21: 0, m22: 1, m23: 0,
-                            m30: 0, m31: 0, m32: 0, m33: 1
-                        };
-                        // prettier-ignore
-                        positiveRotationTranslationMatrix = {
-                            m00: 1, m01: 0, m02: 0, m03: position.alignmentOffsetX * xScale,
-                            m10: 0, m11: 1, m12: 0, m13: -position.alignmentOffsetY * yScale,
-                            m20: 0, m21: 0, m22: 1, m23: 0,
-                            m30: 0, m31: 0, m32: 0, m33: 1
-                        };
-                    }
-                }
-
-                let rotationMatrixX;
-                let rotationMatrixY;
-                let rotationMatrixZ;
-                {
-                    const toRad = Math.PI / 180;
-                    let rotation = this._calcRotation(
-                        time,
-                        currentEvent.getStyle(),
-                        currentEvent.getOverrides()
-                    );
-                    // prettier-ignore
-                    rotationMatrixX = {
-                        m00: 1, m01: 0,                             m02: 0,                                 m03: 0,
-                        m10: 0, m11: Math.cos(rotation[0] * toRad), m12: -Math.sin(rotation[0] * toRad),    m13: 0,
-                        m20: 0, m21: Math.sin(rotation[0] * toRad), m22: Math.cos(rotation[0] * toRad),     m23: 0,
-                        m30: 0, m31: 0,                             m32: 0,                                 m33: 1
-                    };
-                    // prettier-ignore
-                    rotationMatrixY = {
-                        m00: Math.cos(rotation[1] * toRad),     m01: 0, m02: Math.sin(rotation[1] * toRad), m03: 0,
-                        m10: 0,                                 m11: 1, m12: 0,                             m13: 0,
-                        m20: -Math.sin(rotation[1] * toRad),    m21: 0, m22: Math.cos(rotation[1] * toRad), m23: 0,
-                        m30: 0,                                 m31: 0, m32: 0,                             m33: 1
-                    };
-                    // prettier-ignore
-                    rotationMatrixZ = {
-                        m00: Math.cos(rotation[2] * toRad), m01: -Math.sin(rotation[2] * toRad),    m02: 0, m03: 0,
-                        m10: Math.sin(rotation[2] * toRad), m11: Math.cos(rotation[2] * toRad),     m12: 0, m13: 0,
-                        m20: 0,                             m21: 0,                                 m22: 1, m23: 0,
-                        m30: 0,                             m31: 0,                                 m32: 0, m33: 1
-                    };
-                }
-
-                // prettier-ignore
-                let finalPositionOffsetMatrix = {
-                    m00: 1, m01: 0, m02: 0, m03: position.x * xScale - 1,
-                    m10: 0, m11: 1, m12: 0, m13: (this._config.renderer["resolution_y"] - position.y) * yScale - 1,
-                    m20: 0, m21: 0, m22: 1, m23: 0,
-                    m30: 0, m31: 0, m32: 0, m33: 1
-                };
-
-                positioningMatrix = this._matrixMultiply4x4(
-                    offsetMatrix,
-                    negativeRotationTranslationMatrix
-                );
-                positioningMatrix = this._matrixMultiply4x4(
-                    positioningMatrix,
-                    rotationMatrixX
-                );
-                positioningMatrix = this._matrixMultiply4x4(
-                    positioningMatrix,
-                    rotationMatrixY
-                );
-                positioningMatrix = this._matrixMultiply4x4(
-                    positioningMatrix,
-                    rotationMatrixZ
-                );
-                positioningMatrix = this._matrixMultiply4x4(
-                    positioningMatrix,
-                    positiveRotationTranslationMatrix
-                );
-                positioningMatrix = this._matrixMultiply4x4(
-                    positioningMatrix,
-                    finalPositionOffsetMatrix
-                );
-            }
+            let positioningMatrices = this._calcPositioningMatrices(
+                time,
+                source,
+                position,
+                currentEvent
+            );
 
             let dimensions = source.getDimensions();
 
@@ -1749,19 +1927,19 @@ const renderer_prototype = global.Object.create(Object, {
 
             let lowerLeft = {
                 m00: 0,
-                m01: -(dimensions[1] * yScale),
+                m01: -dimensions[1],
                 m02: 0
             };
 
             let upperRight = {
-                m00: dimensions[0] * xScale,
+                m00: dimensions[0],
                 m01: 0,
                 m02: 0
             };
 
             let lowerRight = {
-                m00: dimensions[0] * xScale,
-                m01: -(dimensions[1] * yScale),
+                m00: dimensions[0],
+                m01: -dimensions[1],
                 m02: 0
             };
 
@@ -1826,7 +2004,6 @@ const renderer_prototype = global.Object.create(Object, {
                         quaternaryColor =
                             quaternaryOverride.applyOverride(quaternaryColor);
 
-                    //TODO: Color Transition
                     let primaryColorArray = primaryColor.getRGBA();
                     let secondaryColorArray = secondaryColor.getRGBA();
                     let tertiaryColorArray = tertiaryColor.getRGBA();
@@ -2062,11 +2239,34 @@ const renderer_prototype = global.Object.create(Object, {
                 }
 
                 this._positioningShader.updateOption(
-                    "u_matrix",
+                    "u_pre_rotation_matrix",
                     new Float32Array(
-                        this._matrixToArrayRepresentation4x4(positioningMatrix)
+                        this._matrixToArrayRepresentation4x4(
+                            positioningMatrices[0]
+                        )
                     )
                 );
+                this._positioningShader.updateOption(
+                    "u_rotation_matrix",
+                    new Float32Array(
+                        this._matrixToArrayRepresentation4x4(
+                            positioningMatrices[1]
+                        )
+                    )
+                );
+                this._positioningShader.updateOption(
+                    "u_post_rotation_matrix",
+                    new Float32Array(
+                        this._matrixToArrayRepresentation4x4(
+                            positioningMatrices[2]
+                        )
+                    )
+                );
+                this._positioningShader.updateOption(
+                    "u_aspectscale",
+                    new Float32Array([xScale, yScale])
+                );
+
                 this._positioningShader.updateOption("u_texture", 0);
                 this._positioningShader.bindShader(this._gl);
                 this._gl.bindBuffer(
