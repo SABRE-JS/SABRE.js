@@ -25,6 +25,11 @@ sabre.import("renderer-main");
  */
 
 /**
+ * @typedef {!{info:Object,parser:Object,renderer:{events:Array<SSASubtitleEvent>}}}
+ */
+var RendererData;
+
+/**
  * Assert using grumbles.
  * @param {sabre.Complaint} complaint
  * @param {boolean} test
@@ -135,15 +140,6 @@ const main_prototype = global.Object.create(global.Object, {
     _loadFont: {
         /**
          * Function to load fonts.
-         * @private
-         */
-        value: null,
-        writable: true
-    },
-
-    _renderer: {
-        /**
-         * Renderer instance.
          * @private
          */
         value: null,
@@ -2995,76 +2991,9 @@ const main_prototype = global.Object.create(global.Object, {
          * @param {function(string):void} loadFont
          */
         value: function (loadFont) {
-            this._renderer = new sabre.Renderer();
             this._loadFont = loadFont;
             this._loadFont.call(null, "Arial");
             this._loadFont.call(null, "Open Sans");
-        },
-        writable: false
-    },
-
-    updateViewport: {
-        /**
-         * Updates the resolution/scale at which the subtitles are rendered (if the player is resized, for example).
-         * @param {number} width
-         * @param {number} height
-         */
-        value: function (width, height) {
-            this._renderer.updateViewport(width, height);
-        },
-        writable: false
-    },
-
-    canRender: {
-        /**
-         * Returns if the renderer can render a frame at the current time.
-         * @returns {boolean}
-         */
-        value: function () {
-            return this._renderer.canRender();
-        },
-        writable: false
-    },
-
-    frameAsURI: {
-        /**
-         * A wrapper method around the renderer that allows our delegate to fetch rendered subtitle frames as Object URIs.
-         * @param {number} time the time as provided by HTMLVideoElement.currentTime.
-         * @param {function(string):void} callback a callback that provides the URI for the image generated.
-         * @returns {void}
-         */
-        value: function (time, callback) {
-            this._renderer.frame(time);
-            this._renderer.getDisplayUri(callback);
-        },
-        writable: false
-    },
-
-    frameAsBitmap: {
-        /**
-         * A wrapper method around the renderer that allows our delegate to fetch rendered subtitle frames as ImageBitmap objects.
-         * @param {number} time the time as provided by HTMLVideoElement.currentTime.
-         * @param {function(string):void} callback a callback that provides the URI for the image generated.
-         * @returns {void}
-         */
-        value: function (time, callback) {
-            this._renderer.frame(time);
-            return this._renderer.getDisplayBitmap();
-        },
-        writable: false
-    },
-
-    frameToCanvas: {
-        /**
-         * A wrapper method around the renderer that allows our delegate to request the renderer to render a subtitle frame then copy that frame to the passed canvas.
-         * @param {number} time the time at which to draw subtitles.
-         * @param {HTMLCanvasElement|OffscreenCanvas} canvas the target canvas
-         * @param {boolean} bitmap should we use a bitmap context.
-         * @returns {void}
-         */
-        value: function (time, canvas, bitmap) {
-            this._renderer.frame(time);
-            this._renderer.copyToCanvas(canvas, bitmap);
         },
         writable: false
     },
@@ -3073,9 +3002,10 @@ const main_prototype = global.Object.create(global.Object, {
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
          * @param {string} subsText the passed subtitle file contents.
+         * @param {function(RendererData):void} callback what we pass the results of the parsing to.
          * @returns {void}
          */
-        value: function (subsText) {
+        value: function (subsText, callback) {
             //Create new default style.
             let defaultStyle = new sabre.SSAStyleDefinition();
             defaultStyle.setName("Default");
@@ -3094,7 +3024,7 @@ const main_prototype = global.Object.create(global.Object, {
             for (let i = 0; i < subs.length; i++) {
                 this._parse(subs[i]); //Parse individual lines of the file.
             }
-            this._renderer.load(this._config); //pass the config to the renderer
+            callback(this._config); //pass the config to the renderer
         },
         writable: false
     }
@@ -3117,6 +3047,7 @@ const bitmapSupported =
 
 external["SABRERenderer"] = function (loadFont) {
     let parser = global.Object.create(main_prototype);
+    let renderer = new sabre.Renderer();
     parser.init(loadFont);
     return Object.freeze({
         /**
@@ -3125,7 +3056,7 @@ external["SABRERenderer"] = function (loadFont) {
          * @returns {void}
          */
         "loadSubtitles": function (subsText) {
-            parser.load(subsText);
+            parser.load(subsText, (config) => renderer.load(config));
         },
         /**
          * Updates the resolution at which the subtitles are rendered (if the player is resized, for example).
@@ -3134,14 +3065,14 @@ external["SABRERenderer"] = function (loadFont) {
          * @returns {void}
          */
         "setViewport": function (width, height) {
-            parser.updateViewport(width, height);
+            renderer.updateViewport(width, height);
         },
         /**
          * Checks if the renderer is ready to render a frame.
          * @returns {boolean} is the renderer ready?
          */
         "checkReadyToRender": function () {
-            return parser.canRender();
+            return renderer.canRender();
         },
         /**
          * Fetches a rendered frame of subtitles as an ImageBitmap, returns null if ImageBitmap is unsupported.
@@ -3149,7 +3080,8 @@ external["SABRERenderer"] = function (loadFont) {
          * @returns {ImageBitmap}
          */
         "getFrame": function (time) {
-            return parser.frameAsBitmap(time);
+            renderer.frame(time);
+            return renderer.getDisplayBitmap();
         },
         /**
          * Fetches a rendered frame of subtitles as an object uri.
@@ -3158,7 +3090,8 @@ external["SABRERenderer"] = function (loadFont) {
          * @returns {void}
          */
         "getFrameAsUri": function (time, callback) {
-            parser.frameAsURI(time, callback);
+            renderer.frame(time);
+            renderer.getDisplayUri(callback);
         },
         /**
          * Fetches a rendered frame of subtitles to a canvas.
@@ -3171,7 +3104,8 @@ external["SABRERenderer"] = function (loadFont) {
             let bitmapUsed =
                 bitmapSupported &&
                 (typeof contextType === "undefined" || contextType !== "2d");
-            parser.frameToCanvas(time, canvas, bitmapUsed);
+            renderer.frame(time);
+            renderer.copyToCanvas(canvas, bitmapUsed);
         }
     });
 };
