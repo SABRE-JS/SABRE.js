@@ -127,7 +127,7 @@ const default_ass_event_format = global.Object.freeze([
     "Text"
 ]);
 
-const main_prototype = global.Object.create(global.Object, {
+const parser_prototype = global.Object.create(global.Object, {
     _config: {
         /**
          * Config for the renderer.
@@ -2998,7 +2998,7 @@ const main_prototype = global.Object.create(global.Object, {
         writable: false
     },
 
-    load: {
+    "load": {
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
          * @param {string} subsText the passed subtitle file contents.
@@ -3030,6 +3030,12 @@ const main_prototype = global.Object.create(global.Object, {
     }
 });
 
+sabre["Parser"] = function (loadFont) {
+    let parser = global.Object.create(parser_prototype);
+    parser.init(loadFont);
+    return parser;
+};
+
 /**
  * Is Bitmap Rendering supported for canvas?
  * @type {boolean}
@@ -3046,9 +3052,8 @@ const bitmapSupported =
  */
 
 external["SABRERenderer"] = function (loadFont) {
-    let parser = global.Object.create(main_prototype);
+    let parser = new sabre["Parser"](loadFont);
     let renderer = new sabre.Renderer();
-    parser.init(loadFont);
     return Object.freeze({
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
@@ -3056,7 +3061,7 @@ external["SABRERenderer"] = function (loadFont) {
          * @returns {void}
          */
         "loadSubtitles": function (subsText) {
-            parser.load(subsText, (config) => renderer.load(config));
+            parser["load"](subsText, (config) => renderer.load(config));
         },
         /**
          * Updates the resolution at which the subtitles are rendered (if the player is resized, for example).
