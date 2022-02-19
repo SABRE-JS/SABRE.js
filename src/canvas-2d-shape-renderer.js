@@ -810,6 +810,17 @@ const shape_renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    "getBounds": {
+        /**
+         * Gets the collision bounds of the resulting shape.
+         * @returns {Array<number>} bounds of the resulting shape.
+         */
+        value: function () {
+            return [this._width, this._height];
+        },
+        writable: false
+    },
+
     "getDimensions": {
         /**
          * Gets the dimensions of the resulting image.
