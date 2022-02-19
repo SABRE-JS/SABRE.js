@@ -131,6 +131,7 @@ const parser_prototype = global.Object.create(global.Object, {
     _config: {
         /**
          * Config for the renderer.
+         * @type {?RendererData}
          * @private
          */
         value: null,
@@ -2811,8 +2812,8 @@ const parser_prototype = global.Object.create(global.Object, {
                 let value = values[i];
                 switch (key) {
                     case "Style":
-                        //Set the style to the specified one.
-                        style = this._styles[value];
+                        //Set the style to the specified one, or the default if it doesn't exist.
+                        style = this._styles[value] ?? this._styles["Default"];
                         break;
                     case "Layer":
                         //Set the layer.
@@ -3010,7 +3011,11 @@ const parser_prototype = global.Object.create(global.Object, {
             let defaultStyle = new sabre.SSAStyleDefinition();
             defaultStyle.setName("Default");
             this._styles = { "Default": defaultStyle };
-            this._config = { "info": {}, "parser": {}, "renderer": {} };
+            this._config = /** @type {RendererData} */ ({
+                "info": {},
+                "parser": {},
+                "renderer": {}
+            });
             if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
                 //check for BOM
                 subsText = subsText.replace("\xEF\xBB\xBF", ""); //ignore BOM, we're on the web, everything is big endian.
