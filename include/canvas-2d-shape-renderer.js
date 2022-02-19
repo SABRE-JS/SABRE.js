@@ -4,6 +4,7 @@
  *              setPixelScaleRatio:function(number,number):void,
  *              getOffset:function():Array<number>,
  *              getDimensions:function():Array<number>,
+ *              getBounds:function():Array<number>,
  *              getExtents:function():Array<number>,
  *              getImage:function():(HTMLCanvasElement|OffscreenCanvas)
  *          }}

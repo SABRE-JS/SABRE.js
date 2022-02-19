@@ -96,7 +96,16 @@ const text_renderer_prototype = global.Object.create(Object, {
 
     _width: {
         /**
-         * The width of the canvas.
+         * The width of the text.
+         * @type {number}
+         */
+        value: NaN,
+        writable: true
+    },
+
+    _textSpacingWidth: {
+        /**
+         * The width in terms of text spacing.
          * @type {number}
          */
         value: NaN,
@@ -105,7 +114,7 @@ const text_renderer_prototype = global.Object.create(Object, {
 
     _height: {
         /**
-         * The height of the canvas.
+         * The height of the text.
          * @type {number}
          */
         value: NaN,
@@ -553,23 +562,17 @@ const text_renderer_prototype = global.Object.create(Object, {
             //calculate size of text without scaling.
             {
                 let fontSize = this._calcFontSize(time, style, overrides);
-                if (spacing === 0) {
-                    let measurements = this._ctx.measureText(text);
-                    this._offsetY += measurements.actualBoundingBoxAscent;
-                    this._width = measurements.width;
-                } else {
-                    this._width = 0;
-                    let topSpace = 0;
-                    for (let i = 0; i < text.length; i++) {
-                        let measurements = this._ctx.measureText(text[i]);
-                        topSpace =
-                            topSpace >= measurements.actualBoundingBoxAscent
-                                ? topSpace
-                                : measurements.actualBoundingBoxAscent;
-                        this._width += measurements.width;
-                    }
-                    this._offsetY += topSpace;
-                    this._width += spacing * (text.length - 1);
+                let measurements = this._ctx.measureText(text);
+                this._offsetY += measurements.actualBoundingBoxAscent;
+                this._offsetX += measurements.actualBoundingBoxLeft;
+                this._width =
+                    measurements.actualBoundingBoxLeft +
+                    measurements.actualBoundingBoxRight;
+                this._textSpacingWidth = measurements.width;
+                if (spacing !== 0) {
+                    let kerning = spacing * (text.length - 1);
+                    this._width += kerning;
+                    this._textSpacingWidth += kerning;
                 }
                 this._height = fontSize;
             }
@@ -586,6 +589,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             ) {
                 let outline = this._calcOutline(time, style, overrides);
                 this._width += outline.x * 2;
+                this._textSpacingWidth += outline.x * 2;
                 this._height += outline.y * 2;
                 this._offsetX += outline.x;
                 this._offsetY += outline.y;
@@ -596,6 +600,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             let offsetXUnscaled = this._offsetX;
             let offsetYUnscaled = this._offsetY;
             let widthUnscaled = this._width;
+            let textSpacingWidthUnscaled = this._textSpacingWidth;
             let heightUnscaled = this._height;
 
             if (pass === sabre.RenderPasses.BACKGROUND) {
@@ -637,17 +642,17 @@ const text_renderer_prototype = global.Object.create(Object, {
                         this._ctx.clearRect(
                             0,
                             0,
-                            widthUnscaled,
-                            heightUnscaled
+                            Math.ceil(widthUnscaled),
+                            Math.ceil(heightUnscaled)
                         );
                     } else {
-                        if (this._canvas.width === cwidth) {
+                        if (this._canvas.height < cheight) {
                             this._canvas.height = cheight;
-                            this._lastFont = "";
-                        } else {
-                            this._canvas.width = cwidth;
-                            this._lastFont = "";
                         }
+                        if (this._canvas.width < cwidth) {
+                            this._canvas.width = cwidth;
+                        }
+                        this._lastFont = "";
                     }
                 }
                 this._handleStyling(
@@ -909,6 +914,17 @@ const text_renderer_prototype = global.Object.create(Object, {
          */
         value: function () {
             return [this._offsetX, this._offsetY];
+        },
+        writable: false
+    },
+
+    "getBounds": {
+        /**
+         * Gets the collision bounds of the text.
+         * @returns {Array<number>} dimensions of the text.
+         */
+        value: function () {
+            return [this._textSpacingWidth, this._height];
         },
         writable: false
     },

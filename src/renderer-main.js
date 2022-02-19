@@ -577,7 +577,7 @@ const renderer_prototype = global.Object.create(Object, {
                     sabre.RenderPasses.FILL,
                     true
                 );
-                let dim = this._textRenderer.getDimensions();
+                let dim = this._textRenderer.getBounds();
                 if (
                     lineOverrides.getPosition() === null &&
                     lineOverrides.getMovement() === null
@@ -742,7 +742,7 @@ const renderer_prototype = global.Object.create(Object, {
                     sabre.RenderPasses.FILL,
                     true
                 );
-                let dim = this._shapeRenderer.getDimensions();
+                let dim = this._shapeRenderer.getBounds();
                 if (
                     lineOverrides.getPosition() === null &&
                     lineOverrides.getMovement() === null
