@@ -600,7 +600,6 @@ const text_renderer_prototype = global.Object.create(Object, {
             let offsetXUnscaled = this._offsetX;
             let offsetYUnscaled = this._offsetY;
             let widthUnscaled = this._width;
-            let textSpacingWidthUnscaled = this._textSpacingWidth;
             let heightUnscaled = this._height;
 
             if (pass === sabre.RenderPasses.BACKGROUND) {
@@ -622,6 +621,8 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._offsetX *= scale.x * this._pixelScaleRatio.xratio;
                 this._offsetY *= scale.y * this._pixelScaleRatio.yratio;
                 this._width *= scale.x * this._pixelScaleRatio.xratio;
+                this._textSpacingWidth *=
+                    scale.x * this._pixelScaleRatio.xratio;
                 this._height *= scale.y * this._pixelScaleRatio.yratio;
             }
 
