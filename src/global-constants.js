@@ -43,3 +43,13 @@ sabre["RenderPasses"] = Object.freeze({
     "OUTLINE": 1,
     "FILL": 2
 });
+/**
+ * Defines wrap style modes.
+ * @enum {number}
+ */
+sabre["WrapStyleModes"] = Object.freeze({
+    "SMART": 0,
+    "EOL": 1,
+    "NONE": 2,
+    "SMART_INVERSE": 3
+});
