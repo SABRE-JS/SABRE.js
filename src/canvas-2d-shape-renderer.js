@@ -456,8 +456,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
             } else {
                 expandBounds(max_coords, min_coords, x, y);
             }
-            this._offsetX = min_coords[0];
-            this._offsetY = min_coords[1];
+            this._offsetX = -min_coords[0];
+            this._offsetY = -min_coords[1];
             this._width = max_coords[0] - min_coords[0];
             this._height = max_coords[1] - min_coords[1];
         },
@@ -683,9 +683,10 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             heightUnscaled
                         );
                     } else {
-                        if (this._canvas.width === cwidth) {
+                        if (this._canvas.height <= cheight) {
                             this._canvas.height = cheight;
-                        } else {
+                        }
+                        if (this._canvas.width <= cwidth) {
                             this._canvas.width = cwidth;
                         }
                     }
