@@ -11,7 +11,7 @@
 //@include [color.js]
 
 sabre["SSATransitionTargetOverride"] = function () {
-    const template = Object.freeze({
+    let obj = {
         transitionStart: 0,
         transitionEnd: 0,
         transitionAcceleration: 1,
@@ -32,8 +32,7 @@ sabre["SSATransitionTargetOverride"] = function () {
         shearX: null,
         shearY: null,
         spacing: null
-    });
-    let obj = Object.assign({}, template);
+    };
     return Object.create(Object, {
         "toJSON": {
             value: function () {
@@ -408,7 +407,43 @@ sabre["SSAStyleOverride"] = function () {
         weight: null,
         wrapStyle: 0
     });
-    let obj = Object.assign({}, template);
+    let obj = {
+        alignment: null,
+        baselineOffset: 0,
+        blurIterations: 0,
+        drawingMode: false,
+        drawingScale: 1,
+        encoding: null,
+        fontName: null,
+        fontSize: null,
+        fontSizeMod: 0,
+        gblurValue: 0,
+        italic: null,
+        karaokeMode: 0,
+        karaokeStart: global.NaN,
+        karaokeEnd: global.NaN,
+        margins: [null, null, null],
+        outlineX: null,
+        outlineY: null,
+        position: null,
+        primaryColor: null,
+        secondaryColor: null,
+        tertiaryColor: null,
+        quaternaryColor: null,
+        rotation: [0, 0, 0],
+        scaleX: null,
+        scaleY: null,
+        shadowX: null,
+        shadowY: null,
+        shearX: 0,
+        shearY: 0,
+        spacing: null,
+        strikeout: null,
+        transitions: [],
+        underline: null,
+        weight: null,
+        wrapStyle: 0
+    };
     return Object.create(Object, {
         "toJSON": {
             value: function () {
@@ -1016,6 +1051,9 @@ sabre["SSAStyleOverride"] = function () {
         "reset": {
             value: function () {
                 obj = Object.assign({}, template);
+                obj.margins = template.margins.slice(0);
+                obj.rotation = template.rotation.slice(0);
+                obj.transitions = [];
             },
             writable: false
         },
@@ -1032,12 +1070,9 @@ sabre["SSAStyleOverride"] = function () {
         _cloneHelper: {
             value: function (other) {
                 obj = Object.assign(obj, other);
-                let keys = Object.keys(obj);
-                for (let i = 0; i < keys.length; i++) {
-                    if (obj[keys[i]] instanceof Array) {
-                        obj[keys[i]] = obj[keys[i]].slice(0);
-                    }
-                }
+                obj.margins = other.margins.slice(0);
+                obj.rotation = other.rotation.slice(0);
+                obj.transitions = other.transitions.slice(0);
             },
             writable: false
         }
@@ -1045,15 +1080,14 @@ sabre["SSAStyleOverride"] = function () {
 };
 
 sabre["SSALineStyleOverride"] = function () {
-    const template = Object.freeze({
+    let obj = {
         clip: null,
         clipInverted: false,
         movement: null,
         position: null,
         rotationOrigin: null,
         fade: null
-    });
-    let obj = Object.assign({}, template);
+    };
     return Object.create(Object, {
         "toJSON": {
             value: function () {
@@ -1179,13 +1213,12 @@ sabre["SSALineStyleOverride"] = function () {
 };
 
 sabre["SSALineTransitionTargetOverride"] = function () {
-    const template = Object.freeze({
+    let obj = {
         transitionStart: 0,
         transitionEnd: 0,
         transitionAcceleration: 1,
         clip: null
-    });
-    let obj = Object.assign({}, template);
+    };
     return Object.create(Object, {
         "toJSON": {
             value: function () {
