@@ -53,7 +53,10 @@ const UNKNOWN_HEADING = new sabre.Complaint(
     "Encounterd a heading which is non-standard, ignoring."
 );
 const WRONG_CASE_IN_HEADING = new sabre.Complaint(
-    "Encounterd a heading which does not have its case consistent with the standard."
+    "Encountered a heading which does not have its case consistent with the standard."
+);
+const INVALID_WRAP_STYLE = new sabre.Complaint(
+    "Default Wrap style was invalid. Defaulting to SMART (mode 0)."
 );
 
 //Default style and dialogue formats
@@ -196,30 +199,6 @@ const parser_prototype = global.Object.create(global.Object, {
         writable: false
     },
 
-    _cloneEventWithoutText: {
-        /**
-         * Clone a SSASubtitleEvent, but leave the text uncloned.
-         * @param {SSASubtitleEvent} event
-         * @returns {SSASubtitleEvent} the clone.
-         * @private
-         */
-        value: function (event) {
-            let new_event = new sabre.SSASubtitleEvent();
-            new_event.setId(event.getId());
-            new_event.setStart(event.getStart());
-            new_event.setEnd(event.getEnd());
-            new_event.setLayer(event.getLayer());
-            new_event.setStyle(event.getStyle());
-            new_event.setOverrides(event.getOverrides());
-            new_event.setLineOverrides(event.getLineOverrides());
-            new_event.setLineTransitionTargetOverrides(
-                event.getLineTransitionTargetOverrides()
-            );
-            return new_event;
-        },
-        writable: false
-    },
-
     _parser: {
         /**
          * Contains parsing methods for root entries.
@@ -326,8 +305,21 @@ const parser_prototype = global.Object.create(global.Object, {
                         );
                         return;
                     case "WrapStyle":
-                        config["renderer"]["default_wrap_style"] =
-                            global.parseInt(keypair[1], 10);
+                        {
+                            let wrap_style = global.parseInt(keypair[1], 10);
+                            if (
+                                !gassert(
+                                    INVALID_WRAP_STYLE,
+                                    wrap_style >= sabre.WrapStyleModes.SMART &&
+                                        wrap_style <=
+                                            sabre.WrapStyleModes.SMART_INVERSE
+                                )
+                            ) {
+                                wrap_style = sabre.WrapStyleModes.SMART;
+                            }
+                            config["renderer"]["default_wrap_style"] =
+                                wrap_style;
+                        }
                         return;
                     default:
                         console.warn(
@@ -799,7 +791,7 @@ const parser_prototype = global.Object.create(global.Object, {
                 event.setOrder(i);
                 match = /^([^{}]*?)\\([nN])(.*)$/.exec(event.getText());
                 if (match !== null) {
-                    let new_event = this._cloneEventWithoutText(event);
+                    let new_event = sabre.cloneEventWithoutText(event);
                     event.setText(match[1]);
                     new_event.setText(match[3]);
                     new_event.setNewLine(match[2] === "N");
@@ -807,7 +799,7 @@ const parser_prototype = global.Object.create(global.Object, {
                 }
                 match = /^([^{}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
                 if (match !== null) {
-                    let new_event = this._cloneEventWithoutText(event);
+                    let new_event = sabre.cloneEventWithoutText(event);
                     event.setText(match[1]);
                     new_event.setOverrides(
                         this._parseOverrides(
@@ -875,12 +867,14 @@ const parser_prototype = global.Object.create(global.Object, {
                     let color_index = 1;
                     if (
                         typeof parameters[0] !== "undefined" &&
+                        parameters[0] !== null &&
                         parameters[0] !== ""
                     )
                         color_index = global.parseInt(parameters[0], 10);
                     let a = null;
                     if (
                         typeof parameters[1] !== "undefined" &&
+                        parameters[1] !== null &&
                         parameters[1] !== ""
                     ) {
                         a = global.parseInt(
@@ -1100,6 +1094,7 @@ const parser_prototype = global.Object.create(global.Object, {
                 ) {
                     if (
                         typeof parameters[0] === "undefined" ||
+                        parameters[0] === null ||
                         parameters[0] === ""
                     ) {
                         overrides.setAlignment(null);
@@ -1304,12 +1299,14 @@ const parser_prototype = global.Object.create(global.Object, {
                     let color_index = 1;
                     if (
                         typeof parameters[0] !== "undefined" &&
+                        parameters[0] !== null &&
                         parameters[0] !== ""
                     )
                         color_index = global.parseInt(parameters[0], 10);
                     let color;
                     if (
                         typeof parameters[1] !== "undefined" &&
+                        parameters[1] !== null &&
                         parameters[1] !== ""
                     ) {
                         let pcolor = global.parseInt(
@@ -2361,7 +2358,11 @@ const parser_prototype = global.Object.create(global.Object, {
                 ) {
                     overrides.reset();
                     let styleName = parameters[0];
-                    if (typeof styleName !== "undefined" && styleName !== "")
+                    if (
+                        typeof styleName !== "undefined" &&
+                        styleName !== null &&
+                        styleName !== ""
+                    )
                         setStyle(
                             this._styles[styleName] ?? this._styles["Default"]
                         );
@@ -2590,6 +2591,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     let value = parameters[0] === "1";
                     if (
                         typeof parameters[0] === "undefined" ||
+                        parameters[0] === null ||
                         (parameters[0] !== "0" && !value)
                     )
                         return;

@@ -39,6 +39,15 @@ sabre.performTransition = function (
 };
 
 /**
+ * Clone a SSASubtitleEvent, but leave the text uncloned, don't copy newline state.
+ * @param {SSASubtitleEvent} event
+ * @returns {SSASubtitleEvent} the clone.
+ */
+sabre.cloneEventWithoutText = function (event) {
+    return new sabre.SSASubtitleEvent();
+};
+
+/**
  * Round number n to p places.
  * @param {number} n Number to round.
  * @param {number} p Number of places.
