@@ -557,6 +557,7 @@ const renderer_prototype = global.Object.create(Object, {
                 marginVertical: 0,
                 alignment: alignment
             };
+            if (event.getText() === "" && !event.isNewLine()) return result;
             {
                 let style = event.getStyle();
                 let overrides = event.getOverrides();
@@ -918,45 +919,79 @@ const renderer_prototype = global.Object.create(Object, {
                 localPositionInfo.alignment % 3
             );
             let verticalAlignment = Math.floor(localPositionInfo.alignment / 3);
-            let lineWidth = 0;
-            for (let i = 0; i < lineInfos.length; i++) {
-                lineWidth += lineInfos.width;
+            switch (verticalAlignment) {
+                case 2:
+                    //TOP
+                    for (let i = 0; i < lines.length - 1; i++) {
+                        let max = 0;
+                        for (let j = 0; j < lines[i].length; j++) {
+                            max = Math.max(lines[i][j].height, max);
+                        }
+                        localPositionInfo.y += max;
+                        localPositionInfo.originalY += max;
+                        localPositionInfo.alignmentOffsetY -= max;
+                    }
+                    break;
+                case 1:
+                    //CENTER
+                    for (let i = 0; i < lines.length - 1; i++) {
+                        let max = 0;
+                        for (let j = 0; j < lines[i].length; j++) {
+                            max = Math.max(lines[i][j].height, max);
+                        }
+                        localPositionInfo.y += max / 2;
+                        localPositionInfo.originalY += max / 2;
+                        localPositionInfo.alignmentOffsetY -= max / 2;
+                    }
+                    break;
+                case 0:
+                    //BOTTOM
+                    //Do Nothing unless newline.
+                    break;
             }
-            if (
-                newLine ||
-                lineWidth +
-                    localPositionInfo.marginLeft +
-                    localPositionInfo.marginRight +
-                    localPositionInfo.width >
-                    this._config.renderer["resolution_x"]
-            ) {
-                lines.push(lineInfos);
+            if (newLine) {
+                let max;
                 switch (verticalAlignment) {
                     case 2:
                         //TOP
-                        for (let i = 0; i < lines.length; i++) {
-                            let max = 0;
-                            for (let j = 0; j < lines[i].length; j++) {
-                                max = Math.max(lines[i][j].height, max);
-                            }
-                            localPositionInfo.y += max;
-                            localPositionInfo.originalY += max;
+                        max = 0;
+                        for (
+                            let j = 0;
+                            j < lines[lines.length - 1].length;
+                            j++
+                        ) {
+                            max = Math.max(
+                                lines[lines.length - 1][j].height,
+                                max
+                            );
                         }
+                        localPositionInfo.y += max;
+                        localPositionInfo.originalY += max;
+                        localPositionInfo.alignmentOffsetY -= max;
                         break;
                     case 1:
                         //CENTER
-                        for (let i = 0; i < lines.length; i++) {
-                            let max = 0;
-                            for (let j = 0; j < lines[i].length; j++) {
-                                max = Math.max(lines[i][j].height, max);
-                            }
-                            localPositionInfo.y += max / 2;
-                            localPositionInfo.originalY += max / 2;
+                        max = 0;
+                        for (
+                            let j = 0;
+                            j < lines[lines.length - 1].length;
+                            j++
+                        ) {
+                            max = Math.max(
+                                lines[lines.length - 1][j].height,
+                                max
+                            );
                         }
+                        localPositionInfo.y += max / 2;
+                        localPositionInfo.originalY += max / 2;
+                        localPositionInfo.alignmentOffsetY -= max / 2;
+
                         for (let i = 0; i < lines.length; i++) {
                             for (let j = 0; j < lines[i].length; j++) {
-                                lines[i][j].y += localPositionInfo.height / 2;
+                                lines[i][j].y -= localPositionInfo.height / 2;
                                 lines[i][j].originalY -=
+                                    localPositionInfo.height / 2;
+                                lines[i][j].alignmentOffsetY +=
                                     localPositionInfo.height / 2;
                             }
                         }
@@ -967,6 +1002,8 @@ const renderer_prototype = global.Object.create(Object, {
                             for (let j = 0; j < lines[i].length; j++) {
                                 lines[i][j].y -= localPositionInfo.height;
                                 lines[i][j].originalY -=
+                                    localPositionInfo.height;
+                                lines[i][j].alignmentOffsetY +=
                                     localPositionInfo.height;
                             }
                         }
@@ -980,6 +1017,8 @@ const renderer_prototype = global.Object.create(Object, {
                         for (let i = 0; i < lineInfos.length; i++) {
                             lineInfos[i].x -= localPositionInfo.width;
                             lineInfos[i].originalX -= localPositionInfo.width;
+                            lineInfos[i].alignmentOffsetX +=
+                                localPositionInfo.width;
                         }
                         break;
                     case 1:
@@ -988,10 +1027,14 @@ const renderer_prototype = global.Object.create(Object, {
                             lineInfos[i].x -= localPositionInfo.width / 2;
                             lineInfos[i].originalX -=
                                 localPositionInfo.width / 2;
+                            lineInfos[i].alignmentOffsetX +=
+                                localPositionInfo.width / 2;
                         }
                         for (let i = 0; i < lineInfos.length; i++) {
                             localPositionInfo.x += lineInfos[i].width / 2;
                             localPositionInfo.originalX +=
+                                lineInfos[i].width / 2;
+                            localPositionInfo.alignmentOffsetX -=
                                 lineInfos[i].width / 2;
                         }
                         break;
@@ -1000,6 +1043,8 @@ const renderer_prototype = global.Object.create(Object, {
                         for (let i = 0; i < lineInfos.length; i++) {
                             localPositionInfo.x += lineInfos[i].width;
                             localPositionInfo.originalX += lineInfos[i].width;
+                            localPositionInfo.alignmentOffsetX +=
+                                lineInfos[i].width;
                         }
                         break;
                 }
@@ -1200,6 +1245,164 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _subdivideEvents: {
+        /**
+         * Breakup the events on spaces.
+         * @param {Array<SSASubtitleEvent>} events
+         */
+        value: function (events) {
+            let cur_event, new_event, next_event, text;
+            for (let i = 0; i < events.length; i++) {
+                cur_event = events[i];
+                if (cur_event.getOverrides().getDrawingMode()) continue;
+                text = cur_event.getText();
+                for (let j = 1; j < text.length; j++) {
+                    if (text[j] === " ") {
+                        //TODO: Fix the issue this causes with karaoke wipes.
+                        new_event = sabre.cloneEventWithoutText(cur_event);
+                        new_event.setNewLine(cur_event.isNewLine());
+                        next_event = sabre.cloneEventWithoutText(cur_event);
+                        new_event.setText(text.slice(0, j));
+                        next_event.setText(text.slice(j));
+                        events.splice(i, 1, new_event, next_event);
+                        break;
+                    }
+                }
+                if (cur_event === events[i]) {
+                    events[i] = sabre.cloneEventWithoutText(cur_event);
+                    events[i].setText(text);
+                    events[i].setNewLine(cur_event.isNewLine());
+                }
+            }
+        },
+        writable: false
+    },
+
+    _wordWrap: {
+        /**
+         * Handle if a line gets too long.
+         * @param {number} time The current time.
+         * @param {Array<SSASubtitleEvent>} events the list of events
+         */
+        value: function (time, events) {
+            let width = 0;
+            let last_id = -1;
+            let line_start = 0;
+            let event_widths = [];
+            for (let i = 0; i < events.length; i++) {
+                let cur_event = events[i];
+                if (!cur_event.getOverrides().getDrawingMode()) {
+                    if (cur_event.getId() !== last_id) {
+                        last_id = events[i].getId();
+                        width = 0;
+                        line_start = i;
+                    }
+                    let wrap_style =
+                        cur_event.getOverrides().getWrapStyle() ??
+                        this._config.renderer["default_wrap_style"];
+                    if (
+                        wrap_style < sabre.WrapStyleModes.SMART ||
+                        wrap_style > sabre.WrapStyleModes.SMART_INVERSE
+                    ) {
+                        wrap_style =
+                            this._config.renderer["default_wrap_style"];
+                    }
+                    if (wrap_style === sabre.WrapStyleModes.NONE) continue;
+                    this._textRenderer.renderEvent(
+                        time,
+                        cur_event,
+                        sabre.RenderPasses.FILL,
+                        true
+                    );
+
+                    let marginLeft, marginRight;
+                    {
+                        let style = cur_event.getStyle();
+                        let overrides = cur_event.getOverrides();
+                        let styleMargins = style.getMargins();
+                        let overrideMargins = overrides.getMargins();
+                        {
+                            marginLeft = overrideMargins[0] || styleMargins[0];
+                            marginRight = overrideMargins[1] || styleMargins[1];
+                        }
+                    }
+
+                    let available_width =
+                        this._config.renderer["resolution_x"] -
+                        marginLeft -
+                        marginRight;
+                    let event_width = this._textRenderer.getBounds()[0];
+                    event_widths[i] = event_width;
+                    if (cur_event.isNewLine()) {
+                        width = 0;
+                        line_start = i;
+                    }
+                    if (width + event_width > available_width) {
+                        if (
+                            wrap_style === sabre.WrapStyleModes.SMART ||
+                            wrap_style === sabre.WrapStyleModes.SMART_INVERSE
+                        ) {
+                            let internal_width = 0;
+                            for (let j = line_start; j <= i; j++) {
+                                if (
+                                    internal_width + event_widths[j] >
+                                    available_width / 2
+                                ) {
+                                    let offset =
+                                        wrap_style ===
+                                        sabre.WrapStyleModes.SMART
+                                            ? 1
+                                            : 0;
+                                    if (j + offset < events.length) {
+                                        let internal_text =
+                                            events[j + offset].getText();
+                                        if (internal_text[0] === " ") {
+                                            if (internal_text !== " ")
+                                                events[j + offset].setText(
+                                                    internal_text.slice(1)
+                                                );
+                                            else events[j + offset].setText("");
+                                            this._textRenderer.renderEvent(
+                                                time,
+                                                events[j + offset],
+                                                sabre.RenderPasses.FILL,
+                                                true
+                                            );
+                                            event_widths[j + offset] =
+                                                this._textRenderer.getBounds()[0];
+                                        }
+                                        events[j + offset].setNewLine(true);
+                                        i = j + offset - 1;
+                                    }
+                                    break;
+                                } else internal_width += event_widths[j];
+                            }
+                        } else if (wrap_style === sabre.WrapStyleModes.EOL) {
+                            cur_event.setNewLine(true);
+                            let internal_text = cur_event.getText();
+                            if (internal_text[0] === " ") {
+                                if (internal_text !== " ")
+                                    cur_event.setText(internal_text.slice(1));
+                                else cur_event.setText("");
+                                this._textRenderer.renderEvent(
+                                    time,
+                                    cur_event,
+                                    sabre.RenderPasses.FILL,
+                                    true
+                                );
+                                event_widths[i] =
+                                    this._textRenderer.getBounds()[0];
+                            }
+                            width = event_widths[i];
+                            line_start = i;
+                        }
+                    } else width += event_width;
+                }
+            }
+        },
+        writable: false
+    },
+
     _organizeEvents: {
         /**
          * Positions events onscreen and handles collisions.
@@ -1211,19 +1414,22 @@ const renderer_prototype = global.Object.create(Object, {
         value: function (time, events) {
             let result = new Array(events.length);
             let resultsForId = {};
+            this._subdivideEvents(events);
+            this._wordWrap(time, events);
             {
-                let lines = [];
                 let lineInfos = [];
+                let lines = [lineInfos];
                 let lastId = -1;
                 for (let i = 0; i < events.length; i++) {
                     let id = events[i].getId();
                     let newLineForced = events[i].isNewLine();
                     if (lastId !== id) {
                         resultsForId[id] = [];
-                        lines = [];
                         lineInfos = [];
+                        lines = [lineInfos];
                         lastId = id;
                     }
+
                     result[i] = this._positionEvent(time, i, events[i]);
                     if (lineInfos.length >= 1) {
                         if (
@@ -1235,6 +1441,7 @@ const renderer_prototype = global.Object.create(Object, {
                             )
                         ) {
                             lineInfos = [result[i]];
+                            lines.push(lineInfos);
                         } else {
                             lineInfos.push(result[i]);
                         }
@@ -1491,7 +1698,21 @@ const renderer_prototype = global.Object.create(Object, {
                 "Matrix4fv"
             );
             this._positioningShader.addOption(
-                "u_rotation_matrix",
+                "u_rotation_matrix_x",
+                new Float32Array([
+                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+                ]),
+                "Matrix4fv"
+            );
+            this._positioningShader.addOption(
+                "u_rotation_matrix_y",
+                new Float32Array([
+                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+                ]),
+                "Matrix4fv"
+            );
+            this._positioningShader.addOption(
+                "u_rotation_matrix_z",
                 new Float32Array([
                     1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
                 ]),
@@ -1762,48 +1983,38 @@ const renderer_prototype = global.Object.create(Object, {
                 );
             }
 
-            let rotationMatrix;
+            let rotationMatrixX;
+            let rotationMatrixY;
+            let rotationMatrixZ;
             //NOTE: Rotate the subtitle.
             {
                 // prettier-ignore
-                let rotationMatrixX = {
+                rotationMatrixX = {
                     m00: 1, m01: 0,     m02: 0,     m03: 0,
                     m10: 0, m11: cosx,  m12: -sinx, m13: 0,
                     m20: 0, m21: sinx,  m22: cosx,  m23: 0,
                     m30: 0, m31: 0,     m32: 0,     m33: 1
                 };
-
-                rotationMatrix = rotationMatrixX;
             }
 
             {
                 // prettier-ignore
-                let rotationMatrixY = {
+                rotationMatrixY = {
                     m00: cosy,  m01: 0, m02: siny,  m03: 0,
                     m10: 0,     m11: 1, m12: 0,     m13: 0,
                     m20: -siny, m21: 0, m22: cosy,  m23: 0,
                     m30: 0,     m31: 0, m32: 0,     m33: 1
                 };
-
-                rotationMatrix = this._matrixMultiply4x4(
-                    rotationMatrix,
-                    rotationMatrixY
-                );
             }
 
             {
                 // prettier-ignore
-                let rotationMatrixZ = {
+                rotationMatrixZ = {
                     m00: cosz,  m01: -sinz, m02: 0, m03: 0,
                     m10: sinz,  m11: cosz,  m12: 0, m13: 0,
                     m20: 0,     m21: 0,     m22: 1, m23: 0,
                     m30: 0,     m31: 0,     m32: 0, m33: 1,
                 };
-
-                rotationMatrix = this._matrixMultiply4x4(
-                    rotationMatrix,
-                    rotationMatrixZ
-                );
             }
 
             //NOTE: Position for display.
@@ -1825,7 +2036,13 @@ const renderer_prototype = global.Object.create(Object, {
                 );
             }
 
-            return [preRotationMatrix, rotationMatrix, postRotationMatrix];
+            return [
+                preRotationMatrix,
+                rotationMatrixX,
+                rotationMatrixY,
+                rotationMatrixZ,
+                postRotationMatrix
+            ];
         },
         writable: false
     },
@@ -1845,7 +2062,7 @@ const renderer_prototype = global.Object.create(Object, {
                     this._gl.TEXTURE_2D,
                     0,
                     0,
-                    0,
+                    this._textureSubtitleBounds[1] - extents[1],
                     this._gl.RGBA,
                     this._gl.UNSIGNED_BYTE,
                     source.getImage()
@@ -1955,7 +2172,7 @@ const renderer_prototype = global.Object.create(Object, {
 
             let tex_coords;
             {
-                let extents = source.getExtents();
+                let extents = this._textureSubtitleBounds;
                 let width = dimensions[0] / extents[0];
                 let height = dimensions[1] / extents[1];
                 // prettier-ignore
@@ -2247,7 +2464,7 @@ const renderer_prototype = global.Object.create(Object, {
                     )
                 );
                 this._positioningShader.updateOption(
-                    "u_rotation_matrix",
+                    "u_rotation_matrix_x",
                     new Float32Array(
                         this._matrixToArrayRepresentation4x4(
                             positioningMatrices[1]
@@ -2255,10 +2472,26 @@ const renderer_prototype = global.Object.create(Object, {
                     )
                 );
                 this._positioningShader.updateOption(
-                    "u_post_rotation_matrix",
+                    "u_rotation_matrix_y",
                     new Float32Array(
                         this._matrixToArrayRepresentation4x4(
                             positioningMatrices[2]
+                        )
+                    )
+                );
+                this._positioningShader.updateOption(
+                    "u_rotation_matrix_z",
+                    new Float32Array(
+                        this._matrixToArrayRepresentation4x4(
+                            positioningMatrices[3]
+                        )
+                    )
+                );
+                this._positioningShader.updateOption(
+                    "u_post_rotation_matrix",
+                    new Float32Array(
+                        this._matrixToArrayRepresentation4x4(
+                            positioningMatrices[4]
                         )
                     )
                 );
@@ -2672,7 +2905,11 @@ const renderer_prototype = global.Object.create(Object, {
                         j++
                     ) {
                         let currentEvent = events[i + j];
-                        if (currentEvent.getText() === "") continue;
+                        if (
+                            currentEvent.getText() === "" ||
+                            currentEvent.getText().match(/^\s+$/) !== null
+                        )
+                            continue;
                         if (!currentEvent.getOverrides().getDrawingMode()) {
                             this._textRenderer.renderEvent(
                                 time,
