@@ -11,7 +11,7 @@
  * @suppress {globalThis}
  */
 const shaderlog = {};
-const statetracker = {};
+let statetracker = {};
 
 function isArrayish(a) {
     return (
@@ -38,6 +38,11 @@ const ShaderPrototype = Object.create(Object, {
         writable: true
     },
 
+    _uniformLocations: {
+        value: null,
+        writable: true
+    },
+
     _textures: {
         value: null,
         writable: true
@@ -59,7 +64,9 @@ const ShaderPrototype = Object.create(Object, {
                 if (val.length !== cval.length) return false;
                 else
                     for (i = 0; i < val.length; i++)
-                        unchanged = unchanged && val[i] === cval[i];
+                        if (!(unchanged = unchanged && val[i] === cval[i]))
+                            break;
+
                 return unchanged;
             }
             return false;
@@ -237,7 +244,12 @@ const ShaderPrototype = Object.create(Object, {
             let type = null;
             for (let i = 0; i < props.length; i++) {
                 key = props[i];
-                uniform = gl.getUniformLocation(this._shader, key);
+                if (!(this._uniformLocations[key] ?? false))
+                    this._uniformLocations[key] = gl.getUniformLocation(
+                        this._shader,
+                        key
+                    );
+                uniform = this._uniformLocations[key];
                 if (this._isUnchanged(this._keys[key], uniform, gl)) continue;
                 if ((uniform || null) !== null) {
                     type = this._keys[key].datatype;
@@ -372,6 +384,7 @@ const ShaderPrototype = Object.create(Object, {
     "compile": {
         value: function (gl, defines, err, version) {
             statetracker[gl] = statetracker[gl] ?? {};
+            this._uniformLocations = {};
             if (typeof err === "undefined" || err === null) {
                 err = defines;
                 defines = null;
@@ -472,6 +485,5 @@ sabre["Shader"] = function () {
     return Object.create(ShaderPrototype);
 };
 sabre["Shader"]["resetStateEngine"] = function () {
-    let keys = Object.keys(statetracker);
-    for (let i = 0; i < keys.length; i++) statetracker[keys[i]] = null;
+    statetracker = {};
 };
