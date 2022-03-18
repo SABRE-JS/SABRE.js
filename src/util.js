@@ -5,6 +5,10 @@
  |
  |-
  */
+//@include [color.js]
+//@include [style.js]
+//@include [style-override.js]
+//@include [subtitle-event.js]
 /**
  * @fileoverview utility code and polyfills.
  */
@@ -61,27 +65,168 @@ global.Math.trunc =
     function (a) {
         return a < 0 ? Math.ceil(a) : Math.floor(a);
     };
-global.requestAnimationFrame = (function () {
-    return (
-        global.requestAnimationFrame ??
-        global.webkitRequestAnimationFrame ??
-        global.mozRequestAnimationFrame ??
-        global.msRequestAnimationFrame ??
-        global.oRequestAnimationFrame ??
-        function (callback) {
-            global.setTimeout(callback, 1000 / 60);
-        }
-    );
-})();
 
-const lehex = function (value) {
-    var result = [];
-    for (var bytes = 4; bytes > 0; bytes--) {
-        result.push(String.fromCharCode(value & 255));
-        value >>= 8;
+(function (global) {
+    global.requestAnimationFrame = (function (global) {
+        return (
+            global.requestAnimationFrame ??
+            global.webkitRequestAnimationFrame ??
+            global.mozRequestAnimationFrame ??
+            global.msRequestAnimationFrame ??
+            global.oRequestAnimationFrame ??
+            function (callback) {
+                return global.setTimeout(callback, 1000 / 60);
+            }
+        );
+    })(global);
+
+    global.cancelAnimationFrame = (function (global) {
+        return (
+            global.cancelAnimationFrame ??
+            global.webkitCancelAnimationFrame ??
+            global.mozCancelAnimationFrame ??
+            global.msCancelAnimationFrame ??
+            global.oCancelAnimationFrame ??
+            function (id) {
+                global.clearTimeout(id);
+            }
+        );
+    })(global);
+})(global);
+
+(function (global) {
+    let shownTimeAlert = false;
+    let repaintTimes = [0, 0, 0];
+    let animationFrameId = null;
+    let callbacksCount = 0;
+    let callbacks = [];
+
+    let lastVideoMetrics = {};
+
+    function getMetricForVideo(video) {
+        let metric = video.mozPresentedFrames ?? null;
+        if (
+            typeof video.getVideoPlaybackQuality === "undefined" ||
+            metric !== null
+        ) {
+            return metric;
+        } else {
+            let quality = video.getVideoPlaybackQuality();
+            return quality.totalVideoFrames - quality.droppedVideoFrames;
+        }
     }
-    return result.join("");
-};
+
+    function checkForNewVideoFrame(currentTime) {
+        if (currentTime >= Number.MAX_SAFE_INTEGER && !shownTimeAlert) {
+            shownTimeAlert = true;
+            if (
+                global.confirm(
+                    "Warning:\n\tThis webpage has been open for a long time" +
+                        " and may begin to have issues as a result.\n\t" +
+                        "Please press ok to refresh the page to fix this or" +
+                        " cancel so that you may backup any work.\n\tAfter doing" +
+                        " so please refresh the page."
+                )
+            ) {
+                global.location.reload();
+            }
+        }
+
+        let avgRepaintTime =
+            (repaintTimes[0] + repaintTimes[1] + repaintTimes[2]) / 3;
+        let videosChanged = {};
+        for (let i = 0; i < callbacks.length; i++) {
+            if (callbacks[i] === null) continue;
+            let isNewFrame = true;
+            let video = callbacks[i].video;
+            let callback = callbacks[i].callback;
+            let metric = getMetricForVideo(video);
+            if (!videosChanged[video]) {
+                let currentMetric = metric ?? NaN;
+                let lastMetric = lastVideoMetrics[video] ?? NaN;
+                lastVideoMetrics[video] = currentMetric;
+                isNewFrame = currentMetric !== lastMetric;
+            }
+            videosChanged[video] = isNewFrame;
+            if (isNewFrame) {
+                if (--callbacksCount === 0) {
+                    callbacks = [];
+                } else callbacks[i] = null;
+                let presentTime = currentTime + avgRepaintTime;
+                callback.call(video, currentTime, {
+                    "presentationTime": currentTime,
+                    "expectedDisplayTime": presentTime,
+                    "width": video.videoWidth ?? video.width,
+                    "height": video.videoHeight ?? video.height,
+                    "mediaTime":
+                        video.currentTime +
+                        (performance.now() - presentTime) / 1000,
+                    "presentedFrames": metric ?? -1,
+                    "processingDuration": video.mozFrameDelay ?? 0
+                });
+            }
+        }
+
+        if (callbacksCount !== 0)
+            animationFrameId = global.requestAnimationFrame(
+                checkForNewVideoFrame
+            );
+        else animationFrameId = null;
+        repaintTimes[0] = repaintTimes[1];
+        repaintTimes[1] = repaintTimes[2];
+        repaintTimes[2] = performance.now() - currentTime;
+    }
+
+    global.HTMLVideoElement.prototype["requestVideoFrameCallback"] = (function (
+        global
+    ) {
+        return (
+            global.HTMLVideoElement.prototype["requestVideoFrameCallback"] ??
+            global.HTMLVideoElement.prototype[
+                "webkitRequestVideoFrameCallback"
+            ] ??
+            global.HTMLVideoElement.prototype["mozRequestVideoFrameCallback"] ??
+            global.HTMLVideoElement.prototype["msRequestVideoFrameCallback"] ??
+            global.HTMLVideoElement.prototype["oRequestVideoFrameCallback"] ??
+            function (cb) {
+                let vid = this;
+                callbacksCount++;
+                let id = callbacks.push({ video: vid, callback: cb }) - 1;
+                if (animationFrameId === null) {
+                    animationFrameId = global.requestAnimationFrame(
+                        checkForNewVideoFrame
+                    );
+                }
+                return id;
+            }
+        );
+    })(global);
+
+    global.HTMLVideoElement.prototype["cancelVideoFrameCallback"] = (function (
+        global
+    ) {
+        return (
+            global.HTMLVideoElement.prototype["cancelVideoFrameCallback"] ??
+            global.HTMLVideoElement.prototype[
+                "webkitCancelVideoFrameCallback"
+            ] ??
+            global.HTMLVideoElement.prototype["mozCancelVideoFrameCallback"] ??
+            global.HTMLVideoElement.prototype["msRequestVideoFrameCallback"] ??
+            global.HTMLVideoElement.prototype["oRequestVideoFrameCallback"] ??
+            function (id) {
+                if (callbacks[id] && callbacks[id].video === this) {
+                    if (--callbacksCount === 0) {
+                        callbacks = [];
+                        if (animationFrameId !== null) {
+                            global.cancelAnimationFrame(animationFrameId);
+                            animationFrameId = null;
+                        }
+                    } else callbacks[id] = null;
+                }
+            }
+        );
+    })(global);
+})(global);
 
 /**
  * Performs a transition between two numbers given current time, start, end, and acceleration.
@@ -108,6 +253,36 @@ sabre["performTransition"] = function (
         Math.min(Math.pow((curtime - start) / (end - start), acceleration), 1)
     );
     return originalValue * (1 - percent) + transitionValue * percent;
+};
+
+/**
+ * Clone a SSASubtitleEvent, but leave the text uncloned, don't copy newline state.
+ * @param {SSASubtitleEvent} event
+ * @returns {SSASubtitleEvent} the clone.
+ */
+sabre["cloneEventWithoutText"] = function (event) {
+    let new_event = new sabre.SSASubtitleEvent();
+    new_event.setId(event.getId());
+    new_event.setStart(event.getStart());
+    new_event.setEnd(event.getEnd());
+    new_event.setLayer(event.getLayer());
+    new_event.setStyle(event.getStyle());
+    new_event.setOverrides(event.getOverrides());
+    new_event.setLineOverrides(event.getLineOverrides());
+    new_event.setLineTransitionTargetOverrides(
+        event.getLineTransitionTargetOverrides()
+    );
+    new_event.setNewLine(false);
+    return new_event;
+};
+
+const lehex = function (value) {
+    var result = [];
+    for (var bytes = 4; bytes > 0; bytes--) {
+        result.push(String.fromCharCode(value & 255));
+        value >>= 8;
+    }
+    return result.join("");
 };
 
 //implement toBlob on systems that don't support it in a manner that avoids using costly dataurls
