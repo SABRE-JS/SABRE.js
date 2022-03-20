@@ -1841,7 +1841,7 @@ const renderer_prototype = global.Object.create(Object, {
                 currentEvent.getStyle(),
                 currentEvent.getOverrides()
             );
-            if (info.blur == 0 && info.gaussBlur == 0) return null;
+            if (info.blur === 0 && info.gaussBlur === 0) return null;
             return info;
         },
         writable: false
@@ -1940,7 +1940,7 @@ const renderer_prototype = global.Object.create(Object, {
             let rotationOrigin = event.getLineOverrides().getRotationOrigin();
 
             let rotationOffset;
-            if (rotationOrigin == null)
+            if (rotationOrigin === null)
                 rotationOffset = [
                     -position.alignmentOffsetX,
                     -position.alignmentOffsetY
@@ -2940,7 +2940,7 @@ const renderer_prototype = global.Object.create(Object, {
                             );
                         }
                     }
-                    if (pass == 2) i += j;
+                    if (pass === 2) i += j;
                 }
             }
         },

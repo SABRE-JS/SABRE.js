@@ -343,7 +343,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
             const BSpline = sabre.BSpline;
             //end prep
             let uniquecommands = cmds.match(
-                /[mnlbspc](?: \-?\d+(?:\.\d+)? \-?\d+(?:\.\d+)?)*/gi
+                /[mnlbspc](?: -?\d+(?:\.\d+)? -?\d+(?:\.\d+)?)*/gi
             );
             if (uniquecommands === null) return;
             let min_coords = [
@@ -471,7 +471,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
             const BSpline = sabre.BSpline;
             //end prep
             let uniquecommands = cmds.match(
-                /[mnlbspc](?: \-?\d+(?:\.\d+)? \-?\d+(?:\.\d+)?)*/gi
+                /[mnlbspc](?: -?\d+(?:\.\d+)? -?\d+(?:\.\d+)?)*/gi
             );
             if (uniquecommands === null) return;
             let spline_points = null;
@@ -704,7 +704,6 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 this._ctx.globalCompositeOperation = "source-over";
                 //draw the shape
                 {
-                    let spacing = overrides.getSpacing() ?? style.getSpacing();
                     if (pass === sabre.RenderPasses.OUTLINE) {
                         let outline_gt_zero = outline_x > 0 && outline_y > 0;
                         if (outline_x > outline_y) {

@@ -421,10 +421,14 @@ const ShaderPrototype = Object.create(Object, {
                 gl.deleteProgram(shaderProgram);
                 try {
                     gl.deleteShader(this._vert);
-                } catch (e) {}
+                } catch (e) {
+                    console.warn("Error deleting vertex shader.");
+                }
                 try {
                     gl.deleteShader(this._frag);
-                } catch (e) {}
+                } catch (e) {
+                    console.warn("Error deleting fragment shader.");
+                }
                 err();
                 return;
             }
@@ -472,7 +476,9 @@ const ShaderPrototype = Object.create(Object, {
                 console.log(gl.getShaderInfoLog(shader));
                 try {
                     gl.deleteShader(shader);
-                } catch (e) {}
+                } catch (e) {
+                    console.log("Error deleting shader.");
+                }
                 return null;
             }
 
