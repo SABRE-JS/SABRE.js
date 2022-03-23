@@ -1,12 +1,17 @@
 #!/bin/sh
 . "$PWD/sbin/bootstrap.sh"
-
+FORMAT_OPTION=-c
+FORMAT_TYPE="%Y"
+if [ "$NIX_TYPE" = "bsd" ]; then
+    FORMAT_OPTION=-f
+    FORMAT_TYPE="%c"
+fi
 if [ "$1" = "test" ]; then
     TARGET_FILE=$2
     FILE_COUNT=$3
     TEMPVAR_1="$PWD"
     cd "$PROJECT_SOURCE_DIR"
-    MODIFICATION_TIME=$(stat -c %Y $TARGET_FILE)
+    MODIFICATION_TIME=$(stat $FORMAT_OPTION $FORMAT_TYPE $TARGET_FILE)
     cd "$TEMPVAR_1"
     unset TEMPVAR_1
     if [ ! -f "$TOOL_DATA_DIR/changes.cfg" ]; then
@@ -27,7 +32,7 @@ if [ "$1" = "test" ]; then
     exit 0
 elif [ "$1" = "init" ]; then
     FILES_TO_SCAN="$2"
-    FILE_COUNT=$(echo "$FILES_TO_SCAN" | wc -l)
+    FILE_COUNT=$(echo "$FILES_TO_SCAN" | wc -l | awk '{$1=$1};1')
     rm -f "$TOOL_DATA_DIR/changes.cfg"
     touch "$TOOL_DATA_DIR/changes.cfg"
     TEMPVAR_1="$PWD"
@@ -35,7 +40,7 @@ elif [ "$1" = "init" ]; then
     echo "/COUNT=$FILE_COUNT" >> "$TOOL_DATA_DIR/changes.cfg"
     for f in $FILES_TO_SCAN
     do
-        echo "$f=$(stat -c %Y $f)" >> "$TOOL_DATA_DIR/changes.cfg"
+        echo "$f=$(stat $FORMAT_OPTION $FORMAT_TYPE $f)" >> "$TOOL_DATA_DIR/changes.cfg"
     done
     cd "$TEMPVAR_1"
     unset TEMPVAR_1

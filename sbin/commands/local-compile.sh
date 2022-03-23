@@ -22,7 +22,7 @@ TEMPVAR_1="$PWD"
 cd "$PROJECT_SOURCE_DIR"
 FILES_TO_COMPILE="$(find ./ -type f -name "*.js" ! -name "*.min.js" ! -name "*.test.js" ! -path "*__tests__*" )"
 FILES_TO_COPY="$(find ./ -type f ! -name ".gitignore" ! -name "*.js" ! -name "*.min.js" ! -name "*.test.js" ! -path "*__tests__*")"
-FILE_COUNT=$(echo "$FILES_TO_COMPILE" | wc -l)
+FILE_COUNT=$(echo "$FILES_TO_COMPILE" | wc -l | awk '{$1=$1};1')
 cd "$TEMPVAR_1"
 unset TEMPVAR_1
 
