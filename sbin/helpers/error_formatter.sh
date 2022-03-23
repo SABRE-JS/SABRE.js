@@ -24,7 +24,7 @@ closure_error_formatter(){
             STATE=2
         else
             STATE=0
-            echo "    $(echo "$input_line" | sed "s/^\(\\s*\)\\^*/\1/" | wc -c)->$(echo "$input_line" | wc -c)"
+            echo "    $(echo "$input_line" | sed "s/^\(\\s*\)\\^*/\1/" | wc -c | awk '{$1=$1};1')->$(echo "$input_line" | wc -c | awk '{$1=$1};1')"
         fi
     done
 }
