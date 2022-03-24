@@ -1,0 +1,39 @@
+{
+    "name": "@sabre-js/sabre",
+    "version": "0.1.0-git-7e492d81f6a6cd6439048c6307e6c5d20eed2abe",
+    "description": "A gpu accelerated ecmascript renderer for Advanced Substation Alpha (ASS) subtitles. Renders .ass and .ssa files over video in the browser.",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/SABRE-JS/SABRE.js.git"
+    },
+    "files": [
+        "LICENCE.md",
+        "README.md",
+        "dist/*.js",
+        "dist/lib/*.js",
+        "dist/shaders/*.glsl",
+        "dist/*.map"
+    ],
+    "keywords": [
+        "ass",
+        "ssa",
+        "subtitles",
+        "subtitle",
+        "captions",
+        "caption",
+        "webgl",
+        "browser"
+    ],
+    "author": "Patrick \"ILOVEPIE\" Rhodes Martin & Contributors",
+    "license": "SEE LICENSE IN LICENCE.md",
+    "bugs": {
+        "url": "https://github.com/SABRE-JS/SABRE.js/issues"
+    },
+    "homepage": "https://github.com/SABRE-JS/SABRE.js#readme",
+    "funding": [
+        "https://ko-fi.com/ilovepie"
+    ]
+}
