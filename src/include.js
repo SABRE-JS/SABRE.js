@@ -11,7 +11,11 @@ let scriptpath = "";
 {
     let scripts = global.document.getElementsByTagName("script");
     let curscript = new global.URL(scripts[scripts.length - 1].src);
-    scriptpath = curscript.pathname.match(/^(.*\/).*?$/)[1];
+    scriptpath =
+        curscript.protocol +
+        "//" +
+        curscript.host +
+        curscript.pathname.match(/^(.*\/).*?$/)[1];
 }
 
 /**
@@ -43,7 +47,7 @@ sabre["import"] = function (scriptUrl, callback) {
         typeof global["document"] === "undefined"
     ) {
         try {
-            global.importScripts(scriptUrl); //eslint-disable-line no-undef
+            global.importScripts(scriptpath + scriptUrl); //eslint-disable-line no-undef
         } catch (e) {
             //if(e instanceof NetworkError){
             callback(false);
@@ -89,7 +93,7 @@ sabre["include"] = function (scriptUrl, callback) {
         typeof global["document"] === "undefined"
     ) {
         try {
-            global.importScripts(scriptUrl); //eslint-disable-line no-undef
+            global.importScripts(scriptpath + scriptUrl); //eslint-disable-line no-undef
         } catch (e) {
             //if(e instanceof NetworkError){
             callback(false);
