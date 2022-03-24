@@ -12,6 +12,10 @@ help:
 test:
 	@echo "Testing..."
 	@sh ./sbin/commands/test.sh
+	
+pkg: test rebuild
+	@echo "Packaging..."
+	@sh ./sbin/commands/npm-package.sh
 
 run: local
 	@echo "Launching..."
