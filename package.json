@@ -1,7 +1,8 @@
 {
     "name": "@sabre-js/sabre",
-    "version": "0.1.0-git-7e492d81f6a6cd6439048c6307e6c5d20eed2abe",
+    "version": "0.1.0-git",
     "description": "A gpu accelerated ecmascript renderer for Advanced Substation Alpha (ASS) subtitles. Renders .ass and .ssa files over video in the browser.",
+    "main": "dist/sabre.min.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },

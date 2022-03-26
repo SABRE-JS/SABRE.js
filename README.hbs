@@ -22,6 +22,10 @@ To view the gallery click [here](/gallery/gallery.md) if you're using a decent b
 
 ### Documentation
 
+How to include the library (from the unpkg CDN):
+```html
+<script src="https://unpkg.com/@sabre-js/sabre/dist/sabre.min.js"></script>
+```
 
 You can retrieve an instance of the library by calling `sabre.SABRERenderer(fontLoadingFunction)` and passing
 it a function that loads fonts using the CSS Font loading API:
@@ -33,20 +37,19 @@ function loadFont(name) {
         if (name.indexOf(".") !== -1) {
             const newFont = new FontFace(name, `url(./fonts/${name})`);
             newFont.load().then((font) => document.fonts.add(font));
-            return;
-        }
-
-        // otherwise, load from google fonts and add stylesheet to document
-        let link = document.createElement("link");
-        link.setAttribute("rel", "stylesheet");
-        link.setAttribute("media", "print");
-        link.setAttribute("type", "text/css");
-        link.setAttribute("onload", "this.media='all';");
-        link.setAttribute(
-            "href",
-            `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
-        );
-        document.head.appendChild(link);
+        }else{
+            // otherwise, load from google fonts and add stylesheet to document
+            let link = document.createElement("link");
+            link.setAttribute("rel", "stylesheet");
+            link.setAttribute("media", "print");
+            link.setAttribute("type", "text/css");
+            link.setAttribute("onload", "this.media='all';");
+            link.setAttribute(
+                "href",
+                `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
+            );
+            document.head.appendChild(link);
+        }        
     }
     //Force the font to load.
     let force_load = document.createElement("span");
@@ -57,10 +60,17 @@ function loadFont(name) {
     force_load.appendChild(document.createTextNode("Force Load"));
     document.body.appendChild(force_load);
 }
+```
 
+Then in a `load` event handler:
+
+```js
 // pass the function to the renderer
 let renderer = sabre.SABRERenderer(loadFont);
 ```
+
+### API
+
 {{>main}}
 
-&copy; 2012-2021 Patrick "ILOVEPIE" Rhodes Martin.
+&copy; 2012-2022 Patrick "ILOVEPIE" Rhodes Martin.

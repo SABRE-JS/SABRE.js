@@ -49,7 +49,7 @@ do
         cat "$PROJECT_SOURCE_DIR/$f" >> "$OUTPUT_FILE_DEBUG"
         echo "$DEBUG_SUFFIX" >> "$OUTPUT_FILE_DEBUG"
 
-		INCLUDE_LIST="--externs '$PROJECT_INCLUDE_DIR/shared.include.js' --externs '$PROJECT_INCLUDE_DIR/include.js'"
+		INCLUDE_LIST="--externs '$PROJECT_INCLUDE_DIR/shared.include.js' --externs '$PROJECT_INCLUDE_DIR/sabre.js'"
 		FILES_TO_INCLUDE="$(cat "$PROJECT_SOURCE_DIR/$f" | grep -E "//@include \[..*?\]" | sed -E "s|//@include \[(..*?)\]|\1|g" | tr '\r\n' ' ' | tr '\n' ' ')"
 		for include in $FILES_TO_INCLUDE
 		do
