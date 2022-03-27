@@ -366,7 +366,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                 style.getBorderStyle() !== sabre.BorderStyleModes.SRT_STYLE &&
                 style.getBorderStyle() !== sabre.BorderStyleModes.SRT_NO_OVERLAP
             ) {
-                this._ctx.fillStyle = "rgba(255,0,255,1)";
+                this._ctx.fillStyle = "rgba(0,0,0,1)";
             } else {
                 if (
                     (overrides.getKaraokeMode() ===
