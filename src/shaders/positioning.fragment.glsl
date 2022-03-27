@@ -11,7 +11,7 @@ uniform vec4 u_quaternary_color;
 void main(){
     vec4 uncolored = texture2D(u_texture, v_texcoord);
     vec4 colored = vec4(0.0,0.0,0.0,0.0);
-    if(uncolored.r > 0.0 && uncolored.b > 0.0 && uncolored.a > 0.0){
+    if(uncolored.r == 0.0 && uncolored.g == 0.0 && uncolored.b == 0.0 && uncolored.a > 0.0){
         colored.rgb = u_quaternary_color.rgb;
         colored.a = uncolored.a*u_quaternary_color.a;
     }else if(uncolored.r > 0.0 && uncolored.a > 0.0){
