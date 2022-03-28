@@ -2852,7 +2852,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @returns {boolean}
          */
         value: function () {
-            return this._contextLost;
+            return !this._contextLost;
         },
         writable: false
     },
