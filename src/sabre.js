@@ -6,8 +6,7 @@
 let includelog = Object.create(Object, {});
 let scriptpath = "";
 {
-    let scripts = global.document.getElementsByTagName("script");
-    let curscript = new global.URL(scripts[scripts.length - 1].src);
+    let curscript = new global.URL(document.currentScript.src);
     scriptpath =
         curscript.protocol +
         "//" +
