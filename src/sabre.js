@@ -1,12 +1,31 @@
 /*
- *   include.js
+ *   sabre.js
  *----------------
- *  include.js is copyright Patrick Rhodes Martin 2013,2016,2019,2020.
+ *  sabre.js is copyright Patrick Rhodes Martin 2013-2022.
  */
 let includelog = Object.create(Object, {});
 let scriptpath = "";
 {
-    let curscript = new global.URL(document.currentScript.src);
+    let scripturl;
+    if (typeof global.document !== "undefined") {
+        if (typeof global.document.currentScript !== "undefined") {
+            scripturl = global.document.currentScript.src;
+        } else {
+            scripturl = "./";
+            let scripts = global.document.getElementsByTagName("script");
+            for (let i = 0; i < scripts.length; i++) {
+                let src = scripts[i].getAttribute("src");
+                if (srcvalue === null || srcvalue === "") continue;
+                if (src.endsWith("sabre.js")) {
+                    scripturl = src;
+                    break;
+                }
+            }
+        }
+    } else {
+        scripturl = "./";
+    }
+    let curscript = new global.URL(scripturl);
     scriptpath =
         curscript.protocol +
         "//" +
@@ -22,20 +41,20 @@ const ENABLE_DEBUG = true;
 
 /**
  * includes a ecmascript file asynchronously.
- * @param {string} scriptUrl The URL or URI of the script.
+ * @param {string} scriptName The name/path of the script.
  * @param {function(boolean)=} callback Callback on success or failure.
  */
-sabre["import"] = function (scriptUrl, callback) {
+sabre["import"] = function (scriptName, callback) {
     if (!ENABLE_DEBUG) {
-        scriptUrl += ".min.js";
+        scriptName += ".min.js";
     } else {
-        scriptUrl += ".js";
+        scriptName += ".js";
     }
     if (typeof callback === "undefined" || callback === null)
         callback = function () {};
     if (
-        !(typeof includelog[scriptUrl] === "undefined") &&
-        includelog[scriptUrl] === true
+        !(typeof includelog[scriptName] === "undefined") &&
+        includelog[scriptName] === true
     )
         return;
     if (
@@ -43,7 +62,7 @@ sabre["import"] = function (scriptUrl, callback) {
         typeof global["document"] === "undefined"
     ) {
         try {
-            global.importScripts(scriptpath + scriptUrl); //eslint-disable-line no-undef
+            global.importScripts(scriptpath + scriptName); //eslint-disable-line no-undef
         } catch (e) {
             //if(e instanceof NetworkError){
             callback(false);
@@ -51,37 +70,37 @@ sabre["import"] = function (scriptUrl, callback) {
             //}
         }
         callback(true);
-        includelog[scriptUrl] = true;
+        includelog[scriptName] = true;
         return;
     }
     let head = global.document.head;
     let scriptImport = global.document.createElement("script");
     scriptImport.setAttribute("type", "application/ecmascript");
-    scriptImport.setAttribute("src", scriptpath + scriptUrl);
+    scriptImport.setAttribute("src", scriptpath + scriptName);
     scriptImport.setAttribute("async", "");
     scriptImport.addEventListener("load", function () {
-        console.log("Finished Importing: " + scriptUrl);
+        console.log("Finished Importing: " + scriptName);
         callback(true);
     });
-    includelog[scriptUrl] = true;
+    includelog[scriptName] = true;
     head.appendChild(scriptImport);
 };
 /**
  * includes a ecmascript file
- * @param {string} scriptUrl The URL or URI of the script.
+ * @param {string} scriptName The name/path of the script.
  * @param {function(boolean)=} callback Callback on success or failure.
  */
-sabre["include"] = function (scriptUrl, callback) {
+sabre["include"] = function (scriptName, callback) {
     if (!ENABLE_DEBUG) {
-        scriptUrl += ".min.js";
+        scriptName += ".min.js";
     } else {
-        scriptUrl += ".js";
+        scriptName += ".js";
     }
     if (typeof callback === "undefined" || callback === null)
         callback = function () {};
     if (
-        !(typeof includelog[scriptUrl] === "undefined") &&
-        includelog[scriptUrl] === true
+        !(typeof includelog[scriptName] === "undefined") &&
+        includelog[scriptName] === true
     )
         return;
     if (
@@ -89,7 +108,7 @@ sabre["include"] = function (scriptUrl, callback) {
         typeof global["document"] === "undefined"
     ) {
         try {
-            global.importScripts(scriptpath + scriptUrl); //eslint-disable-line no-undef
+            global.importScripts(scriptpath + scriptName); //eslint-disable-line no-undef
         } catch (e) {
             //if(e instanceof NetworkError){
             callback(false);
@@ -97,18 +116,18 @@ sabre["include"] = function (scriptUrl, callback) {
             //}
         }
         callback(true);
-        includelog[scriptUrl] = true;
+        includelog[scriptName] = true;
         return;
     }
     let head = global.document.head;
     let scriptImport = global.document.createElement("script");
     scriptImport.setAttribute("type", "application/ecmascript");
-    scriptImport.setAttribute("src", scriptpath + scriptUrl);
+    scriptImport.setAttribute("src", scriptpath + scriptName);
     scriptImport.addEventListener("load", function () {
-        console.log("Finished Including: " + scriptUrl);
+        console.log("Finished Including: " + scriptName);
         callback(true);
     });
-    includelog[scriptUrl] = true;
+    includelog[scriptName] = true;
     head.appendChild(scriptImport);
 };
 
