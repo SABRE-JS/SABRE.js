@@ -337,7 +337,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
     },
 
     _calcSize: {
-        value: function (cmds, xoffset, yoffset, outline) {
+        value: function (cmds) {
             //prep runtime stuff
             const parseFloat = global.parseFloat;
             const BSpline = sabre.BSpline;
