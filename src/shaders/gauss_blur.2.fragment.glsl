@@ -14,7 +14,7 @@ void main(){
     vec4 accumulator = texture2D(u_texture,v_texcoord)*normpdf(0.0,u_sigma);
     for(float i = 1.0; i < 512.0; i++){
         float gaussian_value = normpdf(i,u_sigma);
-        if(gaussian_value == 0.0){
+        if(gaussian_value <= 0.00135){
             break;
         }
         accumulator += texture2D(u_texture,clamp(v_texcoord+vec2(0,pixel_y*i),0.0,1.0)) * gaussian_value;
