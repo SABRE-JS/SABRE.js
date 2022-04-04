@@ -15,7 +15,7 @@ let scriptpath = "";
             let scripts = global.document.getElementsByTagName("script");
             for (let i = 0; i < scripts.length; i++) {
                 let src = scripts[i].getAttribute("src");
-                if (srcvalue === null || srcvalue === "") continue;
+                if (src === null || src === "") continue;
                 if (src.endsWith("sabre.js")) {
                     scripturl = src;
                     break;
