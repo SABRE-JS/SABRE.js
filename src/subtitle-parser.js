@@ -12,7 +12,7 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 //@include [renderer-main.js]
-sabre.import("util");
+sabre.include("util");
 sabre.import("global-constants");
 sabre.import("color");
 sabre.import("style");
@@ -25,6 +25,7 @@ sabre.import("renderer-main");
  */
 
 /**
+ * @private
  * @typedef {!{info:Object,parser:Object,renderer:{events:Array<SSASubtitleEvent>}}}
  */
 var RendererData;
