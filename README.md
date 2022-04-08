@@ -27,8 +27,15 @@ How to include the library (from the unpkg CDN):
 <script src="https://unpkg.com/@sabre-js/sabre/dist/sabre.min.js"></script>
 ```
 
-You can retrieve an instance of the library by calling `sabre.SABRERenderer(fontLoadingFunction)` and passing
-it a function that loads fonts using the CSS Font loading API:
+You can retrieve an instance of the library by calling `sabre.SABRERenderer` like so from a `load` event handler:
+```js
+window.addEventListener("load",() => {
+    // pass the function to the renderer
+    let renderer = sabre.SABRERenderer(loadFont);
+    //more code here
+});
+```
+and passing it a function that loads fonts using the CSS Font loading API:
 ```js
 function loadFont(name) {
     // check if font is already loaded
@@ -62,12 +69,15 @@ function loadFont(name) {
 }
 ```
 
-Then in a `load` event handler:
+You may then call `loadSubtitles` passing in a string containing the contents of the subtitle file.
 
-```js
-// pass the function to the renderer
-let renderer = sabre.SABRERenderer(loadFont);
-```
+
+Anytime the video or player is resized you should call `setViewport` with the current dimensions of the player.
+
+You should also call `setViewport` once with the dimensions of the video just after you load the subtitle file.
+
+Each frame before you call any of the rendering functions first call `checkReadyToRender` to see if the library is ready
+to render a frame of subtitles.
 
 ### API
 
@@ -92,15 +102,6 @@ let renderer = sabre.SABRERenderer(loadFont);
 <dt><a href="#drawFrame">drawFrame(time, canvas, [contextType])</a> ⇒ <code>void</code></dt>
 <dd><p>Fetches a rendered frame of subtitles to a canvas.</p>
 </dd>
-</dl>
-
-#### Typedefs
-
-<dl>
-<dt><a href="#CollisionInfo">CollisionInfo</a> : <code>Object</code></dt>
-<dd></dd>
-<dt><a href="#RendererData">RendererData</a> : <code>Object</code></dt>
-<dd></dd>
 </dl>
 
 <a name="loadSubtitles"></a>
@@ -169,13 +170,5 @@ Fetches a rendered frame of subtitles to a canvas.
 | canvas | <code>HTMLCanvasElement</code> \| <code>OffscreenCanvas</code> | the target canvas |
 | [contextType] | <code>string</code> | the context type to use (must be one of "bitmap" or "2d"), defaults to "bitmap" unless unsupported by the browser, in which case "2d" is the default. |
 
-<a name="CollisionInfo"></a>
-
-#### CollisionInfo : <code>Object</code>
-**Kind**: global typedef  
-<a name="RendererData"></a>
-
-#### RendererData : <code>Object</code>
-**Kind**: global typedef  
 
 &copy; 2012-2022 Patrick "ILOVEPIE" Rhodes Martin.
