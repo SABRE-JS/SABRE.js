@@ -35,6 +35,7 @@ let scriptpath = "";
 
 /**
  * Determines if we import *.min.js or *.js
+ * @private
  * @define {boolean}
  * */
 const ENABLE_DEBUG = true;

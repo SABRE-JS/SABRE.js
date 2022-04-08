@@ -15,7 +15,7 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 //@include [lib/BSpline.js]
-sabre.import("util");
+sabre.include("util");
 sabre.import("global-constants");
 sabre.import("color");
 sabre.import("style");

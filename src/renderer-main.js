@@ -16,13 +16,13 @@
 //@include [canvas-2d-text-renderer.js]
 //@include [canvas-2d-shape-renderer.js]
 //@include [shader.js]
-sabre.import("util");
+sabre.include("util");
 sabre.import("global-constants");
 sabre.import("color");
 sabre.import("style");
 sabre.import("style-override");
 sabre.import("subtitle-event");
-sabre.import("subtitle-parser");
+sabre.include("subtitle-parser");
 sabre.import("scheduler");
 sabre.import("shader");
 sabre.import("canvas-2d-text-renderer");
@@ -31,6 +31,7 @@ sabre.import("canvas-2d-shape-renderer");
  * @fileoverview webgl subtitle compositing code.
  */
 /**
+ * @private
  * @typedef {!{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number,alignmentOffsetX:number,alignmentOffsetY:number}}
  */
 var CollisionInfo;
@@ -1954,13 +1955,6 @@ const renderer_prototype = global.Object.create(Object, {
             //NOTE: Position the subtitle for rotation.
             let postRotationMatrix;
             {
-                /*console.log("----------------");
-                console.log("Event: ",event.getText())
-                console.log("Position: ",position.x,position.y);
-                console.log("AlignmentOffset: ",position.alignmentOffsetX,position.alignmentOffsetY);
-                console.log("RotationOrigin: ",rotationOrigin);
-                console.log("RotationOffset: ",rotationOffset);*/
-
                 // prettier-ignore
                 let preRotationTranslationMatrix = {
                     m00: 1, m01: 0, m02: 0, m03: rotationOffset[0],
@@ -2774,15 +2768,16 @@ const renderer_prototype = global.Object.create(Object, {
                 );
             }
 
+            var _this = this;
             this._compositingCanvas.addEventListener(
                 "webglcontextlost",
                 function (event) {
                     console.log("[SABRE.js] WebGL Context Lost...");
-                    this._contextLost = true;
-                    event.preventDefault();
+                    _this._contextLost = true;
                 },
                 false
             );
+
             this._compositingCanvas.addEventListener(
                 "webglcontextrestored",
                 function (event) {
@@ -2790,8 +2785,8 @@ const renderer_prototype = global.Object.create(Object, {
                         "[SABRE.js] WebGL Context Restored. Recovering..."
                     );
                     sabre.Shader.resetStateEngine();
-                    this._glSetup();
-                    this._contextLost = false;
+                    _this._glSetup();
+                    _this._contextLost = false;
                 },
                 false
             );
