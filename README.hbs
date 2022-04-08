@@ -27,8 +27,15 @@ How to include the library (from the unpkg CDN):
 <script src="https://unpkg.com/@sabre-js/sabre/dist/sabre.min.js"></script>
 ```
 
-You can retrieve an instance of the library by calling `sabre.SABRERenderer(fontLoadingFunction)` and passing
-it a function that loads fonts using the CSS Font loading API:
+You can retrieve an instance of the library by calling `sabre.SABRERenderer` like so from a `load` event handler:
+```js
+window.addEventListener("load",() => {
+    // pass the function to the renderer
+    let renderer = sabre.SABRERenderer(loadFont);
+    //more code here
+});
+```
+and passing it a function that loads fonts using the CSS Font loading API:
 ```js
 function loadFont(name) {
     // check if font is already loaded
@@ -62,12 +69,15 @@ function loadFont(name) {
 }
 ```
 
-Then in a `load` event handler:
+You may then call `loadSubtitles` passing in a string containing the contents of the subtitle file.
 
-```js
-// pass the function to the renderer
-let renderer = sabre.SABRERenderer(loadFont);
-```
+
+Anytime the video or player is resized you should call `setViewport` with the current dimensions of the player.
+
+You should also call `setViewport` once with the dimensions of the video just after you load the subtitle file.
+
+Each frame before you call any of the rendering functions first call `checkReadyToRender` to see if the library is ready
+to render a frame of subtitles.
 
 ### API
 
