@@ -9,6 +9,7 @@
  * @fileoverview This file defines the storage objects for style overrides.
  */
 //@include [color.js]
+sabre.import("color");
 
 sabre["SSATransitionTargetOverride"] = function () {
     let obj = {

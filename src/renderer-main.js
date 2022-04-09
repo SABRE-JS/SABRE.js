@@ -16,13 +16,13 @@
 //@include [canvas-2d-text-renderer.js]
 //@include [canvas-2d-shape-renderer.js]
 //@include [shader.js]
-sabre.include("util");
+sabre.import("util");
 sabre.import("global-constants");
 sabre.import("color");
 sabre.import("style");
 sabre.import("style-override");
 sabre.import("subtitle-event");
-sabre.include("subtitle-parser");
+sabre.import("subtitle-parser");
 sabre.import("scheduler");
 sabre.import("shader");
 sabre.import("canvas-2d-text-renderer");
