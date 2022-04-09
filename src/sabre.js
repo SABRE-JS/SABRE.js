@@ -141,4 +141,5 @@ sabre["getScriptPath"] = function () {
 };
 
 //This is a stub for loading.
-sabre.import("renderer-main");
+sabre.include("util");
+sabre.include("renderer-main");

@@ -12,7 +12,7 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 //@include [renderer-main.js]
-sabre.include("util");
+sabre.import("util");
 sabre.import("global-constants");
 sabre.import("color");
 sabre.import("style");

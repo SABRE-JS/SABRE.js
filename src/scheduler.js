@@ -9,6 +9,10 @@
 //@include [style.js]
 //@include [style-override.js]
 //@include [subtitle-event.js]
+sabre.import("color");
+sabre.import("style");
+sabre.import("style-override");
+sabre.import("subtitle-event");
 /**
  * @private
  * @typedef {!{
