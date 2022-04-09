@@ -29,13 +29,20 @@ How to include the library (from the unpkg CDN):
 
 You can retrieve an instance of the library by calling `sabre.SABRERenderer` like so from a `load` event handler:
 ```js
+let renderer;
 window.addEventListener("load",() => {
-    // pass the function to the renderer
-    let renderer = sabre.SABRERenderer(loadFont);
-    //more code here
+    let subs = "";
+    //load the contents of the subtitle file into subs
+    // pass the font loading function to the renderer
+    renderer = sabre.SABRERenderer(loadFont);
+    renderer.loadSubtitles(subs);
+    renderer.setViewport(1280,720); //use the video player's dimensions.
+    //schedule your frame callback using either requestAnimationFrame or requestVideoFrameCallback
 });
 ```
-and passing it a function that loads fonts using the CSS Font loading API:
+and passing it a function that loads fonts using the CSS Font loading API.
+
+Here we provide a font loading function that you can use for testing:
 ```js
 function loadFont(name) {
     // check if font is already loaded
@@ -69,14 +76,11 @@ function loadFont(name) {
 }
 ```
 
-You may then call `loadSubtitles` passing in a string containing the contents of the subtitle file.
+You may then call `loadSubtitles` passing in a string containing the contents of the subtitle file and set the
+viewport with `setViewport` as shown in the example above. Anytime the video or player is resized you should call
+`setViewport` with the new dimensions of the player.
 
-
-Anytime the video or player is resized you should call `setViewport` with the current dimensions of the player.
-
-You should also call `setViewport` once with the dimensions of the video just after you load the subtitle file.
-
-Each frame before you call any of the rendering functions first call `checkReadyToRender` to see if the library is ready
+Each frame, before you call any of the rendering functions, first call `checkReadyToRender` to see if the library is ready
 to render a frame of subtitles.
 
 ### API
