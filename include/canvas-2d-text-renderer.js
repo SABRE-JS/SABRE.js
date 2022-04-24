@@ -1,6 +1,6 @@
 /**
  * @typedef {!{
- *              renderEvent:function(number,SSASubtitleEvent,number,boolean):void,
+ *              renderEvent:function(number,SSASubtitleEvent,number,boolean,boolean):void,
  *              setPixelScaleRatio:function(number,number):void,
  *              getOffset:function():Array<number>,
  *              getDimensions:function():Array<number>,

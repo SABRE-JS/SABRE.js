@@ -68,6 +68,12 @@ const renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _textMaskRenderer: {
+        /** @type {?Canvas2DTextRenderer} */
+        value: null,
+        writable: true
+    },
+
     _shapeRenderer: {
         /** @type {?Canvas2DShapeRenderer} */
         value: null,
@@ -97,6 +103,12 @@ const renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _maskCoordinatesBuffer: {
+        /** @type{?WebGLBuffer} */
+        value: null,
+        writable: true
+    },
+
     _subtitlePositioningBuffer: {
         /** @type{?WebGLBuffer} */
         value: null,
@@ -116,6 +128,12 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _textureSubtitleBounds: {
+        /** @type{?Array<number>} */
+        value: null,
+        writable: true
+    },
+
+    _textureSubtitleMaskBounds: {
         /** @type{?Array<number>} */
         value: null,
         writable: true
@@ -577,7 +595,8 @@ const renderer_prototype = global.Object.create(Object, {
                     time,
                     event,
                     sabre.RenderPasses.FILL,
-                    true
+                    true,
+                    false
                 );
                 let dim = this._textRenderer.getBounds();
                 if (
@@ -1313,7 +1332,8 @@ const renderer_prototype = global.Object.create(Object, {
                         time,
                         cur_event,
                         sabre.RenderPasses.FILL,
-                        true
+                        true,
+                        false
                     );
 
                     let marginLeft, marginRight;
@@ -1367,7 +1387,8 @@ const renderer_prototype = global.Object.create(Object, {
                                                 time,
                                                 events[j + offset],
                                                 sabre.RenderPasses.FILL,
-                                                true
+                                                true,
+                                                false
                                             );
                                             event_widths[j + offset] =
                                                 this._textRenderer.getBounds()[0];
@@ -1389,7 +1410,8 @@ const renderer_prototype = global.Object.create(Object, {
                                     time,
                                     cur_event,
                                     sabre.RenderPasses.FILL,
-                                    true
+                                    true,
+                                    false
                                 );
                                 event_widths[i] =
                                     this._textRenderer.getBounds()[0];
@@ -1520,12 +1542,23 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._textureCoordinatesBuffer = this._gl.createBuffer();
+            this._maskCoordinatesBuffer = this._gl.createBuffer();
             this._subtitlePositioningBuffer = this._gl.createBuffer();
             this._fullscreenPositioningBuffer = this._gl.createBuffer();
 
             this._gl.bindBuffer(
                 this._gl.ARRAY_BUFFER,
                 this._textureCoordinatesBuffer
+            );
+            this._gl.bufferData(
+                this._gl.ARRAY_BUFFER,
+                default_tex_coords,
+                this._gl.DYNAMIC_DRAW
+            );
+
+            this._gl.bindBuffer(
+                this._gl.ARRAY_BUFFER,
+                this._maskCoordinatesBuffer
             );
             this._gl.bufferData(
                 this._gl.ARRAY_BUFFER,
@@ -1577,7 +1610,45 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.UNSIGNED_BYTE,
                 null
             );
+
+            this._textureSubtitleMask = this._gl.createTexture();
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitleMask);
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_S,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_T,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MIN_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MAG_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.pixelStorei(this._gl.UNPACK_FLIP_Y_WEBGL, true);
+            this._gl.texImage2D(
+                this._gl.TEXTURE_2D,
+                0,
+                this._gl.RGBA,
+                1,
+                1,
+                0,
+                this._gl.RGBA,
+                this._gl.UNSIGNED_BYTE,
+                null
+            );
+
             this._textureSubtitleBounds = [1, 1];
+            this._textureSubtitleMaskBounds = [1, 1];
+
 
             this._fbTextureA = this._gl.createTexture();
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
@@ -1727,6 +1798,8 @@ const renderer_prototype = global.Object.create(Object, {
                 "Matrix4fv"
             );
             this._positioningShader.addOption("u_texture", 0, "1i");
+            this._positioningShader.addOption("u_mask", 1, "1i");
+            this._positioningShader.addOption("u_hasmask", 0, "1i");
             this._positioningShader.addOption(
                 "u_primary_color",
                 [0, 0, 0, 0],
@@ -2046,17 +2119,17 @@ const renderer_prototype = global.Object.create(Object, {
          * Loads a subtitle into graphics card's VRAM.
          * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source the source.
          */
-        value: function (source) {
+        value: function (source,bounds) {
             let extents = source.getExtents();
             if (
-                extents[0] <= this._textureSubtitleBounds[0] &&
-                extents[1] <= this._textureSubtitleBounds[1]
+                extents[0] <= bounds[0] &&
+                extents[1] <= bounds[1]
             ) {
                 this._gl.texSubImage2D(
                     this._gl.TEXTURE_2D,
                     0,
                     0,
-                    this._textureSubtitleBounds[1] - extents[1],
+                    bounds[1] - extents[1],
                     this._gl.RGBA,
                     this._gl.UNSIGNED_BYTE,
                     source.getImage()
@@ -2070,8 +2143,8 @@ const renderer_prototype = global.Object.create(Object, {
                     this._gl.UNSIGNED_BYTE,
                     source.getImage()
                 );
-                this._textureSubtitleBounds[0] = extents[0];
-                this._textureSubtitleBounds[1] = extents[1];
+                bounds[0] = extents[0];
+                bounds[1] = extents[1];
             }
         },
         writable: false
@@ -2114,9 +2187,21 @@ const renderer_prototype = global.Object.create(Object, {
                 );
             }
 
+            this._gl.activeTexture(this._gl.TEXTURE0);
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
 
-            this._loadSubtitleToVram(source);
+            this._loadSubtitleToVram(source,this._textureSubtitleBounds);
+
+            if(!isShape){
+                this._gl.activeTexture(this._gl.TEXTURE1);
+                this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitleMask);
+
+                this._loadSubtitleToVram(this._textMaskRenderer,this._textureSubtitleMaskBounds);
+
+                this._positioningShader.updateOption("u_hasmask",1);
+            }else{
+                this._positioningShader.updateOption("u_hasmask",0);
+            }
 
             let xScale = 2 / this._config.renderer["resolution_x"];
             let yScale = 2 / this._config.renderer["resolution_y"];
@@ -2179,6 +2264,22 @@ const renderer_prototype = global.Object.create(Object, {
                     width,  1 - height
                 ]);
             }
+
+            let mask_coords;
+            {
+                let extents = this._textureSubtitleMaskBounds;
+                let width = dimensions[0] / extents[0];
+                let height = dimensions[1] / extents[1];
+                // prettier-ignore
+                mask_coords = new Float32Array([
+                    0,      1,
+                    width,  1,
+                    0,      1 - height,
+                    0,      1 - height,
+                    width,  1,
+                    width,  1 - height
+                ]);
+            }
             //Draw background or outline or text depending on pass to destination
             {
                 let positionAttrib = this._positioningShader.getAttribute(
@@ -2188,6 +2289,10 @@ const renderer_prototype = global.Object.create(Object, {
                 let textureAttrib = this._positioningShader.getAttribute(
                     this._gl,
                     "a_texcoord"
+                );
+                let maskAttrib = this._positioningShader.getAttribute(
+                    this._gl,
+                    "a_maskcoord"
                 );
                 {
                     let style = currentEvent.getStyle();
@@ -2496,6 +2601,7 @@ const renderer_prototype = global.Object.create(Object, {
 
                 this._positioningShader.updateOption("u_texture", 0);
                 this._positioningShader.bindShader(this._gl);
+
                 this._gl.bindBuffer(
                     this._gl.ARRAY_BUFFER,
                     this._textureCoordinatesBuffer
@@ -2509,12 +2615,28 @@ const renderer_prototype = global.Object.create(Object, {
                     0,
                     0
                 );
-
                 this._gl.bufferData(
                     this._gl.ARRAY_BUFFER,
                     tex_coords,
                     this._gl.DYNAMIC_DRAW
                 );
+
+                this._gl.enableVertexAttribArray(maskAttrib);
+                this._gl.vertexAttribPointer(
+                    maskAttrib,
+                    2,
+                    this._gl.FLOAT,
+                    false,
+                    0,
+                    0
+                );
+                this._gl.bufferData(
+                    this._gl.ARRAY_BUFFER,
+                    mask_coords,
+                    this._gl.DYNAMIC_DRAW
+                );
+
+
                 this._gl.bindBuffer(
                     this._gl.ARRAY_BUFFER,
                     this._subtitlePositioningBuffer
@@ -2730,6 +2852,7 @@ const renderer_prototype = global.Object.create(Object, {
         value: function () {
             this._scheduler = new sabre.SubtitleScheduler();
             this._textRenderer = new sabre.Canvas2DTextRenderer();
+            this._textMaskRenderer = new sabre.Canvas2DTextRenderer();
             this._shapeRenderer = new sabre.Canvas2DShapeRenderer();
         },
         writable: false
@@ -2910,7 +3033,15 @@ const renderer_prototype = global.Object.create(Object, {
                                 time,
                                 currentEvent,
                                 pass,
+                                false,
                                 false
+                            );
+                            this._textMaskRenderer.renderEvent(
+                                time,
+                                currentEvent,
+                                pass,
+                                false,
+                                true
                             );
                             this._compositeSubtitle(
                                 time,

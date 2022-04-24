@@ -16,7 +16,8 @@
         "dist/*.js",
         "dist/lib/*.js",
         "dist/shaders/*.glsl",
-        "dist/*.map"
+        "dist/*.map",
+        "dist/lib/*.map"
     ],
     "keywords": [
         "front-end",
