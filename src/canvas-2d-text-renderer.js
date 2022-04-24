@@ -248,6 +248,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSALineStyleOverride} lineOverrides
          * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
+         * @param {boolean} mask
          */
         value: function (
             time,
@@ -255,7 +256,8 @@ const text_renderer_prototype = global.Object.create(Object, {
             overrides,
             lineOverrides,
             lineTransitionTargetOverrides,
-            pass
+            pass,
+            mask
         ) {
             let outline = this._calcOutline(time, style, overrides);
 
@@ -300,6 +302,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSALineStyleOverride} lineOverrides
          * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
+         * @param {boolean} mask
          */
         value: function (
             time,
@@ -307,7 +310,8 @@ const text_renderer_prototype = global.Object.create(Object, {
             overrides,
             lineOverrides,
             lineTransitionTargetOverrides,
-            pass
+            pass,
+            mask
         ) {
             let fontSize = this._calcFontSize(time, style, overrides);
             let fontName = overrides.getFontName() ?? style.getFontName();
@@ -352,6 +356,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSALineStyleOverride} lineOverrides
          * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
+         * @param {boolean} mask
          */
         value: function (
             time,
@@ -359,58 +364,64 @@ const text_renderer_prototype = global.Object.create(Object, {
             overrides,
             lineOverrides,
             lineTransitionTargetOverrides,
-            pass
+            pass,
+            mask
         ) {
-            if (
-                pass === sabre.RenderPasses.BACKGROUND &&
-                style.getBorderStyle() !== sabre.BorderStyleModes.SRT_STYLE &&
-                style.getBorderStyle() !== sabre.BorderStyleModes.SRT_NO_OVERLAP
-            ) {
-                this._ctx.fillStyle = "rgba(0,0,0,1)";
+            if(mask){
+                this._ctx.fillStyle = "rgba(255,255,255,1)";
+                this._ctx.strokeStyle = "rgba(255,255,255,1)";
             } else {
                 if (
-                    (overrides.getKaraokeMode() ===
-                        sabre.KaraokeModes.COLOR_SWAP ||
+                    pass === sabre.RenderPasses.BACKGROUND &&
+                    style.getBorderStyle() !== sabre.BorderStyleModes.SRT_STYLE &&
+                    style.getBorderStyle() !== sabre.BorderStyleModes.SRT_NO_OVERLAP
+                ) {
+                    this._ctx.fillStyle = "rgba(0,0,0,1)";
+                } else {
+                    if (
+                        (overrides.getKaraokeMode() ===
+                            sabre.KaraokeModes.COLOR_SWAP ||
+                            overrides.getKaraokeMode() ===
+                                sabre.KaraokeModes.COLOR_SWEEP) &&
+                        time < overrides.getKaraokeStart()
+                    ) {
+                        this._ctx.fillStyle = "rgba(0,255,0,1)";
+                    } else if (
                         overrides.getKaraokeMode() ===
-                            sabre.KaraokeModes.COLOR_SWEEP) &&
-                    time < overrides.getKaraokeStart()
-                ) {
-                    this._ctx.fillStyle = "rgba(0,255,0,1)";
-                } else if (
-                    overrides.getKaraokeMode() ===
-                        sabre.KaraokeModes.COLOR_SWEEP &&
-                    time < overrides.getKaraokeEnd()
-                ) {
-                    let progress =
-                        Math.max(time - overrides.getKaraokeStart(), 0) /
-                        (overrides.getKaraokeEnd() -
-                            overrides.getKaraokeStart());
-                    let gradient = this._ctx.createLinearGradient(
-                        0,
-                        0,
-                        this._width,
-                        0
-                    );
-                    gradient.addColorStop(0, "rgba(255,0,0,1)");
-                    gradient.addColorStop(progress, "rgba(255,0,0,1)");
-                    gradient.addColorStop(
-                        Math.min(progress + 1 / this._width, 1),
-                        "rgba(0,255,0,1)"
-                    );
-                    gradient.addColorStop(1, "rgba(255,0,0,1)");
-                    this._ctx.fillStyle = gradient;
-                } else {
-                    this._ctx.fillStyle = "rgba(255,0,0,1)";
-                }
+                            sabre.KaraokeModes.COLOR_SWEEP &&
+                        time < overrides.getKaraokeEnd()
+                    ) {
+                        let progress =
+                            Math.max(time - overrides.getKaraokeStart(), 0) /
+                            (overrides.getKaraokeEnd() -
+                                overrides.getKaraokeStart());
+                        let gradient = this._ctx.createLinearGradient(
+                            0,
+                            0,
+                            this._width,
+                            0
+                        );
+                        gradient.addColorStop(0, "rgba(255,0,0,1)");
+                        gradient.addColorStop(progress, "rgba(255,0,0,1)");
+                        gradient.addColorStop(
+                            Math.min(progress + 1 / this._width, 1),
+                            "rgba(0,255,0,1)"
+                        );
+                        gradient.addColorStop(1, "rgba(255,0,0,1)");
+                        this._ctx.fillStyle = gradient;
+                    } else {
+                        this._ctx.fillStyle = "rgba(255,0,0,1)";
+                    }
 
-                if (
-                    overrides.getKaraokeMode() ===
-                        sabre.KaraokeModes.OUTLINE_TOGGLE &&
-                    time < overrides.getKaraokeStart()
-                ) {
-                    this._ctx.strokeStyle = "rgba(0,0,255,0)";
-                } else {
-                    this._ctx.strokeStyle = "rgba(0,0,255,1)";
+                    if (
+                        overrides.getKaraokeMode() ===
+                            sabre.KaraokeModes.OUTLINE_TOGGLE &&
+                        time < overrides.getKaraokeStart()
+                    ) {
+                        this._ctx.strokeStyle = "rgba(0,0,255,0)";
+                    } else {
+                        this._ctx.strokeStyle = "rgba(0,0,255,1)";
+                    }
                 }
             }
         },
@@ -450,6 +461,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSALineStyleOverride} lineOverrides
          * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
+         * @param {boolean} mask
          */
         value: function (
             time,
@@ -457,7 +469,8 @@ const text_renderer_prototype = global.Object.create(Object, {
             overrides,
             lineOverrides,
             lineTransitionTargetOverrides,
-            pass
+            pass,
+            mask
         ) {
             this._ctx.resetTransform();
             this._ctx.textAlign = "left";
@@ -471,7 +484,8 @@ const text_renderer_prototype = global.Object.create(Object, {
                 overrides,
                 lineOverrides,
                 lineTransitionTargetOverrides,
-                pass
+                pass,
+                mask
             );
             this._setFont(
                 time,
@@ -479,7 +493,8 @@ const text_renderer_prototype = global.Object.create(Object, {
                 overrides,
                 lineOverrides,
                 lineTransitionTargetOverrides,
-                pass
+                pass,
+                mask
             );
             this._setColors(
                 time,
@@ -487,7 +502,8 @@ const text_renderer_prototype = global.Object.create(Object, {
                 overrides,
                 lineOverrides,
                 lineTransitionTargetOverrides,
-                pass
+                pass,
+                mask
             );
             this._setScale(
                 time,
@@ -495,7 +511,8 @@ const text_renderer_prototype = global.Object.create(Object, {
                 overrides,
                 lineOverrides,
                 lineTransitionTargetOverrides,
-                pass
+                pass,
+                mask
             );
         },
         writable: false
@@ -533,8 +550,9 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSASubtitleEvent} event the subtitle event to render
          * @param {number} pass the pass we are on.
          * @param {boolean} dryRun is this a dry run for positioning.
+         * @param {boolean} mask is this a mask for setable colors.
          */
-        value: function (time, event, pass, dryRun) {
+        value: function (time, event, pass, dryRun, mask) {
             if (!this._initialized) this._init();
 
             let text = event.getText();
@@ -552,9 +570,11 @@ const text_renderer_prototype = global.Object.create(Object, {
                 overrides,
                 lineOverrides,
                 lineTransitionTargetOverrides,
-                pass
+                pass,
+                mask
             );
 
+            let noDraw = false;
             //These are used in multiple places, so to avoid recalculation we put it in the function scope.
             let spacing = this._calcSpacing(time, style, overrides);
             let scale = this._calcScale(time, style, overrides);
@@ -612,8 +632,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                         Math.sign(style.getShadow()) *
                         Math.sqrt(Math.pow(style.getShadow(), 2) / 2);
 
-                    this._offsetX -= overrides.getShadowX() ?? shadowComponent;
-                    this._offsetY -= overrides.getShadowY() ?? shadowComponent;
+                    let shadowX = overrides.getShadowX() ?? shadowComponent;
+                    let shadowY = overrides.getShadowY() ?? shadowComponent;
+                    if(shadowX === 0 && shadowY === 0)
+                        noDraw = true;
+                    this._offsetX -= shadowX;
+                    this._offsetY -= shadowY;
+                }else if(borderStyle === sabre.BorderStyleModes.NONE){
+                    noDraw = true;
                 }
             }
 
@@ -662,12 +688,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                     overrides,
                     lineOverrides,
                     lineTransitionTargetOverrides,
-                    pass
+                    pass,
+                    mask
                 ); //To workaround a bug.
 
                 //reset the composite operation
                 this._ctx.globalCompositeOperation = "source-over";
                 //draw the text
+                if(!noDraw)
                 {
                     if (pass === sabre.RenderPasses.BACKGROUND) {
                         switch (borderStyle) {

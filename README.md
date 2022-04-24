@@ -32,12 +32,12 @@ You can retrieve an instance of the library by calling `sabre.SABRERenderer` lik
 let renderer;
 window.addEventListener("load",() => {
     let subs = "";
-    //load the contents of the subtitle file into subs
+    // load the contents of the subtitle file into subs
     // pass the font loading function to the renderer
     renderer = sabre.SABRERenderer(loadFont);
     renderer.loadSubtitles(subs);
-    renderer.setViewport(1280,720); //use the video player's dimensions.
-    //schedule your frame callback using either requestAnimationFrame or requestVideoFrameCallback
+    renderer.setViewport(1280,720); // use the video player's dimensions.
+    // schedule your frame callback using either requestAnimationFrame or requestVideoFrameCallback
 });
 ```
 and passing it a function that loads fonts using the CSS Font loading API.

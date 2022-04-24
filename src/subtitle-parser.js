@@ -883,7 +883,7 @@ const parser_prototype = global.Object.create(global.Object, {
                             16
                         );
                         if (isNaN(a)) return;
-                        a = (a & 0xff) / 255;
+                        a = (255 - (a & 0xff)) / 255;
                     }
                     let color;
                     switch (color_index) {
@@ -1013,7 +1013,7 @@ const parser_prototype = global.Object.create(global.Object, {
             {
                 ass_only: false,
                 ignore_exterior: false,
-                regular_expression: /^a/,
+                regular_expression: /^a(?=[0-9][0-9]?)/,
                 /**
                  * Sets the alignment of the event using the old style.
                  * @param {{start:number,end:number}} timeInfo

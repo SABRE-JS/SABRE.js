@@ -621,6 +621,10 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 pass
             );
 
+            let noDraw = false;
+
+            let borderStyle = event.getStyle().getBorderStyle();
+
             //calculate size of drawing without scaling.
             this._calcSize(cmds);
 
@@ -642,6 +646,28 @@ const shape_renderer_prototype = global.Object.create(Object, {
             let offsetYUnscaled = this._offsetY;
             let widthUnscaled = this._width;
             let heightUnscaled = this._height;
+
+            if (pass === sabre.RenderPasses.BACKGROUND) {
+                if (
+                    borderStyle !== sabre.BorderStyleModes.NONE &&
+                    borderStyle !== sabre.BorderStyleModes.SRT_STYLE &&
+                    borderStyle !== sabre.BorderStyleModes.SRT_NO_OVERLAP
+                ) {
+                    let shadowComponent =
+                        Math.sign(style.getShadow()) *
+                        Math.sqrt(Math.pow(style.getShadow(), 2) / 2);
+
+                    let shadowX = overrides.getShadowX() ?? shadowComponent;
+                    let shadowY = overrides.getShadowY() ?? shadowComponent;
+                    if(shadowX === 0 && shadowY === 0)
+                        noDraw = true;
+                    this._offsetX -= shadowX;
+                    this._offsetY -= shadowY;
+                }else if(borderStyle === sabre.BorderStyleModes.NONE){
+                    noDraw = true;
+                }
+            }
+
             {
                 let scale = this._calcScale(time, style, overrides);
                 this._offsetX *=
@@ -703,6 +729,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 //reset the composite operation
                 this._ctx.globalCompositeOperation = "source-over";
                 //draw the shape
+                if(!noDraw)
                 {
                     if (pass === sabre.RenderPasses.OUTLINE) {
                         let outline_gt_zero = outline_x > 0 && outline_y > 0;
