@@ -1612,7 +1612,10 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._textureSubtitleMask = this._gl.createTexture();
-            this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitleMask);
+            this._gl.bindTexture(
+                this._gl.TEXTURE_2D,
+                this._textureSubtitleMask
+            );
             this._gl.texParameteri(
                 this._gl.TEXTURE_2D,
                 this._gl.TEXTURE_WRAP_S,
@@ -1648,7 +1651,6 @@ const renderer_prototype = global.Object.create(Object, {
 
             this._textureSubtitleBounds = [1, 1];
             this._textureSubtitleMaskBounds = [1, 1];
-
 
             this._fbTextureA = this._gl.createTexture();
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
@@ -1987,11 +1989,11 @@ const renderer_prototype = global.Object.create(Object, {
                 );
 
                 let shearMatrix = {
-                    m00: 1 + shear.x * shear.y,
+                    m00: 1 + shear.x * -shear.y,
                     m01: shear.x,
                     m02: 0,
                     m03: 0,
-                    m10: shear.y,
+                    m10: -shear.y,
                     m11: 1,
                     m12: 0,
                     m13: 0,
@@ -2119,12 +2121,9 @@ const renderer_prototype = global.Object.create(Object, {
          * Loads a subtitle into graphics card's VRAM.
          * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source the source.
          */
-        value: function (source,bounds) {
+        value: function (source, bounds) {
             let extents = source.getExtents();
-            if (
-                extents[0] <= bounds[0] &&
-                extents[1] <= bounds[1]
-            ) {
+            if (extents[0] <= bounds[0] && extents[1] <= bounds[1]) {
                 this._gl.texSubImage2D(
                     this._gl.TEXTURE_2D,
                     0,
@@ -2190,17 +2189,23 @@ const renderer_prototype = global.Object.create(Object, {
             this._gl.activeTexture(this._gl.TEXTURE0);
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
 
-            this._loadSubtitleToVram(source,this._textureSubtitleBounds);
+            this._loadSubtitleToVram(source, this._textureSubtitleBounds);
 
-            if(!isShape){
+            if (!isShape) {
                 this._gl.activeTexture(this._gl.TEXTURE1);
-                this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitleMask);
+                this._gl.bindTexture(
+                    this._gl.TEXTURE_2D,
+                    this._textureSubtitleMask
+                );
 
-                this._loadSubtitleToVram(this._textMaskRenderer,this._textureSubtitleMaskBounds);
+                this._loadSubtitleToVram(
+                    this._textMaskRenderer,
+                    this._textureSubtitleMaskBounds
+                );
 
-                this._positioningShader.updateOption("u_hasmask",1);
-            }else{
-                this._positioningShader.updateOption("u_hasmask",0);
+                this._positioningShader.updateOption("u_hasmask", 1);
+            } else {
+                this._positioningShader.updateOption("u_hasmask", 0);
             }
 
             let xScale = 2 / this._config.renderer["resolution_x"];
@@ -2266,10 +2271,11 @@ const renderer_prototype = global.Object.create(Object, {
             }
 
             let mask_coords;
-            {
+            if (!isShape) {
                 let extents = this._textureSubtitleMaskBounds;
-                let width = dimensions[0] / extents[0];
-                let height = dimensions[1] / extents[1];
+                let maskDimensions = this._textMaskRenderer.getDimensions();
+                let width = maskDimensions[0] / extents[0];
+                let height = maskDimensions[1] / extents[1];
                 // prettier-ignore
                 mask_coords = new Float32Array([
                     0,      1,
@@ -2621,21 +2627,26 @@ const renderer_prototype = global.Object.create(Object, {
                     this._gl.DYNAMIC_DRAW
                 );
 
-                this._gl.enableVertexAttribArray(maskAttrib);
-                this._gl.vertexAttribPointer(
-                    maskAttrib,
-                    2,
-                    this._gl.FLOAT,
-                    false,
-                    0,
-                    0
-                );
-                this._gl.bufferData(
-                    this._gl.ARRAY_BUFFER,
-                    mask_coords,
-                    this._gl.DYNAMIC_DRAW
-                );
-
+                if (!isShape) {
+                    this._gl.bindBuffer(
+                        this._gl.ARRAY_BUFFER,
+                        this._maskCoordinatesBuffer
+                    );
+                    this._gl.enableVertexAttribArray(maskAttrib);
+                    this._gl.vertexAttribPointer(
+                        maskAttrib,
+                        2,
+                        this._gl.FLOAT,
+                        false,
+                        0,
+                        0
+                    );
+                    this._gl.bufferData(
+                        this._gl.ARRAY_BUFFER,
+                        mask_coords,
+                        this._gl.DYNAMIC_DRAW
+                    );
+                }
 
                 this._gl.bindBuffer(
                     this._gl.ARRAY_BUFFER,
