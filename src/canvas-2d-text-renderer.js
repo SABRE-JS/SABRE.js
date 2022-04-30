@@ -367,14 +367,16 @@ const text_renderer_prototype = global.Object.create(Object, {
             pass,
             mask
         ) {
-            if(mask){
+            if (mask) {
                 this._ctx.fillStyle = "rgba(255,255,255,1)";
                 this._ctx.strokeStyle = "rgba(255,255,255,1)";
             } else {
                 if (
                     pass === sabre.RenderPasses.BACKGROUND &&
-                    style.getBorderStyle() !== sabre.BorderStyleModes.SRT_STYLE &&
-                    style.getBorderStyle() !== sabre.BorderStyleModes.SRT_NO_OVERLAP
+                    style.getBorderStyle() !==
+                        sabre.BorderStyleModes.SRT_STYLE &&
+                    style.getBorderStyle() !==
+                        sabre.BorderStyleModes.SRT_NO_OVERLAP
                 ) {
                     this._ctx.fillStyle = "rgba(0,0,0,1)";
                 } else {
@@ -634,11 +636,12 @@ const text_renderer_prototype = global.Object.create(Object, {
 
                     let shadowX = overrides.getShadowX() ?? shadowComponent;
                     let shadowY = overrides.getShadowY() ?? shadowComponent;
-                    if(shadowX === 0 && shadowY === 0)
-                        noDraw = true;
+
+                    if (shadowX === 0 && shadowY === 0) noDraw = true;
+
                     this._offsetX -= shadowX;
                     this._offsetY -= shadowY;
-                }else if(borderStyle === sabre.BorderStyleModes.NONE){
+                } else if (borderStyle === sabre.BorderStyleModes.NONE) {
                     noDraw = true;
                 }
             }
@@ -695,8 +698,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                 //reset the composite operation
                 this._ctx.globalCompositeOperation = "source-over";
                 //draw the text
-                if(!noDraw)
-                {
+                if (!noDraw) {
                     if (pass === sabre.RenderPasses.BACKGROUND) {
                         switch (borderStyle) {
                             case sabre.BorderStyleModes.NONE:
