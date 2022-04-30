@@ -568,7 +568,7 @@ const parser_prototype = global.Object.create(global.Object, {
                         break;
                     case "Italic":
                         tmp = global.parseInt(value, 10);
-                        if (!global.isNaN(tmp)) style.setItalic(tmp > 0);
+                        if (!global.isNaN(tmp)) style.setItalic(tmp !== 0);
                         else throw "Invalid italic setting in style.";
                     case "BorderStyle":
                         tmp = global.parseInt(value, 10);
@@ -696,15 +696,15 @@ const parser_prototype = global.Object.create(global.Object, {
                         break;
                     case "Italic":
                         tmp = global.parseInt(value, 10);
-                        if (!global.isNaN(tmp)) style.setItalic(tmp > 0);
+                        if (!global.isNaN(tmp)) style.setItalic(tmp !== 0);
                         else throw "Invalid italic setting in style.";
                     case "Underline":
                         tmp = global.parseInt(value, 10);
-                        if (!global.isNaN(tmp)) style.setUnderline(tmp > 0);
+                        if (!global.isNaN(tmp)) style.setUnderline(tmp !== 0);
                         else throw "Invalid underline setting in style.";
                     case "StrikeOut":
                         tmp = global.parseInt(value, 10);
-                        if (!global.isNaN(tmp)) style.setStrikeout(tmp > 0);
+                        if (!global.isNaN(tmp)) style.setStrikeout(tmp !== 0);
                         else
                             throw "Invalid Strikeout/Strikethrough setting in style.";
                     case "ScaleX":
@@ -1982,9 +1982,9 @@ const parser_prototype = global.Object.create(global.Object, {
                     transitionTargetOverrides,
                     lineGlobalTransitionTargetOverrides
                 ) {
-                    let value = parameters[0] === "1";
-                    if (parameters[0] !== "0" && !value) return;
-                    overrides.setItalic(value);
+                    let value = global.parseInt(parameters[0], 10);
+                    if (!value && value !== 0) return;
+                    overrides.setItalic(value !== 0);
                 }
             },
             {
@@ -2398,7 +2398,8 @@ const parser_prototype = global.Object.create(global.Object, {
                     lineGlobalTransitionTargetOverrides
                 ) {
                     let value = global.parseInt(parameters[0], 10);
-                    overrides.setStrikeout(value > 0);
+                    if (!value && value !== 0) return;
+                    overrides.setStrikeout(value !== 0);
                 }
             },
             {
@@ -2589,14 +2590,9 @@ const parser_prototype = global.Object.create(global.Object, {
                     transitionTargetOverrides,
                     lineGlobalTransitionTargetOverrides
                 ) {
-                    let value = parameters[0] === "1";
-                    if (
-                        typeof parameters[0] === "undefined" ||
-                        parameters[0] === null ||
-                        (parameters[0] !== "0" && !value)
-                    )
-                        return;
-                    overrides.setUnderline(value);
+                    let value = global.parseInt(parameters[0], 10);
+                    if (!value && value !== 0) return;
+                    overrides.setUnderline(value !== 0);
                 }
             }
         ]),
