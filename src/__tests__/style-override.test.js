@@ -5,7 +5,11 @@ const constants = require("./test-constants/style-override.constants");
 const utils = require("./test-utils/style-override.uils");
 const testPrimitiveMethods = require("./test-utils/primitive-values-methods.utils");
 
-const { defaultStyleOverride, defaultTransitionTargetOverride } = constants;
+const {
+    defaultStyleOverride,
+    defaultTransitionTargetOverride,
+    defaultLineTransitionTargetOverride
+} = constants;
 const { a, b, c, d, expectedClip } = constants.clip;
 
 describe("style-override", () => {
@@ -174,7 +178,13 @@ describe("style-override", () => {
                 expect(styleOverride.getShearX()).not.toBe(shearX);
                 expect(styleOverride.getShearY()).not.toBe(shearY);
 
-                styleOverride._cloneHelper({ shearX, shearY });
+                styleOverride._cloneHelper({
+                    shearX: shearX,
+                    shearY: shearY,
+                    margins: ["m"],
+                    rotation: ["r"],
+                    transitions: ["t"]
+                });
 
                 expect(styleOverride.getShearX()).toBe(shearX);
                 expect(styleOverride.getShearY()).toBe(shearY);
@@ -196,6 +206,12 @@ describe("style-override", () => {
             "r",
             ...constants.rotations
         );
+        //TODO: Get a working test for transition override arrays.
+        /*utils.testArrayAppendMethod(
+            sabre.SSAStyleOverride(),
+            "Transition",
+            "t"
+        );*/
         testPrimitiveMethods(
             sabre.SSAStyleOverride(),
             constants.styleOverridePrimitiveFieldsAliases
@@ -373,9 +389,9 @@ describe("style-override", () => {
 
         describe("#toJSON", () => {
             it("should return translation target override object", () => {
-                expect(lineTransitionTargetOverride.toJSON()).toEqual({
-                    cl: null
-                });
+                expect(lineTransitionTargetOverride.toJSON()).toEqual(
+                    defaultLineTransitionTargetOverride
+                );
             });
         });
 
@@ -389,5 +405,10 @@ describe("style-override", () => {
         });
 
         utils.getClipTest(sabre.SSALineTransitionTargetOverride());
+
+        testPrimitiveMethods(
+            sabre.SSALineTransitionTargetOverride(),
+            constants.lineGlobalTransitionTargetOverridePrimitiveFieldsAliases
+        );
     });
 });
