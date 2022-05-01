@@ -10,19 +10,19 @@ echo "Running pre-commit hook..." | tee -a $LOG_FILE
 echo "Running pretty-quick..." | tee -a $LOG_FILE
 $SCRIPT_BIN_DIR/helpers/execute-node.sh pretty-quick --staged | tee -a $LOG_FILE
 RESULT_NEW=$?
-if [ $RESULT_CODE -eq 0 ]; then
+if [ $RESULT_CODE -ne 0 ]; then
     RESULT_CODE=$RESULT_NEW
 fi
 echo "Running eslint..." | tee -a $LOG_FILE
 $SCRIPT_BIN_DIR/helpers/execute-node.sh lint-staged | tee -a $LOG_FILE
 RESULT_NEW=$?
-if [ $RESULT_CODE -eq 0 ]; then
+if [ $RESULT_CODE -ne 0 ]; then
     RESULT_CODE=$RESULT_NEW
 fi
 echo "Running tests..." | tee -a $LOG_FILE
 $SCRIPT_BIN_DIR/helpers/execute-node.sh jest -o | tee -a $LOG_FILE
 RESULT_NEW=$?
-if [ $RESULT_CODE -eq 0 ]; then
+if [ $RESULT_CODE -ne 0 ]; then
     RESULT_CODE=$RESULT_NEW
 fi
 echo "Finished pre-commit hook..." | tee -a $LOG_FILE

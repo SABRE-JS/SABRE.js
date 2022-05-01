@@ -11,8 +11,7 @@ const subtitleEventPrimitiveFieldsAliases = {
     Layer: "l",
     Style: "st",
     Overrides: "o",
-    LineOverrides: "lO",
-    LineTransitionTargetOverrides: "tO"
+    LineOverrides: "lO"
 };
 
 describe("SSASubtitleEvent", () => {
@@ -28,17 +27,21 @@ describe("SSASubtitleEvent", () => {
             id: NaN,
             l: 0,
             lO: null,
+            nl: false,
             o: null,
+            or: NaN,
             s: 0,
             st: null,
             t: null,
-            tO: null
+            tO: []
         };
 
         it("should return subtitle event object", () => {
             expect(subtitleEvent.toJSON()).toEqual(defaultSubtitleEvent);
         });
     });
+
+    //TODO: Test line transition override arrays.
 
     testPrimitiveMethods(
         sabre.SSASubtitleEvent(),

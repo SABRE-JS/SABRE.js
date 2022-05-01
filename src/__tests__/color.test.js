@@ -10,10 +10,10 @@ describe("SSAColor", () => {
     describe("#constructor", () => {
         test("Are hex inputs to SSAColor handled correctly?", () => {
             let color = new sabre.SSAColor(0x12345678);
-            expect(color.getR()).toBe(0x12 / 255);
-            expect(color.getG()).toBe(0x34 / 255);
-            expect(color.getB()).toBe(0x56 / 255);
-            expect(color.getA()).toBe(0x78 / 255);
+            expect(color.getR()).toBe(0x78 / 255);
+            expect(color.getG()).toBe(0x56 / 255);
+            expect(color.getB()).toBe(0x34 / 255);
+            expect(color.getA()).toBe((255 - 0x12) / 255);
         });
 
         test("Are individual hex inputs to SSAColor handled correctly?", () => {
@@ -37,7 +37,7 @@ describe("SSAColor", () => {
         test("should serialize correctly.", () => {
             let color = new sabre.SSAColor(0x87654321);
             expect(JSON.stringify(color, jsonFix)).toBe(
-                "[0.5294117647058824,0.396078431372549,0.2627450980392157,0.12941176470588237]"
+                "[0.12941176470588237,0.2627450980392157,0.396078431372549,0.47058823529411764]"
             );
         });
     });

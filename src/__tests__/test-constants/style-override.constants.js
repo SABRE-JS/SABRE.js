@@ -1,7 +1,7 @@
-const a = 'a';
-const b = 'b';
-const c = 'c';
-const d = 'd';
+const a = "a";
+const b = "b";
+const c = "c";
+const d = "d";
 
 const expectedClip = [a, b, c, d];
 
@@ -35,7 +35,7 @@ const defaultStyleOverride = {
     sheY: 0,
     sp: null,
     st: null,
-    t: null,
+    t: [],
     tC: null,
     u: null,
     w: null,
@@ -43,47 +43,46 @@ const defaultStyleOverride = {
 };
 
 const styleOverridePrimitiveFieldsAliases = {
-    Alignment: 'a',
-    BaselineOffset: 'bO',
-    DrawingMode: 'dM',
-    DrawingScale: 'dS',
-    Encoding: 'e',
-    EdgeBlur: 'bI',
-    FontName: 'fN',
-    FontSize: 'fS',
-    FontSizeMod: 'fSM',
-    GaussianEdgeBlur: 'gB',
-    Italic: 'i',
-    KaraokeMode: 'kM',
-    KaraokeStart: 'kS',
-    KaraokeEnd: 'kE',
-    OutlineY: 'oY',
-    OutlineX: 'oX',
-    PrimaryColor: 'pC',
-    SecondaryColor: 'sC',
-    TertiaryColor: 'tC',
-    QuaternaryColor: 'qC',
-    ScaleX: 'sX',
-    ScaleY: 'sY',
-    ShadowX: 'shX',
-    ShadowY: 'shY',
-    ShearX: 'sheX',
-    ShearY: 'sheY',
-    Spacing: 'sp',
-    Strikeout: 'st',
-    Transition: 't',
-    Underline: 'u',
-    Weight: 'w',
-    WrapStyle: 'wS',
-}
+    Alignment: "a",
+    BaselineOffset: "bO",
+    DrawingMode: "dM",
+    DrawingScale: "dS",
+    Encoding: "e",
+    EdgeBlur: "bI",
+    FontName: "fN",
+    FontSize: "fS",
+    FontSizeMod: "fSM",
+    GaussianEdgeBlur: "gB",
+    Italic: "i",
+    KaraokeMode: "kM",
+    KaraokeStart: "kS",
+    KaraokeEnd: "kE",
+    OutlineY: "oY",
+    OutlineX: "oX",
+    PrimaryColor: "pC",
+    SecondaryColor: "sC",
+    TertiaryColor: "tC",
+    QuaternaryColor: "qC",
+    ScaleX: "sX",
+    ScaleY: "sY",
+    ShadowX: "shX",
+    ShadowY: "shY",
+    ShearX: "sheX",
+    ShearY: "sheY",
+    Spacing: "sp",
+    Strikeout: "st",
+    Underline: "u",
+    Weight: "w",
+    WrapStyle: "wS"
+};
 
-const marginLeft = 'marginLeft';
-const marginRight = 'marginRight';
-const marginVertical = 'marginVertical';
+const marginLeft = "marginLeft";
+const marginRight = "marginRight";
+const marginVertical = "marginVertical";
 
-const rotationX = 'rotationX';
-const rotationY = 'rotationY';
-const rotationZ = 'rotationZ';
+const rotationX = "rotationX";
+const rotationY = "rotationY";
+const rotationZ = "rotationZ";
 
 const defaultTransitionTargetOverride = {
     bI: null,
@@ -109,25 +108,38 @@ const defaultTransitionTargetOverride = {
 };
 
 const transitionTargetOverridePrimitiveFieldsAliases = {
-    TransitionStart: 'tS',
-    TransitionEnd: 'tE',
-    TransitionAcceleration: 'tA',
-    EdgeBlur: 'bI',
-    FontSize: 'fS',
-    GaussianEdgeBlur: 'gB',
-    OutlineY: 'oY',
-    OutlineX: 'oX',
-    PrimaryColor: 'pC',
-    SecondaryColor: 'sC',
-    TertiaryColor: 'tC',
-    QuaternaryColor: 'qC',
-    ScaleX: 'sX',
-    ScaleY: 'sY',
-    ShadowX: 'shX',
-    ShadowY: 'shY',
-    ShearX: 'sheX',
-    ShearY: 'sheY',
-    Spacing: 'sp',
+    TransitionStart: "tS",
+    TransitionEnd: "tE",
+    TransitionAcceleration: "tA",
+    EdgeBlur: "bI",
+    FontSize: "fS",
+    GaussianEdgeBlur: "gB",
+    OutlineY: "oY",
+    OutlineX: "oX",
+    PrimaryColor: "pC",
+    SecondaryColor: "sC",
+    TertiaryColor: "tC",
+    QuaternaryColor: "qC",
+    ScaleX: "sX",
+    ScaleY: "sY",
+    ShadowX: "shX",
+    ShadowY: "shY",
+    ShearX: "sheX",
+    ShearY: "sheY",
+    Spacing: "sp"
+};
+
+const defaultLineTransitionTargetOverride = {
+    cl: null,
+    tA: 1,
+    tE: 0,
+    tS: 0
+};
+
+const lineGlobalTransitionTargetOverridePrimitiveFieldsAliases = {
+    TransitionStart: "tS",
+    TransitionEnd: "tE",
+    TransitionAcceleration: "tA"
 };
 
 module.exports = {
@@ -146,5 +158,7 @@ module.exports = {
     marginVertical,
     rotations: [rotationX, rotationY, rotationZ],
     defaultTransitionTargetOverride,
-    transitionTargetOverridePrimitiveFieldsAliases
-}
+    transitionTargetOverridePrimitiveFieldsAliases,
+    defaultLineTransitionTargetOverride,
+    lineGlobalTransitionTargetOverridePrimitiveFieldsAliases
+};
