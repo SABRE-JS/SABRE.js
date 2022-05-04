@@ -3,12 +3,15 @@
  */
 var global;
 
-//window = null;
-
 global.sabre = {};
 
 var external = global.sabre;
 
+//This is internal to the wrapper that is applied to the compiled output.
+var sabre = {};
+sabre.$ = null;
+
+//These are definitions for APIs the closure compiler doesn't know by default.
 global.CanvasRenderingContext2D.prototype.resetTransform = function () {};
 /** @type {number} */
 global.CanvasRenderingContext2D.prototype.webkitBackingStorePixelRatio = 1;
@@ -33,5 +36,3 @@ global.HTMLCanvasElement.prototype.toBlobHD = function () {};
  */
 global.OffscreenCanvas.prototype.toBlobHD = function () {};
 
-var sabre = {};
-sabre.$ = null;
