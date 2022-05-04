@@ -2,7 +2,7 @@
 # SABRE.js: Substation Alpha suBtitles REnderer
 A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer. 
 
-<span style="text-align:center; width:100%; display: inline-block;">[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) [![CodeFactor](https://www.codefactor.io/repository/github/sabre-js/sabre.js/badge)](https://www.codefactor.io/repository/github/sabre-js/sabre.js) [![](https://data.jsdelivr.com/v1/package/npm/@sabre-js/sabre/badge)](https://www.jsdelivr.com/package/npm/@sabre-js/sabre)</span>
+<span style="text-align:center; width:100%; display: inline-block;">[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) [![CodeFactor](https://www.codefactor.io/repository/github/sabre-js/sabre.js/badge)](https://www.codefactor.io/repository/github/sabre-js/sabre.js) [![](https://data.jsdelivr.com/v1/package/npm/@sabre-js/sabre/badge)](https://www.jsdelivr.com/package/npm/@sabre-js/sabre) [![Featured on Openbase](https://badges.openbase.com/js/featured/@sabre-js/sabre.svg?token=X7lxF2mBNtaAGL5OtiKQkLjR8uUzMVOJtDX45rCSq1g=)](https://openbase.com/js/@sabre-js/sabre?utm_source=embedded&amp;utm_medium=badge&amp;utm_campaign=rate-badge)</span>
 
 ## What is the SABRE.js?
 
