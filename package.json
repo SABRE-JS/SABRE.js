@@ -3,6 +3,7 @@
     "version": "0.1.0-git",
     "description": "A gpu accelerated ecmascript renderer for Advanced Substation Alpha (ASS) subtitles. Renders .ass and .ssa files over video in the browser.",
     "main": "dist/sabre.min.js",
+    "types": "dist/sabre.d.ts",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
@@ -15,9 +16,11 @@
         "README.md",
         "dist/*.js",
         "dist/lib/*.js",
-        "dist/shaders/*.glsl",
         "dist/*.map",
-        "dist/lib/*.map"
+        "dist/lib/*.map",
+        "dist/*.d.ts",
+        "dist/lib/*.d.ts",
+        "dist/shaders/*.glsl"
     ],
     "keywords": [
         "front-end",
