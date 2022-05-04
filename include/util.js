@@ -53,7 +53,7 @@ sabre.cloneEventWithoutText = function (event) {
  * @param {number} p Number of places.
  * @return {number} Rounded result.
  */
-Math.roundTo = function (n, p) {
+sabre.roundTo = function (n, p) {
     return 0;
 };
 
@@ -67,7 +67,6 @@ sabre.stringEqualsCaseInsensitive = function (a, b) {
     return true;
 };
 
-sabre.pixelRatio = 1.0;
 /**
  * Get Backing pixel ratio for a canvas context.
  * @param {CanvasRenderingContext2D} context the target context.

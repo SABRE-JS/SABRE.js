@@ -2,7 +2,7 @@
 # SABRE.js: Substation Alpha suBtitles REnderer
 A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer. 
 
-<span style="text-align:center; width:100%; display: inline-block;">[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) [![CodeFactor](https://www.codefactor.io/repository/github/sabre-js/sabre.js/badge)](https://www.codefactor.io/repository/github/sabre-js/sabre.js)</span>
+<span style="text-align:center; width:100%; display: inline-block;">[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) [![CodeFactor](https://www.codefactor.io/repository/github/sabre-js/sabre.js/badge)](https://www.codefactor.io/repository/github/sabre-js/sabre.js)[![](https://data.jsdelivr.com/v1/package/npm/@sabre-js/sabre/badge)](https://www.jsdelivr.com/package/npm/@sabre-js/sabre)</span>
 
 ## What is the SABRE.js?
 
@@ -19,6 +19,18 @@ It allows you to draw styled/stylized subtitles over web video with multiple fon
 A gallery of major milestones in the development process.
 
 To view the gallery click [here](/gallery/gallery.md) if you're using a decent browser or [here](/gallery/but_i_use_safari.md) if you like safari or internet explorer.
+
+### Folder Structure
+
+* src/ -- Main sourcecode for the project (excluding src/__tests__)
+* src/__tests__/ -- Test code for test driven development.
+* include/ -- Browser API definitions and internal API definitions for the Closure Compiler (Files in this folder aren't compiled).
+* bin/ -- Output directory for production code.
+* debugbin/ -- Output directory for debug code.
+* sbin/ -- Contains scripts that are run by the makefile.
+* tbin/ -- Contains the Closure Compiler and other build tools.
+* temp_files/ -- Temporary files.
+* test/ -- Directory used when running the debug server. 
 
 ### Documentation
 
