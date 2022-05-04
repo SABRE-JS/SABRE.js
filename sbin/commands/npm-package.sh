@@ -32,7 +32,7 @@ RESULT_NEW=$?
 if [ $RESULT_CODE -ne 0 ]; then
     RESULT_CODE=$RESULT_NEW
 fi
-cp "$PROJECT_ROOT/types/*" "$TEMP_DIR/sabre/dist"
+cp -R "$PROJECT_ROOT/types" "$TEMP_DIR/sabre/types"
 RESULT_NEW=$?
 if [ $RESULT_CODE -ne 0 ]; then
     RESULT_CODE=$RESULT_NEW
