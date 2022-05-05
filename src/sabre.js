@@ -86,6 +86,7 @@ if (!(typeof define === "function" && define.amd)) {
                 includelog[scriptName] = true;
                 callback(true);
             } catch (e) {
+                console.warn(e);
                 callback(false);
             }
             return;
@@ -142,6 +143,7 @@ if (!(typeof define === "function" && define.amd)) {
                 includelog[scriptName] = true;
                 callback(true);
             } catch (e) {
+                console.warn(e);
                 callback(false);
             }
             return;
