@@ -11,6 +11,9 @@
         "type": "git",
         "url": "git+https://github.com/SABRE-JS/SABRE.js.git"
     },
+    "dependencies": {
+        "@types/offscreencanvas": "^2019.6.4"
+    },
     "files": [
         "LICENCE.md",
         "README.md",

@@ -7,6 +7,14 @@ global.sabre = {};
 
 var external = global.sabre;
 
+//support AMD
+global.define = function (id, dependancies, factory) {
+    return;
+};
+
+global.define.amd = {};
+global.define.amd.multiversion = false;
+
 //This is internal to the wrapper that is applied to the compiled output.
 var sabre = {};
 sabre.$ = null;
@@ -35,4 +43,3 @@ global.HTMLCanvasElement.prototype.toBlobHD = function () {};
  * @return {Blob} the result.
  */
 global.OffscreenCanvas.prototype.toBlobHD = function () {};
-
