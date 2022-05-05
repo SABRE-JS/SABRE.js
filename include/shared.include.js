@@ -7,6 +7,16 @@ global.sabre = {};
 
 var external = global.sabre;
 
+//Support CommonJS
+/**
+ * Require
+ * @param {string|Array<string>} value
+ * @param {function():void=} callback
+ */
+let require = function (value, callback) {};
+var module = {};
+module.exports = {};
+
 //support AMD
 global.define = function (id, dependancies, factory) {
     return;

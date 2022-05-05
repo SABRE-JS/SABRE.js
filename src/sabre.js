@@ -55,6 +55,12 @@ if (!(typeof define === "function" && define.amd)) {
             curscript.pathname.match(/^(.*\/).*?$/)[1];
     }
 
+    let commonjs = false;
+    if (typeof require !== "undefined") {
+        commonjs = true;
+        module.exports = external;
+    }
+
     /**
      * includes a ecmascript file asynchronously.
      * @param {string} scriptName The name/path of the script.
@@ -68,11 +74,22 @@ if (!(typeof define === "function" && define.amd)) {
         }
         if (typeof callback === "undefined" || callback === null)
             callback = function () {};
+
         if (
             !(typeof includelog[scriptName] === "undefined") &&
             includelog[scriptName] === true
         )
             return;
+        if (commonjs) {
+            try {
+                require("./" + scriptName);
+                includelog[scriptName] = true;
+                callback(true);
+            } catch (e) {
+                callback(false);
+            }
+            return;
+        }
         if (
             typeof global["importScripts"] === "function" &&
             typeof global["document"] === "undefined"
@@ -119,6 +136,16 @@ if (!(typeof define === "function" && define.amd)) {
             includelog[scriptName] === true
         )
             return;
+        if (commonjs) {
+            try {
+                require("./" + scriptName);
+                includelog[scriptName] = true;
+                callback(true);
+            } catch (e) {
+                callback(false);
+            }
+            return;
+        }
         if (
             typeof global["importScripts"] === "function" &&
             typeof global["document"] === "undefined"
