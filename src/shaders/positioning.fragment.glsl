@@ -19,13 +19,13 @@ void main(){
         if(uncolored.r == 0.0 && uncolored.g == 0.0 && uncolored.b == 0.0 && uncolored.a > 0.0){
             colored.rgb = u_quaternary_color.rgb;
             colored.a = uncolored.a*u_quaternary_color.a;
-        }else if(uncolored.r > 0.0 && uncolored.a > 0.0 && uncolored.a > 0.0){
+        }else if(uncolored.r > 0.0 && uncolored.a > 0.0){
             colored.rgb = u_primary_color.rgb;
             colored.a = uncolored.a*u_primary_color.a;
-        }else if(uncolored.g > 0.0 && uncolored.a > 0.0 && uncolored.a > 0.0){
+        }else if(uncolored.g > 0.0 && uncolored.a > 0.0){
             colored.rgb = u_secondary_color.rgb;
             colored.a = uncolored.a*u_secondary_color.a;
-        }else if (uncolored.b > 0.0 && uncolored.a > 0.0 && uncolored.a > 0.0){
+        }else if (uncolored.b > 0.0 && uncolored.a > 0.0){
             colored.rgb = u_tertiary_color.rgb;
             colored.a = uncolored.a*u_tertiary_color.a;
         } else {
@@ -38,13 +38,13 @@ void main(){
             if(uncolored.r == 0.0 && uncolored.g == 0.0 && uncolored.b == 0.0 && uncolored.a > 0.0){
                 colored.rgb = u_quaternary_color.rgb;
                 colored.a = uncolored.a*u_quaternary_color.a;
-            }else if(uncolored.r > 0.0 && uncolored.a > 0.0 && uncolored.a > 0.0){
+            }else if(uncolored.r > 0.0 && uncolored.a > 0.0){
                 colored.rgb = u_primary_color.rgb;
                 colored.a = uncolored.a*u_primary_color.a;
-            }else if(uncolored.g > 0.0 && uncolored.a > 0.0 && uncolored.a > 0.0){
+            }else if(uncolored.g > 0.0 && uncolored.a > 0.0){
                 colored.rgb = u_secondary_color.rgb;
                 colored.a = uncolored.a*u_secondary_color.a;
-            }else if (uncolored.b > 0.0 && uncolored.a > 0.0 && uncolored.a > 0.0){
+            }else if (uncolored.b > 0.0 && uncolored.a > 0.0){
                 colored.rgb = u_tertiary_color.rgb;
                 colored.a = uncolored.a*u_tertiary_color.a;
             } else {
