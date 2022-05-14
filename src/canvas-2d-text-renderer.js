@@ -944,7 +944,10 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @returns {Array<number>} offset of the resulting image
          */
         value: function () {
-            return [this._offsetX, this._offsetY];
+            return [
+                this._offsetX / this._pixelScaleRatio.xratio,
+                this._offsetY / this._pixelScaleRatio.yratio
+            ];
         },
         writable: false
     },
@@ -955,12 +958,29 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @returns {Array<number>} dimensions of the text.
          */
         value: function () {
-            return [this._textSpacingWidth, this._height];
+            return [
+                this._textSpacingWidth / this._pixelScaleRatio.xratio,
+                this._height / this._pixelScaleRatio.yratio
+            ];
         },
         writable: false
     },
 
     "getDimensions": {
+        /**
+         * Gets the dimensions of the resulting image.
+         * @returns {Array<number>} dimensions of the resulting image
+         */
+        value: function () {
+            return [
+                this._width / this._pixelScaleRatio.xratio,
+                this._height / this._pixelScaleRatio.yratio
+            ];
+        },
+        writable: false
+    },
+
+    "getTextureDimensions": {
         /**
          * Gets the dimensions of the resulting image.
          * @returns {Array<number>} dimensions of the resulting image

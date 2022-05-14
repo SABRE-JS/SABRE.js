@@ -13,9 +13,11 @@
 //@include [subtitle-event.js]
 //@include [subtitle-parser.js]
 //@include [scheduler.js]
+//@include [shader.js]
 //@include [canvas-2d-text-renderer.js]
 //@include [canvas-2d-shape-renderer.js]
-//@include [shader.js]
+//@include [lib/BSpline.js]
+//@include [lib/earcut.js]
 sabre.import("util");
 sabre.import("global-constants");
 sabre.import("color");
@@ -27,6 +29,9 @@ sabre.import("scheduler");
 sabre.import("shader");
 sabre.import("canvas-2d-text-renderer");
 sabre.import("canvas-2d-shape-renderer");
+sabre.import("lib/BSpline");
+sabre.import("lib/earcut");
+
 /**
  * @fileoverview webgl subtitle compositing code.
  */
@@ -121,6 +126,12 @@ const renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _clipBuffer: {
+        /** @type{?WebGLBuffer} */
+        value: null,
+        writable: true
+    },
+
     _textureSubtitle: {
         /** @type{?WebGLTexture} */
         value: null,
@@ -187,6 +198,12 @@ const renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _clipShader: {
+        /** @type{?Shader} */
+        value: null,
+        writable: true
+    },
+
     //END WEBGL VARIABLES
 
     _contextLost: {
@@ -234,6 +251,24 @@ const renderer_prototype = global.Object.create(Object, {
 
     //END LOCAL VARIABLES
     //BEGIN LOCAL FUNCTIONS
+
+    _bezierCurve: {
+        value: function (t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+            var cX = 3 * (p1x - p0x),
+                bX = 3 * (p2x - p1x) - cX,
+                aX = p3x - p0x - cX - bX;
+
+            var cY = 3 * (p1y - p0y),
+                bY = 3 * (p2y - p1y) - cY,
+                aY = p3y - p0y - cY - bY;
+
+            var x = aX * Math.pow(t, 3) + bX * Math.pow(t, 2) + cX * t + p0x;
+            var y = aY * Math.pow(t, 3) + bY * Math.pow(t, 2) + cY * t + p0y;
+
+            return [x, y];
+        },
+        writable: false
+    },
 
     _matrixToArrayRepresentation4x4: {
         /**
@@ -1545,6 +1580,7 @@ const renderer_prototype = global.Object.create(Object, {
             this._maskCoordinatesBuffer = this._gl.createBuffer();
             this._subtitlePositioningBuffer = this._gl.createBuffer();
             this._fullscreenPositioningBuffer = this._gl.createBuffer();
+            this._clipBuffer = this._gl.createBuffer();
 
             this._gl.bindBuffer(
                 this._gl.ARRAY_BUFFER,
@@ -1871,6 +1907,20 @@ const renderer_prototype = global.Object.create(Object, {
             );
             this._gaussEdgeBlurPass2Shader.addOption("u_texture", 0, "1i");
             this._gaussEdgeBlurPass2Shader.addOption("u_sigma", 0, "1f");
+
+            this._clipShader = new sabre.Shader();
+            this._clipShader.load(
+                sabre.getScriptPath() + "shaders/clip.vertex.glsl",
+                sabre.getScriptPath() + "shaders/clip.fragment.glsl",
+                1
+            );
+            this._clipShader.compile(this._gl);
+            this._clipShader.addOption(
+                "u_aspectscale",
+                new Float32Array([1, 1]),
+                "2f"
+            );
+            this._clipShader.addOption("u_texture", 0, "1i");
         },
         writable: false
     },
@@ -2116,6 +2166,267 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _getShapesFromPath: {
+        /**
+         * Takes a scale and a path and returns the perimeters of the shapes drawn.
+         * @param {number} scale the scale of the path.
+         * @param {string} path the path itself.
+         * @returns {Array<Array<number>>} the shapes.
+         */
+        value: function (scale, path) {
+            //prep runtime stuff
+            const parseFloat = global.parseFloat;
+            const BSpline = sabre.BSpline;
+            //end prep
+            let uniquecommands = path.match(
+                /[mnlbspc](?: -?\d+(?:\.\d+)? -?\d+(?:\.\d+)?)*/gi
+            );
+            if (uniquecommands === null) return [];
+            let height = this._config.renderer["resolution_y"];
+            let spline_points = null;
+            let lastpos = [0, 0];
+            let shapes = [];
+            let current_shape = [];
+            for (let i = 0; i < uniquecommands.length; i++) {
+                let cmdtype = uniquecommands[i][0];
+                let params = uniquecommands[i].substring(1).trim().split(" ");
+                let length;
+                switch (cmdtype) {
+                    case "b":
+                        length = 6;
+                        break;
+                    case "s":
+                        length = params.length;
+                        break;
+                    case "c":
+                        length = 0;
+                        break;
+                    default:
+                        length = 2;
+                }
+                for (
+                    let j = 0;
+                    j < (length === 0 ? 1 : params.length / length);
+                    j++
+                ) {
+                    let localparam = params.slice(j * length, (j + 1) * length);
+                    switch (cmdtype) {
+                        case "m":
+                            if (current_shape.length > 0) {
+                                shapes.push(current_shape);
+                                current_shape = [];
+                            }
+                        case "n":
+                            lastpos[0] = parseFloat(localparam[0]);
+                            lastpos[1] = parseFloat(localparam[1]);
+                            break;
+                        case "l":
+                            if (current_shape.length === 0) {
+                                current_shape.push(
+                                    scale * lastpos[0],
+                                    height - scale * lastpos[1]
+                                );
+                            }
+                            lastpos[0] = parseFloat(localparam[0]);
+                            lastpos[1] = parseFloat(localparam[1]);
+                            current_shape.push(
+                                scale * lastpos[0],
+                                height - scale * lastpos[1]
+                            );
+                            break;
+                        case "b":
+                            if (current_shape.length === 0) {
+                                current_shape.push(
+                                    scale * lastpos[0],
+                                    height - scale * lastpos[1]
+                                );
+                            }
+                            {
+                                let old_lastpos = [lastpos[0], lastpos[1]];
+                                lastpos[0] = parseFloat(localparam[4]);
+                                lastpos[1] = parseFloat(localparam[5]);
+                                for (let t = 0; t < 1; t += 0.001 / scale) {
+                                    let result = this._bezierCurve(
+                                        t,
+                                        old_lastpos[0],
+                                        old_lastpos[1],
+                                        parseFloat(localparam[0]),
+                                        parseFloat(localparam[1]),
+                                        parseFloat(localparam[2]),
+                                        parseFloat(localparam[3]),
+                                        lastpos[0],
+                                        lastpos[1]
+                                    );
+                                    current_shape.push(
+                                        scale * result[0],
+                                        height - scale * result[1]
+                                    );
+                                }
+                            }
+                            break;
+                        case "s":
+                            if (current_shape.length === 0) {
+                                current_shape.push(
+                                    scale * lastpos[0],
+                                    height - scale * lastpos[1]
+                                );
+                            }
+                            {
+                                spline_points = spline_points || [];
+                                spline_points[0] = [lastpos[0], lastpos[1]];
+                                let n = 1;
+                                for (let k = 0; k < localparam.length; k += 2) {
+                                    spline_points[n++] = [
+                                        parseFloat(localparam[k]),
+                                        parseFloat(localparam[k + 1])
+                                    ];
+                                }
+                            }
+                            break;
+                        case "p":
+                            spline_points = spline_points || [];
+                            spline_points[spline_points.length] = [
+                                parseFloat(localparam[0]),
+                                parseFloat(localparam[1])
+                            ];
+                            break;
+                        case "c":
+                            {
+                                let spline = new BSpline(
+                                    spline_points,
+                                    3,
+                                    true
+                                );
+                                let point;
+                                for (let t = 0; t < 1; t += 0.001 / scale) {
+                                    point = spline.calcAt(t);
+                                    current_shape.push(
+                                        scale * point[0],
+                                        height - scale * point[1]
+                                    );
+                                }
+                                lastpos[0] = point[0];
+                                lastpos[1] = point[1];
+                                spline_points = null;
+                            }
+                            break;
+                    }
+                }
+            }
+
+            if (spline_points !== null) {
+                let spline = new BSpline(spline_points, 3, true);
+                for (let t = 0; t < 1; t += 0.001 / scale) {
+                    let point = spline.calcAt(t);
+                    current_shape.push(
+                        scale * point[0],
+                        height - scale * point[1]
+                    );
+                }
+            }
+            if (current_shape.length > 0) {
+                shapes.push(current_shape);
+            }
+            return shapes;
+        },
+        writable: false
+    },
+
+    _calcRectangularClipCoords: {
+        /**
+         * Calculates rectangular clip coordinates.
+         * @param {Array<number>} clip the clip bounds.
+         * @param {boolean} inverse is the clip inverted?
+         * @returns {Float32Array} the resulting vertices.
+         */
+        value: function (clip, inverse) {
+            let minX = Math.min(clip[0], clip[2]);
+            let minY = Math.min(clip[1], clip[3]);
+            let maxX = Math.max(clip[0], clip[2]);
+            let maxY = Math.max(clip[1], clip[3]);
+            let upperLeft = {
+                m00: minX,
+                m01: this._config.renderer["resolution_y"] - minY
+            };
+
+            let lowerLeft = {
+                m00: minX,
+                m01: this._config.renderer["resolution_y"] - maxY
+            };
+
+            let upperRight = {
+                m00: maxX,
+                m01: this._config.renderer["resolution_y"] - minY
+            };
+
+            let lowerRight = {
+                m00: maxX,
+                m01: this._config.renderer["resolution_y"] - maxY
+            };
+
+            if (!inverse) {
+                // prettier-ignore
+                return new Float32Array([
+                    upperLeft.m00,  upperLeft.m01, 
+                    upperRight.m00, upperRight.m01,
+                    lowerLeft.m00,  lowerLeft.m01, 
+                    lowerLeft.m00,  lowerLeft.m01, 
+                    upperRight.m00, upperRight.m01,
+                    lowerRight.m00, lowerRight.m01,
+                ]);
+            } else {
+                // prettier-ignore
+                return new Float32Array([
+                    0,                                      0,                                    
+                    this._config.renderer["resolution_x"],  0,                                    
+                    this._config.renderer["resolution_x"],  this._config.renderer["resolution_y"],
+                    this._config.renderer["resolution_x"],  this._config.renderer["resolution_y"],
+                    0,                                      this._config.renderer["resolution_y"],
+                    0,                                      0,                                    
+                    upperLeft.m00,                          upperLeft.m01, 
+                    upperRight.m00,                         upperRight.m01,
+                    lowerLeft.m00,                          lowerLeft.m01, 
+                    lowerLeft.m00,                          lowerLeft.m01, 
+                    upperRight.m00,                         upperRight.m01,
+                    lowerRight.m00,                         lowerRight.m01,
+                ]);
+            }
+        },
+        writable: false
+    },
+
+    _calcClipPathCoords: {
+        value: function (clip, inverse) {
+            let scale = /** @type {number} */ (clip[0]);
+            let path = /** @type {string} */ (clip[1]);
+            let shapes = this._getShapesFromPath(scale, path);
+            let triangles = [];
+            for (let i = 0; i < shapes.length; i++) {
+                let vindices = sabre.earcut(shapes[i]);
+                for (let j = 0; j < vindices.length; j++) {
+                    let vertex = vindices[j] * 2;
+                    triangles.push(shapes[i][vertex], shapes[i][vertex + 1]);
+                }
+            }
+            if (inverse) {
+                triangles.push(0, 0);
+                triangles.push(this._config.renderer["resolution_x"], 0);
+                triangles.push(
+                    this._config.renderer["resolution_x"],
+                    this._config.renderer["resolution_y"]
+                );
+                triangles.push(
+                    this._config.renderer["resolution_x"],
+                    this._config.renderer["resolution_y"]
+                );
+                triangles.push(0, this._config.renderer["resolution_y"]);
+                triangles.push(0, 0);
+            }
+            return new Float32Array(triangles);
+        },
+        writable: false
+    },
+
     _loadSubtitleToVram: {
         /**
          * Loads a subtitle into graphics card's VRAM.
@@ -2174,7 +2485,91 @@ const renderer_prototype = global.Object.create(Object, {
 
             let source = !isShape ? this._textRenderer : this._shapeRenderer;
 
-            if (blurInfo === null) {
+            let clip_coords = null;
+            {
+                let line_overrides = currentEvent.getLineOverrides();
+                let line_transition_overrides =
+                    currentEvent.getLineTransitionTargetOverrides();
+                let inverse = line_overrides.getClipInverted();
+                let clip = line_overrides.getClip();
+
+                if (
+                    line_transition_overrides.length > 0 &&
+                    (clip === null || clip.length < 4) &&
+                    time >= line_transition_overrides[0].getTransitionStart()
+                ) {
+                    if (!inverse)
+                        clip = [
+                            0,
+                            0,
+                            this._config.renderer["resolution_x"],
+                            this._config.renderer["resolution_y"]
+                        ];
+                    else clip = [0, 0, 0, 0];
+                }
+                for (let i = 0; i < line_transition_overrides.length; i++) {
+                    let transitionClip = line_transition_overrides[i].getClip();
+                    if (transitionClip === null) continue;
+                    let transitionStart =
+                        line_transition_overrides[i].getTransitionStart();
+                    if (time < transitionStart) break;
+                    let transitionEnd =
+                        line_transition_overrides[i].getTransitionEnd();
+                    if (time >= transitionEnd) {
+                        clip = transitionClip;
+                        continue;
+                    }
+                    let transitionAcceleration =
+                        line_transition_overrides[
+                            i
+                        ].getTransitionAcceleration();
+                    clip[0] = sabre.performTransition(
+                        time,
+                        /** @type {number} */ (clip[0]),
+                        transitionClip[0],
+                        transitionStart,
+                        transitionEnd,
+                        transitionAcceleration
+                    );
+                    clip[1] = sabre.performTransition(
+                        time,
+                        /** @type {number} */ (clip[1]),
+                        transitionClip[1],
+                        transitionStart,
+                        transitionEnd,
+                        transitionAcceleration
+                    );
+                    clip[2] = sabre.performTransition(
+                        time,
+                        /** @type {number} */ (clip[2]),
+                        transitionClip[2],
+                        transitionStart,
+                        transitionEnd,
+                        transitionAcceleration
+                    );
+                    clip[3] = sabre.performTransition(
+                        time,
+                        /** @type {number} */ (clip[3]),
+                        transitionClip[3],
+                        transitionStart,
+                        transitionEnd,
+                        transitionAcceleration
+                    );
+                }
+
+                if (clip !== null) {
+                    if (clip.length === 4) {
+                        clip_coords = this._calcRectangularClipCoords(
+                            clip,
+                            inverse
+                        );
+                    } else {
+                        clip_coords = this._calcClipPathCoords(clip, inverse);
+                    }
+                }
+            }
+
+            if (blurInfo === null && clip_coords === null) {
                 this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
             } else {
                 this._gl.bindFramebuffer(
@@ -2218,31 +2613,37 @@ const renderer_prototype = global.Object.create(Object, {
                 currentEvent
             );
 
-            let dimensions = source.getDimensions();
+            let upperLeft;
+            let lowerLeft;
+            let upperRight;
+            let lowerRight;
+            {
+                let dimensions = source.getDimensions();
 
-            let upperLeft = {
-                m00: 0,
-                m01: 0,
-                m02: 0
-            };
+                upperLeft = {
+                    m00: 0,
+                    m01: 0,
+                    m02: 0
+                };
 
-            let lowerLeft = {
-                m00: 0,
-                m01: -dimensions[1],
-                m02: 0
-            };
+                lowerLeft = {
+                    m00: 0,
+                    m01: -dimensions[1],
+                    m02: 0
+                };
 
-            let upperRight = {
-                m00: dimensions[0],
-                m01: 0,
-                m02: 0
-            };
+                upperRight = {
+                    m00: dimensions[0],
+                    m01: 0,
+                    m02: 0
+                };
 
-            let lowerRight = {
-                m00: dimensions[0],
-                m01: -dimensions[1],
-                m02: 0
-            };
+                lowerRight = {
+                    m00: dimensions[0],
+                    m01: -dimensions[1],
+                    m02: 0
+                };
+            }
 
             // prettier-ignore
             let coordinates = new Float32Array([
@@ -2256,6 +2657,7 @@ const renderer_prototype = global.Object.create(Object, {
 
             let tex_coords;
             {
+                let dimensions = source.getTextureDimensions();
                 let extents = this._textureSubtitleBounds;
                 let width = dimensions[0] / extents[0];
                 let height = dimensions[1] / extents[1];
@@ -2272,8 +2674,9 @@ const renderer_prototype = global.Object.create(Object, {
 
             let mask_coords;
             if (!isShape) {
+                let maskDimensions =
+                    this._textMaskRenderer.getTextureDimensions();
                 let extents = this._textureSubtitleMaskBounds;
-                let maskDimensions = this._textMaskRenderer.getDimensions();
                 let width = maskDimensions[0] / extents[0];
                 let height = maskDimensions[1] / extents[1];
                 // prettier-ignore
@@ -2669,25 +3072,105 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
             }
 
-            if (blurInfo !== null) {
+            {
                 let backFramebuffer = this._frameBufferB;
                 let sourceFramebuffer = this._frameBufferA;
                 let backTexture = this._fbTextureB;
                 let sourceTexture = this._fbTextureA;
-                if (blurInfo.blur > 0) {
-                    this._convEdgeBlurShader.updateOption(
-                        "u_resolution_x",
-                        this._config.renderer["resolution_x"]
-                    );
-                    this._convEdgeBlurShader.updateOption(
-                        "u_resolution_y",
-                        this._config.renderer["resolution_y"]
-                    );
-                    this._convEdgeBlurShader.updateOption("u_texture", 0);
-                    this._convEdgeBlurShader.bindShader(this._gl);
-                    //Draw framebuffer to destination
-                    let swap;
-                    for (let i = 0; i < blurInfo.blur - 1; i++) {
+                let swap;
+                if (blurInfo !== null) {
+                    if (blurInfo.blur > 0) {
+                        this._convEdgeBlurShader.updateOption(
+                            "u_resolution_x",
+                            this._config.renderer["resolution_x"]
+                        );
+                        this._convEdgeBlurShader.updateOption(
+                            "u_resolution_y",
+                            this._config.renderer["resolution_y"]
+                        );
+                        this._convEdgeBlurShader.updateOption("u_texture", 0);
+                        this._convEdgeBlurShader.bindShader(this._gl);
+                        //Draw framebuffer to destination
+
+                        for (let i = 0; i < blurInfo.blur - 1; i++) {
+                            this._gl.bindFramebuffer(
+                                this._gl.FRAMEBUFFER,
+                                backFramebuffer
+                            );
+                            this._gl.clear(
+                                this._gl.DEPTH_BUFFER_BIT |
+                                    this._gl.COLOR_BUFFER_BIT
+                            );
+                            this._gl.activeTexture(this._gl.TEXTURE0);
+                            this._gl.bindTexture(
+                                this._gl.TEXTURE_2D,
+                                sourceTexture
+                            );
+                            this._gl.bindBuffer(
+                                this._gl.ARRAY_BUFFER,
+                                this._fullscreenPositioningBuffer
+                            );
+                            this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                            swap = backTexture;
+                            backTexture = sourceTexture;
+                            sourceTexture = swap;
+                            swap = backFramebuffer;
+                            backFramebuffer = sourceFramebuffer;
+                            sourceFramebuffer = swap;
+                        }
+                        if (blurInfo.gaussBlur > 0 || clip_coords !== null) {
+                            this._gl.bindFramebuffer(
+                                this._gl.FRAMEBUFFER,
+                                backFramebuffer
+                            );
+                            this._gl.clear(
+                                this._gl.DEPTH_BUFFER_BIT |
+                                    this._gl.COLOR_BUFFER_BIT
+                            );
+                        } else {
+                            this._gl.bindFramebuffer(
+                                this._gl.FRAMEBUFFER,
+                                null
+                            );
+                        }
+
+                        this._gl.activeTexture(this._gl.TEXTURE0);
+                        this._gl.bindTexture(
+                            this._gl.TEXTURE_2D,
+                            sourceTexture
+                        );
+
+                        {
+                            let positionAttrib =
+                                this._convEdgeBlurShader.getAttribute(
+                                    this._gl,
+                                    "a_position"
+                                );
+                            this._gl.bindBuffer(
+                                this._gl.ARRAY_BUFFER,
+                                this._fullscreenPositioningBuffer
+                            );
+                            this._gl.enableVertexAttribArray(positionAttrib);
+                            this._gl.vertexAttribPointer(
+                                positionAttrib,
+                                3,
+                                this._gl.FLOAT,
+                                false,
+                                0,
+                                0
+                            );
+                            this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                        }
+
+                        swap = backTexture;
+                        backTexture = sourceTexture;
+                        sourceTexture = swap;
+                        swap = backFramebuffer;
+                        backFramebuffer = sourceFramebuffer;
+                        sourceFramebuffer = swap;
+                    }
+
+                    if (blurInfo.gaussBlur > 0) {
                         this._gl.bindFramebuffer(
                             this._gl.FRAMEBUFFER,
                             backFramebuffer
@@ -2701,11 +3184,106 @@ const renderer_prototype = global.Object.create(Object, {
                             this._gl.TEXTURE_2D,
                             sourceTexture
                         );
-                        this._gl.bindBuffer(
-                            this._gl.ARRAY_BUFFER,
-                            this._fullscreenPositioningBuffer
+                        //Apply gaussian filter 1
+                        this._gaussEdgeBlurPass1Shader.updateOption(
+                            "u_resolution_x",
+                            this._config.renderer["resolution_x"]
                         );
-                        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                        this._gaussEdgeBlurPass1Shader.updateOption(
+                            "u_sigma",
+                            blurInfo.gaussBlur
+                        );
+                        this._gaussEdgeBlurPass1Shader.updateOption(
+                            "u_texture",
+                            0
+                        );
+                        this._gaussEdgeBlurPass1Shader.bindShader(this._gl);
+                        //Draw framebuffer X to framebuffer Y
+                        {
+                            let positionAttrib =
+                                this._gaussEdgeBlurPass1Shader.getAttribute(
+                                    this._gl,
+                                    "a_position"
+                                );
+                            this._gl.bindBuffer(
+                                this._gl.ARRAY_BUFFER,
+                                this._fullscreenPositioningBuffer
+                            );
+                            this._gl.enableVertexAttribArray(positionAttrib);
+                            this._gl.vertexAttribPointer(
+                                positionAttrib,
+                                3,
+                                this._gl.FLOAT,
+                                false,
+                                0,
+                                0
+                            );
+                            this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                        }
+
+                        swap = backTexture;
+                        backTexture = sourceTexture;
+                        sourceTexture = swap;
+                        swap = backFramebuffer;
+                        backFramebuffer = sourceFramebuffer;
+                        sourceFramebuffer = swap;
+
+                        if (clip_coords !== null) {
+                            this._gl.bindFramebuffer(
+                                this._gl.FRAMEBUFFER,
+                                backFramebuffer
+                            );
+                            this._gl.clear(
+                                this._gl.DEPTH_BUFFER_BIT |
+                                    this._gl.COLOR_BUFFER_BIT
+                            );
+                        } else
+                            this._gl.bindFramebuffer(
+                                this._gl.FRAMEBUFFER,
+                                null
+                            );
+                        this._gl.activeTexture(this._gl.TEXTURE0);
+                        this._gl.bindTexture(
+                            this._gl.TEXTURE_2D,
+                            sourceTexture
+                        );
+                        //Apply gaussian filter 2
+                        this._gaussEdgeBlurPass2Shader.updateOption(
+                            "u_resolution_y",
+                            this._config.renderer["resolution_y"]
+                        );
+                        this._gaussEdgeBlurPass2Shader.updateOption(
+                            "u_sigma",
+                            blurInfo.gaussBlur
+                        );
+                        this._gaussEdgeBlurPass2Shader.updateOption(
+                            "u_texture",
+                            0
+                        );
+                        this._gaussEdgeBlurPass2Shader.bindShader(this._gl);
+                        //Draw framebuffer Y to screen
+                        {
+                            let positionAttrib =
+                                this._gaussEdgeBlurPass1Shader.getAttribute(
+                                    this._gl,
+                                    "a_position"
+                                );
+                            this._gl.bindBuffer(
+                                this._gl.ARRAY_BUFFER,
+                                this._fullscreenPositioningBuffer
+                            );
+                            this._gl.enableVertexAttribArray(positionAttrib);
+                            this._gl.vertexAttribPointer(
+                                positionAttrib,
+                                3,
+                                this._gl.FLOAT,
+                                false,
+                                0,
+                                0
+                            );
+                            this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                        }
+
                         swap = backTexture;
                         backTexture = sourceTexture;
                         sourceTexture = swap;
@@ -2713,132 +3291,46 @@ const renderer_prototype = global.Object.create(Object, {
                         backFramebuffer = sourceFramebuffer;
                         sourceFramebuffer = swap;
                     }
-                    if (blurInfo.gaussBlur > 0) {
-                        this._gl.bindFramebuffer(
-                            this._gl.FRAMEBUFFER,
-                            backFramebuffer
-                        );
-                        this._gl.clear(
-                            this._gl.DEPTH_BUFFER_BIT |
-                                this._gl.COLOR_BUFFER_BIT
-                        );
-                    } else {
-                        this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
-                    }
-
-                    this._gl.activeTexture(this._gl.TEXTURE0);
-                    this._gl.bindTexture(this._gl.TEXTURE_2D, sourceTexture);
-
-                    {
-                        let positionAttrib =
-                            this._convEdgeBlurShader.getAttribute(
-                                this._gl,
-                                "a_position"
-                            );
-                        this._gl.bindBuffer(
-                            this._gl.ARRAY_BUFFER,
-                            this._fullscreenPositioningBuffer
-                        );
-                        this._gl.enableVertexAttribArray(positionAttrib);
-                        this._gl.vertexAttribPointer(
-                            positionAttrib,
-                            3,
-                            this._gl.FLOAT,
-                            false,
-                            0,
-                            0
-                        );
-                        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
-                    }
-
-                    swap = backTexture;
-                    backTexture = sourceTexture;
-                    sourceTexture = swap;
-                    swap = backFramebuffer;
-                    backFramebuffer = sourceFramebuffer;
-                    sourceFramebuffer = swap;
                 }
 
-                if (blurInfo.gaussBlur > 0) {
-                    this._gl.bindFramebuffer(
-                        this._gl.FRAMEBUFFER,
-                        backFramebuffer
-                    );
-                    this._gl.clear(
-                        this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
-                    );
-                    this._gl.activeTexture(this._gl.TEXTURE0);
-                    this._gl.bindTexture(this._gl.TEXTURE_2D, sourceTexture);
-                    //Apply gaussian filter 1
-                    this._gaussEdgeBlurPass1Shader.updateOption(
-                        "u_resolution_x",
-                        this._config.renderer["resolution_x"]
-                    );
-                    this._gaussEdgeBlurPass1Shader.updateOption(
-                        "u_sigma",
-                        blurInfo.gaussBlur
-                    );
-                    this._gaussEdgeBlurPass1Shader.updateOption("u_texture", 0);
-                    this._gaussEdgeBlurPass1Shader.bindShader(this._gl);
-                    //Draw framebuffer X to framebuffer Y
-                    {
-                        let positionAttrib =
-                            this._gaussEdgeBlurPass1Shader.getAttribute(
-                                this._gl,
-                                "a_position"
-                            );
-                        this._gl.bindBuffer(
-                            this._gl.ARRAY_BUFFER,
-                            this._fullscreenPositioningBuffer
-                        );
-                        this._gl.enableVertexAttribArray(positionAttrib);
-                        this._gl.vertexAttribPointer(
-                            positionAttrib,
-                            3,
-                            this._gl.FLOAT,
-                            false,
-                            0,
-                            0
-                        );
-                        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
-                    }
-
+                if (clip_coords !== null) {
                     this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
                     this._gl.activeTexture(this._gl.TEXTURE0);
-                    this._gl.bindTexture(this._gl.TEXTURE_2D, backTexture);
-                    //Apply gaussian filter 2
-                    this._gaussEdgeBlurPass2Shader.updateOption(
-                        "u_resolution_y",
-                        this._config.renderer["resolution_y"]
+                    this._gl.bindTexture(this._gl.TEXTURE_2D, sourceTexture);
+                    this._clipShader.updateOption("u_texture", 0);
+                    this._clipShader.updateOption(
+                        "u_aspectscale",
+                        new Float32Array([xScale, yScale])
                     );
-                    this._gaussEdgeBlurPass2Shader.updateOption(
-                        "u_sigma",
-                        blurInfo.gaussBlur
+                    this._clipShader.bindShader(this._gl);
+                    let positionAttrib =
+                        this._gaussEdgeBlurPass1Shader.getAttribute(
+                            this._gl,
+                            "a_position"
+                        );
+                    this._gl.bindBuffer(
+                        this._gl.ARRAY_BUFFER,
+                        this._clipBuffer
                     );
-                    this._gaussEdgeBlurPass2Shader.updateOption("u_texture", 0);
-                    this._gaussEdgeBlurPass2Shader.bindShader(this._gl);
-                    //Draw framebuffer Y to screen
-                    {
-                        let positionAttrib =
-                            this._gaussEdgeBlurPass1Shader.getAttribute(
-                                this._gl,
-                                "a_position"
-                            );
-                        this._gl.bindBuffer(
-                            this._gl.ARRAY_BUFFER,
-                            this._fullscreenPositioningBuffer
-                        );
-                        this._gl.enableVertexAttribArray(positionAttrib);
-                        this._gl.vertexAttribPointer(
-                            positionAttrib,
-                            3,
-                            this._gl.FLOAT,
-                            false,
-                            0,
-                            0
-                        );
-                        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
-                    }
+                    this._gl.enableVertexAttribArray(positionAttrib);
+                    this._gl.vertexAttribPointer(
+                        positionAttrib,
+                        2,
+                        this._gl.FLOAT,
+                        false,
+                        0,
+                        0
+                    );
+                    this._gl.bufferData(
+                        this._gl.ARRAY_BUFFER,
+                        clip_coords,
+                        this._gl.DYNAMIC_DRAW
+                    );
+                    this._gl.drawArrays(
+                        this._gl.TRIANGLES,
+                        0,
+                        clip_coords.length / 2
+                    );
                 }
             }
             if (blendDisabled) {
@@ -2941,6 +3433,11 @@ const renderer_prototype = global.Object.create(Object, {
         value: function (width, height) {
             this._compositingCanvas.width = width;
             this._compositingCanvas.height = height;
+            let scale_x = width / this._config.renderer["resolution_x"];
+            let scale_y = height / this._config.renderer["resolution_y"];
+            this._textRenderer.setPixelScaleRatio(scale_x, scale_y);
+            this._textMaskRenderer.setPixelScaleRatio(scale_x, scale_y);
+            this._shapeRenderer.setPixelScaleRatio(scale_x, scale_y);
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferA);
             this._gl.viewport(0, 0, width, height);
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferB);
@@ -2952,8 +3449,8 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.TEXTURE_2D,
                 0,
                 this._gl.RGBA,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"],
+                width,
+                height,
                 0,
                 this._gl.RGBA,
                 this._gl.UNSIGNED_BYTE,
@@ -2964,8 +3461,8 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.TEXTURE_2D,
                 0,
                 this._gl.RGBA,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"],
+                width,
+                height,
                 0,
                 this._gl.RGBA,
                 this._gl.UNSIGNED_BYTE,

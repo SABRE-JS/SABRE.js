@@ -659,11 +659,10 @@ const shape_renderer_prototype = global.Object.create(Object, {
 
                     let shadowX = overrides.getShadowX() ?? shadowComponent;
                     let shadowY = overrides.getShadowY() ?? shadowComponent;
-                    if(shadowX === 0 && shadowY === 0)
-                        noDraw = true;
+                    if (shadowX === 0 && shadowY === 0) noDraw = true;
                     this._offsetX -= shadowX;
                     this._offsetY -= shadowY;
-                }else if(borderStyle === sabre.BorderStyleModes.NONE){
+                } else if (borderStyle === sabre.BorderStyleModes.NONE) {
                     noDraw = true;
                 }
             }
@@ -729,8 +728,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 //reset the composite operation
                 this._ctx.globalCompositeOperation = "source-over";
                 //draw the shape
-                if(!noDraw)
-                {
+                if (!noDraw) {
                     if (pass === sabre.RenderPasses.OUTLINE) {
                         let outline_gt_zero = outline_x > 0 && outline_y > 0;
                         if (outline_x > outline_y) {
@@ -832,7 +830,10 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @returns {Array<number>} offset of the resulting image
          */
         value: function () {
-            return [this._offsetX, this._offsetY];
+            return [
+                this._offsetX / this._pixelScaleRatio.xratio,
+                this._offsetY / this._pixelScaleRatio.yratio
+            ];
         },
         writable: false
     },
@@ -843,12 +844,29 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @returns {Array<number>} bounds of the resulting shape.
          */
         value: function () {
-            return [this._width, this._height];
+            return [
+                this._width / this._pixelScaleRatio.xratio,
+                this._height / this._pixelScaleRatio.yratio
+            ];
         },
         writable: false
     },
 
     "getDimensions": {
+        /**
+         * Gets the dimensions of the resulting image.
+         * @returns {Array<number>} dimensions of the resulting image
+         */
+        value: function () {
+            return [
+                this._width / this._pixelScaleRatio.xratio,
+                this._height / this._pixelScaleRatio.yratio
+            ];
+        },
+        writable: false
+    },
+
+    "getTextureDimensions": {
         /**
          * Gets the dimensions of the resulting image.
          * @returns {Array<number>} dimensions of the resulting image
