@@ -1524,7 +1524,7 @@ const parser_prototype = global.Object.create(global.Object, {
                         if (!global.isNaN(p1)) {
                             scale = p1;
                         }
-                        var drawString = parameters[1];
+                        var drawString = parameters[1] ?? parameters[0];
                         if (drawString === null) return;
                         lineGlobalOverrides.setClip(
                             scale,
@@ -2024,7 +2024,7 @@ const parser_prototype = global.Object.create(global.Object, {
                         if (!global.isNaN(p1)) {
                             scale = p1;
                         }
-                        var drawString = parameters[1];
+                        var drawString = parameters[1] ?? parameters[0];
                         if (drawString === null) return;
                         lineGlobalOverrides.setClip(
                             scale,
