@@ -4,7 +4,7 @@ A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer.
 
 <span style="text-align:center; width:100%; display: inline-block;">[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier) [![CodeFactor](https://www.codefactor.io/repository/github/sabre-js/sabre.js/badge)](https://www.codefactor.io/repository/github/sabre-js/sabre.js) [![](https://data.jsdelivr.com/v1/package/npm/@sabre-js/sabre/badge)](https://www.jsdelivr.com/package/npm/@sabre-js/sabre) [![Featured on Openbase](https://badges.openbase.com/js/featured/@sabre-js/sabre.svg?token=X7lxF2mBNtaAGL5OtiKQkLjR8uUzMVOJtDX45rCSq1g=)](https://openbase.com/js/@sabre-js/sabre?utm_source=embedded&amp;utm_medium=badge&amp;utm_campaign=rate-badge)</span>
 
-## What is the SABRE.js?
+## What is SABRE.js?
 
 SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substation Alpha Subtitles.
 It allows you to draw styled/stylized subtitles over web video with multiple fonts, colors, animations and effects.
@@ -97,6 +97,15 @@ to render a frame of subtitles.
 
 ### API
 
+#### Members
+
+<dl>
+<dt><a href="#clip[0]">clip[0]</a> : <code>number</code></dt>
+<dd></dd>
+<dt><a href="#clip[1]">clip[1]</a> : <code>string</code></dt>
+<dd></dd>
+</dl>
+
 #### Functions
 
 <dl>
@@ -120,6 +129,14 @@ to render a frame of subtitles.
 </dd>
 </dl>
 
+<a name="clip[0]"></a>
+
+#### clip[0] : <code>number</code>
+**Kind**: global variable  
+<a name="clip[1]"></a>
+
+#### clip[1] : <code>string</code>
+**Kind**: global variable  
 <a name="loadSubtitles"></a>
 
 #### loadSubtitles(subsText) ⇒ <code>void</code>
