@@ -2396,6 +2396,12 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _calcClipPathCoords: {
+        /**
+         *  Gets clip path coords.
+         *  @param {Array<number|string>} clip the clip params
+         *  @param {boolean} inverse is it inverse?
+         *  @returns {Float32Array} result
+         */
         value: function (clip, inverse) {
             let scale = /** @type {number} */ (clip[0]);
             let path = /** @type {string} */ (clip[1]);
