@@ -307,7 +307,6 @@ const shape_renderer_prototype = global.Object.create(Object, {
             lineTransitionTargetOverrides,
             pass
         ) {
-            this._ctx.resetTransform();
             this._setOutline(
                 time,
                 style,
@@ -603,6 +602,9 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 event.getLineTransitionTargetOverrides();
 
             this._offsetX = this._offsetY = 0;
+
+            //Reset the scaling from previous subtitles.
+            this._ctx.resetTransform();
 
             this._handleStyling(
                 time,
