@@ -308,14 +308,6 @@ const shape_renderer_prototype = global.Object.create(Object, {
             pass
         ) {
             this._ctx.resetTransform();
-            this._setScale(
-                time,
-                style,
-                overrides,
-                lineOverrides,
-                lineTransitionTargetOverrides,
-                pass
-            );
             this._setOutline(
                 time,
                 style,
@@ -644,8 +636,6 @@ const shape_renderer_prototype = global.Object.create(Object, {
 
             let offsetXUnscaled = this._offsetX;
             let offsetYUnscaled = this._offsetY;
-            let widthUnscaled = this._width;
-            let heightUnscaled = this._height;
 
             if (pass === sabre.RenderPasses.BACKGROUND) {
                 if (
@@ -701,12 +691,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
                         this._canvas.width >= cwidth &&
                         this._canvas.height >= cheight
                     ) {
-                        this._ctx.clearRect(
-                            0,
-                            0,
-                            widthUnscaled,
-                            heightUnscaled
-                        );
+                        this._ctx.clearRect(0, 0, this._width, this._height);
                     } else {
                         if (this._canvas.height <= cheight) {
                             this._canvas.height = cheight;
@@ -724,6 +709,15 @@ const shape_renderer_prototype = global.Object.create(Object, {
                     lineTransitionTargetOverrides,
                     pass
                 ); //To workaround a bug.
+
+                this._setScale(
+                    time,
+                    style,
+                    overrides,
+                    lineOverrides,
+                    lineTransitionTargetOverrides,
+                    pass
+                );
 
                 //reset the composite operation
                 this._ctx.globalCompositeOperation = "source-over";

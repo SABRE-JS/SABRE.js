@@ -507,15 +507,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                 pass,
                 mask
             );
-            this._setScale(
-                time,
-                style,
-                overrides,
-                lineOverrides,
-                lineTransitionTargetOverrides,
-                pass,
-                mask
-            );
         },
         writable: false
     },
@@ -611,7 +602,6 @@ const text_renderer_prototype = global.Object.create(Object, {
             ) {
                 let outline = this._calcOutline(time, style, overrides);
                 this._width += outline.x * 2;
-                this._textSpacingWidth += outline.x * 2;
                 this._height += outline.y * 2;
                 this._offsetX += outline.x;
                 this._offsetY += outline.y;
@@ -621,8 +611,6 @@ const text_renderer_prototype = global.Object.create(Object, {
 
             let offsetXUnscaled = this._offsetX;
             let offsetYUnscaled = this._offsetY;
-            let widthUnscaled = this._width;
-            let heightUnscaled = this._height;
 
             if (pass === sabre.RenderPasses.BACKGROUND) {
                 if (
@@ -658,11 +646,11 @@ const text_renderer_prototype = global.Object.create(Object, {
             if (!dryRun) {
                 {
                     let cwidth = Math.max(
-                        Math.max(Math.ceil(this._width), 320),
+                        Math.max(Math.ceil(this._width), 64),
                         this._canvas.width
                     );
                     let cheight = Math.max(
-                        Math.max(Math.ceil(this._height), 128),
+                        Math.max(Math.ceil(this._height), 64),
                         this._canvas.height
                     );
                     if (
@@ -672,8 +660,8 @@ const text_renderer_prototype = global.Object.create(Object, {
                         this._ctx.clearRect(
                             0,
                             0,
-                            Math.ceil(widthUnscaled),
-                            Math.ceil(heightUnscaled)
+                            Math.ceil(this._width),
+                            Math.ceil(this._height)
                         );
                     } else {
                         if (this._canvas.height < cheight) {
@@ -694,6 +682,16 @@ const text_renderer_prototype = global.Object.create(Object, {
                     pass,
                     mask
                 ); //To workaround a bug.
+
+                this._setScale(
+                    time,
+                    style,
+                    overrides,
+                    lineOverrides,
+                    lineTransitionTargetOverrides,
+                    pass,
+                    mask
+                );
 
                 //reset the composite operation
                 this._ctx.globalCompositeOperation = "source-over";
@@ -802,21 +800,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     }
                                 }
                             }
-                            this._ctx.globalCompositeOperation =
-                                "destination-out";
-                            this._ctx.fillText(
-                                text,
-                                offsetXUnscaled,
-                                offsetYUnscaled
-                            );
-                            //TEST CODE
-                            this._ctx.globalCompositeOperation = "source-over";
-                            this._ctx.fillStyle = this._ctx.strokeStyle;
-                            this._ctx.fillText(
-                                text,
-                                offsetXUnscaled,
-                                offsetYUnscaled
-                            );
                         } else {
                             // Smear outline
                             if (outline_x_bigger) {
@@ -882,26 +865,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     }
                                 }
                             }
-
-                            this._ctx.globalCompositeOperation =
-                                "destination-out";
-                            this._drawTextWithRelativeKerning(
-                                text,
-                                offsetXUnscaled,
-                                offsetYUnscaled,
-                                spacing,
-                                false
-                            );
-                            //TEST CODE
-                            this._ctx.globalCompositeOperation = "source-over";
-                            this._ctx.fillStyle = this._ctx.strokeStyle;
-                            this._drawTextWithRelativeKerning(
-                                text,
-                                offsetXUnscaled,
-                                offsetYUnscaled,
-                                spacing,
-                                false
-                            );
                         }
                     } else {
                         if (spacing === 0)
