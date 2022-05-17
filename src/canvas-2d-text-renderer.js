@@ -474,7 +474,6 @@ const text_renderer_prototype = global.Object.create(Object, {
             pass,
             mask
         ) {
-            this._ctx.resetTransform();
             this._ctx.textAlign = "left";
             this._ctx.textBaseline = "top";
             this._ctx.lineCap = "round";
@@ -556,6 +555,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                 event.getLineTransitionTargetOverrides();
 
             this._offsetX = this._offsetY = 0;
+
+            //Reset the scaling from previous subtitles.
+            this._ctx.resetTransform();
 
             this._handleStyling(
                 time,
