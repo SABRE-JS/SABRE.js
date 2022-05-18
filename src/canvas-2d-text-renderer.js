@@ -726,7 +726,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                 break;
                             case sabre.BorderStyleModes.SRT_STYLE:
                             case sabre.BorderStyleModes.SRT_NO_OVERLAP:
-                                this._ctx.fillStyle = this._ctx.strokeStyle;
                                 this._ctx.fillRect(
                                     0,
                                     0,
@@ -745,6 +744,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                             return;
                         let outline_x_bigger = outline_x > outline_y;
                         let outline_gt_zero = outline_x > 0 && outline_y > 0;
+                        this._ctx.fillStyle = this._ctx.strokeStyle;
                         if (spacing === 0) {
                             // Smear outline
                             if (outline_x_bigger) {
@@ -760,8 +760,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             offsetYUnscaled
                                         );
                                     }
+                                    this._ctx.fillText(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled
+                                    );
                                 } else {
-                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     for (
                                         let i = -outline_x;
                                         i <= outline_x;
@@ -787,8 +791,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             offsetYUnscaled + i
                                         );
                                     }
+                                    this._ctx.fillText(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled
+                                    );
                                 } else {
-                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     for (
                                         let i = -outline_y;
                                         i <= outline_y;
@@ -819,8 +827,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             true
                                         );
                                     }
+                                    this._drawTextWithRelativeKerning(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled,
+                                        spacing,
+                                        false
+                                    );
                                 } else {
-                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     for (
                                         let i = -outline_x;
                                         i <= outline_x;
@@ -850,8 +864,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             true
                                         );
                                     }
+                                    this._drawTextWithRelativeKerning(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled,
+                                        spacing,
+                                        false
+                                    );
                                 } else {
-                                    this._ctx.fillStyle = this._ctx.strokeStyle;
                                     for (
                                         let i = -outline_y;
                                         i <= outline_y;

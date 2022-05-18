@@ -727,6 +727,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 if (!noDraw) {
                     if (pass === sabre.RenderPasses.OUTLINE) {
                         let outline_gt_zero = outline_x > 0 && outline_y > 0;
+                        this._ctx.fillStyle = this._ctx.strokeStyle;
                         if (outline_x > outline_y) {
                             if (outline_gt_zero) {
                                 for (
@@ -741,8 +742,13 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                         true
                                     );
                                 }
+                                this._drawShape(
+                                    cmds,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled,
+                                    false
+                                );
                             } else {
-                                this._ctx.fillStyle = this._ctx.strokeStyle;
                                 for (let i = -outline_x; i <= outline_x; i++) {
                                     this._drawShape(
                                         cmds,
@@ -766,8 +772,13 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                         true
                                     );
                                 }
+                                this._drawShape(
+                                    cmds,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled,
+                                    false
+                                );
                             } else {
-                                this._ctx.fillStyle = this._ctx.strokeStyle;
                                 for (let i = -outline_y; i <= outline_y; i++) {
                                     this._drawShape(
                                         cmds,
@@ -778,22 +789,6 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                 }
                             }
                         }
-                        this._ctx.globalCompositeOperation = "destination-out";
-                        this._drawShape(
-                            cmds,
-                            offsetXUnscaled,
-                            offsetYUnscaled,
-                            false
-                        );
-                        //TEST CODE
-                        this._ctx.globalCompositeOperation = "source-over";
-                        this._ctx.fillStyle = this._ctx.strokeStyle;
-                        this._drawShape(
-                            cmds,
-                            offsetXUnscaled,
-                            offsetYUnscaled,
-                            false
-                        );
                     } else {
                         this._drawShape(
                             cmds,
