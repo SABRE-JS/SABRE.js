@@ -21,5 +21,6 @@ void main(){
         accumulator += texture2D(u_texture,clamp(v_texcoord+vec2(pixel_x*i,0),0.0,1.0)) * gaussian_value;
         accumulator += texture2D(u_texture,clamp(v_texcoord-vec2(pixel_x*i,0),0.0,1.0)) * gaussian_value;
     }
+
     gl_FragColor = accumulator.rgba;
 }
