@@ -188,7 +188,7 @@ const parser_prototype = global.Object.create(global.Object, {
         /**
          * Cleanup a raw color string.
          * @param {string} raw the raw string.
-         * @returns {string} the cleaned string.
+         * @return {string} the cleaned string.
          * @private
          */
         value: function (raw) {
@@ -456,7 +456,7 @@ const parser_prototype = global.Object.create(global.Object, {
         /**
          * Parses a string into a time
          * @param {string} timestring the string containing the time.
-         * @returns {number} time in seconds.
+         * @return {number} time in seconds.
          */
         value: function (timestring) {
             let array = timestring.split(":");
@@ -782,7 +782,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * Handles parsing of override tags and other things in the actual text of the subtitle.
          * @private
          * @param {Array<SSASubtitleEvent>} events
-         * @returns {Array<SSASubtitleEvent>}
+         * @return {Array<SSASubtitleEvent>}
          */
         value: function (events) {
             let event;
@@ -2879,7 +2879,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * Handles font typing for embedded fonts.
          * @private
          * @param {string} internalName filename for encoded font.
-         * @returns {Object} Info on the font.
+         * @return {Object} Info on the font.
          */
         value: function (internalName) {
             let fontNameData =
@@ -3003,7 +3003,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
          * @param {string} subsText the passed subtitle file contents.
          * @param {function(RendererData):void} callback what we pass the results of the parsing to.
-         * @returns {void}
+         * @return {void}
          */
         value: function (subsText, callback) {
             //Create new default style.
@@ -3062,7 +3062,7 @@ external["SABRERenderer"] = function (loadFont) {
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
          * @param {string} subsText
-         * @returns {void}
+         * @return {void}
          */
         "loadSubtitles": function (subsText) {
             parser["load"](subsText, (config) => renderer.load(config));
@@ -3071,14 +3071,14 @@ external["SABRERenderer"] = function (loadFont) {
          * Updates the resolution at which the subtitles are rendered (if the player is resized, for example).
          * @param {number} width the desired width of the resolution.
          * @param {number} height the desired height of the resolution.
-         * @returns {void}
+         * @return {void}
          */
         "setViewport": function (width, height) {
             renderer.updateViewport(width, height);
         },
         /**
          * Checks if the renderer is ready to render a frame.
-         * @returns {boolean} is the renderer ready?
+         * @return {boolean} is the renderer ready?
          */
         "checkReadyToRender": function () {
             return renderer.canRender();
@@ -3086,7 +3086,7 @@ external["SABRERenderer"] = function (loadFont) {
         /**
          * Fetches a rendered frame of subtitles as an ImageBitmap, returns null if ImageBitmap is unsupported.
          * @param {number} time the time at which to draw subtitles.
-         * @returns {ImageBitmap}
+         * @return {ImageBitmap}
          */
         "getFrame": function (time) {
             renderer.frame(time);
@@ -3096,7 +3096,7 @@ external["SABRERenderer"] = function (loadFont) {
          * Fetches a rendered frame of subtitles as an object uri.
          * @param {number} time the time at which to draw subtitles.
          * @param {function(string):void} callback a callback that provides the URI for the image generated.
-         * @returns {void}
+         * @return {void}
          */
         "getFrameAsUri": function (time, callback) {
             renderer.frame(time);
@@ -3107,7 +3107,7 @@ external["SABRERenderer"] = function (loadFont) {
          * @param {number} time the time at which to draw subtitles.
          * @param {HTMLCanvasElement|OffscreenCanvas} canvas the target canvas
          * @param {string=} contextType the context type to use (must be one of "bitmap" or "2d"), defaults to "bitmap" unless unsupported by the browser, in which case "2d" is the default.
-         * @returns {void}
+         * @return {void}
          */
         "drawFrame": function (time, canvas, contextType) {
             let bitmapUsed =

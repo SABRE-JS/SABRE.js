@@ -236,7 +236,7 @@ global.Math.trunc =
  * @param {number} start start time of transition.
  * @param {number} end end time of transition.
  * @param {number} acceleration the acceleration value.
- * @returns {number} the result of the transition.
+ * @return {number} the result of the transition.
  */
 sabre["performTransition"] = function (
     curtime,
@@ -258,7 +258,7 @@ sabre["performTransition"] = function (
 /**
  * Clone a SSASubtitleEvent, but leave the text uncloned, don't copy newline state.
  * @param {SSASubtitleEvent} event
- * @returns {SSASubtitleEvent} the clone.
+ * @return {SSASubtitleEvent} the clone.
  */
 sabre["cloneEventWithoutText"] = function (event) {
     let new_event = new sabre.SSASubtitleEvent();

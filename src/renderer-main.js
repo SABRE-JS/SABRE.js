@@ -51,7 +51,7 @@ const isImageBitmapSupported = typeof global.ImageBitmap !== "undefined";
  * @private
  * @param {string} key the key of the field of the object.
  * @param {*} value the value of the field of the object.
- * @returns {*}
+ * @return {*}
  */
 const jsonFix = function (key, value) {
     if (value === null) return "null";
@@ -274,7 +274,7 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Represent the matrix as an array, in openGL format.
          * @private
-         * @returns {Array<number>} the array representation.
+         * @return {Array<number>} the array representation.
          */
         value: function (a) {
             return [
@@ -305,7 +305,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @private
          * @param {Object} a first matrix
          * @param {Object} b second matrix
-         * @returns {Object} the result matrix
+         * @return {Object} the result matrix
          */
         value: function (a, b) {
             let result = {};
@@ -353,7 +353,7 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Determines if a list of SSASubtitleEvent objects contains use any animation features.
          * @param {Array<SSASubtitleEvent>} events list of SSASubtitleEvents
-         * @returns {boolean} do they use animation?
+         * @return {boolean} do they use animation?
          */
         value: function (events) {
             for (let i = 0; i < events.length; i++) {
@@ -377,7 +377,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Hashes a list of subtitle events.
          * @private
          * @param {Array<SSASubtitleEvent>} events list of subtitle events to hash.
-         * @returns {number} The Hash of the events.
+         * @return {number} The Hash of the events.
          */
         value: function (events) {
             let str_rep = JSON.stringify(events, jsonFix);
@@ -588,7 +588,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} time time of the current frame.
          * @param {number} index the index of the event we're positioning.
          * @param {SSASubtitleEvent} event the current event we're positioning.
-         * @returns {CollisionInfo} the positioning info of the event.
+         * @return {CollisionInfo} the positioning info of the event.
          */
         value: function (time, index, event) {
             let alignment =
@@ -1117,7 +1117,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Array<CollisionInfo>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
          * @param {CollisionInfo} positionInfo2 the position info of the event we're colliding with.
          * @param {Array<CollisionInfo>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
-         * @returns {boolean} did we move something?
+         * @return {boolean} did we move something?
          */
         value: function (
             positionInfo1,
@@ -1236,7 +1236,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @private
          * @param {CollisionInfo} positionInfo current event's position info.
          * @param {Array<CollisionInfo>} posInfosForMatchingId position infos for events who's id matches the current event's id.
-         * @returns {boolean} did we move something?
+         * @return {boolean} did we move something?
          */
         value: function (positionInfo, posInfosForMatchingId) {
             let horizontalAlignment = Math.floor(positionInfo.alignment % 3);
@@ -1467,7 +1467,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @private
          * @param {number} time time of current frame.
          * @param {Array<SSASubtitleEvent>} events list of onscreen subtitle events for this frame in order of layer.
-         * @returns {Array<CollisionInfo>} each event's position onscreen.
+         * @return {Array<CollisionInfo>} each event's position onscreen.
          */
         value: function (time, events) {
             let result = new Array(events.length);
@@ -1931,7 +1931,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} time the current time we're rendering at.
          * @param {SSASubtitleEvent} currentEvent the current subtitle event.
          * @param {number} pass the render pass we're on.
-         * @returns {?{blur:number,gaussBlur:number}}
+         * @return {?{blur:number,gaussBlur:number}}
          */
         value: function (time, currentEvent, pass) {
             let borderStyle = currentEvent.getStyle().getBorderStyle();
@@ -1978,7 +1978,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Test if we should disable the blend for compositing.
          * @param {SSASubtitleEvent} currentEvent
          * @param {number} pass
-         * @returns {boolean} should we disable blend?
+         * @return {boolean} should we disable blend?
          */
         value: function (currentEvent, pass) {
             return (
@@ -1997,7 +1997,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source the source.
          * @param {CollisionInfo} position the collision and positiong info of the event.
          * @param {SSASubtitleEvent} event the event we're working on.
-         * @returns {Object} the resulting matrix.
+         * @return {Object} the resulting matrix.
          */
         value: function (time, source, position, event) {
             const toRad = Math.PI / 180;
@@ -2171,7 +2171,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Takes a scale and a path and returns the perimeters of the shapes drawn.
          * @param {number} scale the scale of the path.
          * @param {string} path the path itself.
-         * @returns {Array<Array<number>>} the shapes.
+         * @return {Array<Array<number>>} the shapes.
          */
         value: function (scale, path) {
             //prep runtime stuff
@@ -2337,7 +2337,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Calculates rectangular clip coordinates.
          * @param {Array<number>} clip the clip bounds.
          * @param {boolean} inverse is the clip inverted?
-         * @returns {Float32Array} the resulting vertices.
+         * @return {Float32Array} the resulting vertices.
          */
         value: function (clip, inverse) {
             let minX = Math.min(clip[0], clip[2]);
@@ -2400,7 +2400,7 @@ const renderer_prototype = global.Object.create(Object, {
          *  Gets clip path coords.
          *  @param {Array<number|string>} clip the clip params
          *  @param {boolean} inverse is it inverse?
-         *  @returns {Float32Array} result
+         *  @return {Float32Array} result
          */
         value: function (clip, inverse) {
             let scale = /** @type {number} */ (clip[0]);
@@ -3356,7 +3356,7 @@ const renderer_prototype = global.Object.create(Object, {
     init: {
         /**
          * Initializes the renderer.
-         * @returns {void}
+         * @return {void}
          */
         value: function () {
             this._scheduler = new sabre.SubtitleScheduler();
@@ -3371,7 +3371,7 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Load the configuration for the renderer and do any follow-up steps.
          * @param {RendererData} config configuration for the renderer.
-         * @returns {void}
+         * @return {void}
          */
         value: function (config) {
             this._config = config;
@@ -3406,6 +3406,8 @@ const renderer_prototype = global.Object.create(Object, {
                 function (event) {
                     console.log("[SABRE.js] WebGL Context Lost...");
                     _this._contextLost = true;
+                    event.preventDefault();
+                    return false;
                 },
                 false
             );
@@ -3419,11 +3421,18 @@ const renderer_prototype = global.Object.create(Object, {
                     sabre.Shader.resetStateEngine();
                     _this._glSetup();
                     _this._contextLost = false;
+                    return false;
                 },
                 false
             );
 
             this._gl = this._compositingCanvas.getContext("webgl", options);
+            if (!this._gl) {
+                this._gl = this._compositingCanvas.getContext(
+                    "experimental-webgl",
+                    options
+                );
+            }
             this._glSetup();
         },
         writable: false
@@ -3434,7 +3443,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Update the size of the compositing canvas and base rendering scale.
          * @param {number} width the new width of the output.
          * @param {number} height the new height of the output.
-         * @returns {void}
+         * @return {void}
          */
         value: function (width, height) {
             this._compositingCanvas.width = width;
@@ -3481,7 +3490,7 @@ const renderer_prototype = global.Object.create(Object, {
     "canRender": {
         /**
          * Returns false if context is lost and not recovered yet.
-         * @returns {boolean}
+         * @return {boolean}
          */
         value: function () {
             return !this._contextLost;
@@ -3493,7 +3502,7 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Render one frame.
          * @param {number} time the current frame time.
-         * @returns {void}
+         * @return {void}
          */
         value: function (time) {
             if (this._contextLost) return;
@@ -3591,7 +3600,7 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Get the frame output.
          * @param {function(string):void} callback the callback to call with the URI.
-         * @returns {void}
+         * @return {void}
          */
         value: function (callback) {
             this._compositingCanvas.toBlobHD((a) => {
@@ -3608,7 +3617,7 @@ const renderer_prototype = global.Object.create(Object, {
     "getDisplayBitmap": {
         /**
          * Get an ImageBitmap containing the frame or null if ImageBitmap is unsupported.
-         * @returns {ImageBitmap} the bitmap.
+         * @return {ImageBitmap} the bitmap.
          */
         value: function () {
             if (!isImageBitmapSupported) return null;
@@ -3624,7 +3633,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Copy the frame output to a canvas.
          * @param {HTMLCanvasElement|OffscreenCanvas} canvas the canvas to draw to.
          * @param {boolean} bitmap should we use bitmap context?
-         * @returns {void}
+         * @return {void}
          */
         value: function (canvas, bitmap) {
             let context;

@@ -818,7 +818,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
     "getOffset": {
         /**
          * Gets the offset of the resulting image.
-         * @returns {Array<number>} offset of the resulting image
+         * @return {Array<number>} offset of the resulting image
          */
         value: function () {
             return [
@@ -832,7 +832,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
     "getBounds": {
         /**
          * Gets the collision bounds of the resulting shape.
-         * @returns {Array<number>} bounds of the resulting shape.
+         * @return {Array<number>} bounds of the resulting shape.
          */
         value: function () {
             return [
@@ -846,7 +846,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
     "getDimensions": {
         /**
          * Gets the dimensions of the resulting image.
-         * @returns {Array<number>} dimensions of the resulting image
+         * @return {Array<number>} dimensions of the resulting image
          */
         value: function () {
             return [
@@ -860,7 +860,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
     "getTextureDimensions": {
         /**
          * Gets the dimensions of the resulting image.
-         * @returns {Array<number>} dimensions of the resulting image
+         * @return {Array<number>} dimensions of the resulting image
          */
         value: function () {
             return [this._width, this._height];
@@ -871,7 +871,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
     "getExtents": {
         /**
          * Gets the dimensions of the canvas.
-         * @returns {Array<number>} dimensions of the canvas
+         * @return {Array<number>} dimensions of the canvas
          */
         value: function () {
             return [

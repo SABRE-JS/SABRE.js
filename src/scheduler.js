@@ -40,7 +40,7 @@ const scheduler_prototype = global.Object.create(Object, {
          * Function for sorting the events list prior to building the tree.
          * @param {SSASubtitleEvent} a The first event to be compared.
          * @param {SSASubtitleEvent} b The second event to be compared.
-         * @returns {number}
+         * @return {number}
          */
         value: function (/** SSASubtitleEvent */ a, /** SSASubtitleEvent */ b) {
             if (a.getStart() === b.getStart()) return a.getEnd() - b.getEnd();
@@ -53,7 +53,7 @@ const scheduler_prototype = global.Object.create(Object, {
         /**
          * Construct a fixed-length null-filled array.
          * @param {number} len length of fixed-length array.
-         * @returns {!Array<?TreeNode>}
+         * @return {!Array<?TreeNode>}
          */
         value: function (len) {
             let arr = new Array(len);
@@ -101,7 +101,7 @@ const scheduler_prototype = global.Object.create(Object, {
         /**
          * Get the SSASubtitleEvents visible at the specified time.
          * @param {number} time the specified time.
-         * @returns {!Array<SSASubtitleEvent>} subtitle events onscreen.
+         * @return {!Array<SSASubtitleEvent>} subtitle events onscreen.
          */
         value: function (time) {
             let array = [];

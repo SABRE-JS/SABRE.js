@@ -6,7 +6,7 @@ sabre.BSpline = function (
     /** number */ degree,
     /** boolean */ copy
 ) {};
-sabre.BSpline.prototype.calcAt = /** @returns {Array<number>} */ function (
+sabre.BSpline.prototype.calcAt = /** @return {Array<number>} */ function (
     /** number */ t
 ) {
     return [0, 0];

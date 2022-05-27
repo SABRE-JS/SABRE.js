@@ -11,5 +11,5 @@ void main(){
     position.x -= 1.0;
     position.y -= 1.0;
     gl_Position = position;
-    v_texcoord = (position.xy+vec2(1,1))/2.0;
+    v_texcoord = (position.xy+vec2(1.0,1.0))/2.0;
 }

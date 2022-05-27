@@ -134,7 +134,7 @@ sabre["include"] = function (scriptName, callback) {
 
 /**
  * returns the root directory for included ecmascript files.
- * @returns {string} the path.
+ * @return {string} the path.
  */
 sabre["getScriptPath"] = function () {
     return scriptpath;

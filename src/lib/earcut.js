@@ -19,6 +19,13 @@ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 */
 
+/**
+ * Perfrom earcut.
+ * @param {Array<number>} data
+ * @param {Array<number>} holeIndices
+ * @param {number} dim
+ * @return {Array<number>}
+ */
 function earcut(data, holeIndices, dim) {
     dim = dim || 2;
 
@@ -57,7 +64,15 @@ function earcut(data, holeIndices, dim) {
     return triangles;
 }
 
-// create a circular doubly linked list from polygon points in the specified winding order
+/**
+ * create a circular doubly linked list from polygon points in the specified winding order
+ * @param {Array<number>} data
+ * @param {number} start
+ * @param {number} end
+ * @param {number} dim
+ * @param {boolean} clockwise
+ * @return {VNode}
+ */
 function linkedList(data, start, end, dim, clockwise) {
     var i, last, next;
 
@@ -78,7 +93,12 @@ function linkedList(data, start, end, dim, clockwise) {
     return last;
 }
 
-// eliminate colinear or duplicate points
+/**
+ * eliminate colinear or duplicate points
+ * @param {?VNode} start
+ * @param {VNode=} end
+ * @return {?VNode}
+ */
 function filterPoints(start, end) {
     if (!start) return start;
     if (!end) end = start;
@@ -106,7 +126,16 @@ function filterPoints(start, end) {
     return end;
 }
 
-// main ear slicing loop which triangulates a polygon (given as a linked list)
+/**
+ * main ear slicing loop which triangulates a polygon (given as a linked list)
+ * @param {VNode} ear
+ * @param {Array<number>} triangles
+ * @param {number} dim
+ * @param {number=} minX
+ * @param {number=} minY
+ * @param {number=} invSize
+ * @param {number=} pass
+ */
 function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
     if (!ear) return;
 
@@ -710,7 +739,12 @@ function removeNode(p) {
     p.next = p;
     p.prev = p;
 }
-
+/**
+ * @constructor
+ * @param {number} i
+ * @param {number} x
+ * @param {number} y
+ */
 function VNode(i, x, y) {
     // vertex index in coordinates array
     this.i = i;
