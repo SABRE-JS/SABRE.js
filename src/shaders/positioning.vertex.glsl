@@ -20,6 +20,7 @@ void main(){
     position = u_post_rotation_matrix * position;
     position.x *= u_aspectscale.x;
     position.y *= u_aspectscale.y;
+    position.z *= min(u_aspectscale.x,u_aspectscale.y);
     position.x -= 1.0;
     position.y -= 1.0;
     gl_Position = position;

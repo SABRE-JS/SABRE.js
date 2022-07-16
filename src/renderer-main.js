@@ -305,7 +305,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @private
          * @param {Object} a first matrix
          * @param {Object} b second matrix
-         * @return {Object} the result matrix
+         * @return {Object} the resulting matrix
          */
         value: function (a, b) {
             let result = {};
@@ -2628,37 +2628,41 @@ const renderer_prototype = global.Object.create(Object, {
 
                 upperLeft = {
                     m00: 0,
-                    m01: 0,
-                    m02: 0
+                    m10: 0,
+                    m20: 0,
+                    m30: 1
                 };
 
                 lowerLeft = {
                     m00: 0,
-                    m01: -dimensions[1],
-                    m02: 0
+                    m10: -dimensions[1],
+                    m20: 0,
+                    m30: 1
                 };
 
                 upperRight = {
                     m00: dimensions[0],
-                    m01: 0,
-                    m02: 0
+                    m10: 0,
+                    m20: 0,
+                    m30: 1
                 };
 
                 lowerRight = {
                     m00: dimensions[0],
-                    m01: -dimensions[1],
-                    m02: 0
+                    m10: -dimensions[1],
+                    m20: 0,
+                    m30: 1
                 };
             }
 
             // prettier-ignore
             let coordinates = new Float32Array([
-                upperLeft.m00,  upperLeft.m01,  upperLeft.m02,
-                upperRight.m00, upperRight.m01, upperRight.m02,
-                lowerLeft.m00,  lowerLeft.m01,  lowerLeft.m02,
-                lowerLeft.m00,  lowerLeft.m01,  lowerLeft.m02,
-                upperRight.m00, upperRight.m01, upperRight.m02,
-                lowerRight.m00, lowerRight.m01, lowerRight.m02
+                upperLeft.m00,  upperLeft.m10,  upperLeft.m20,
+                upperRight.m00, upperRight.m10, upperRight.m20,
+                lowerLeft.m00,  lowerLeft.m10,  lowerLeft.m20,
+                lowerLeft.m00,  lowerLeft.m10,  lowerLeft.m20,
+                upperRight.m00, upperRight.m10, upperRight.m20,
+                lowerRight.m00, lowerRight.m10, lowerRight.m20
             ]);
 
             let tex_coords;
