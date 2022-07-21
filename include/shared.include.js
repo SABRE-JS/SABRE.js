@@ -7,6 +7,19 @@ global.sabre = {};
 
 var external = global.sabre;
 
+/**
+ * @type {(undefined|function(string):Object)}
+ */
+var require = function (a) {
+    return {};
+};
+
+global.module = {};
+
+global.module.exports = {};
+
+var module = global.module;
+
 //This is internal to the wrapper that is applied to the compiled output.
 var sabre = {};
 sabre.$ = null;
@@ -35,4 +48,3 @@ global.HTMLCanvasElement.prototype.toBlobHD = function () {};
  * @return {Blob} the result.
  */
 global.OffscreenCanvas.prototype.toBlobHD = function () {};
-

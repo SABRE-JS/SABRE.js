@@ -1,5 +1,9 @@
 //@include [color.js]
-sabre.import("color");
+if (!require) {
+    sabre.import("color");
+} else {
+    require("./color.min.js");
+}
 
 sabre["SSAStyleDefinition"] = function () {
     let obj = {

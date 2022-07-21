@@ -14,12 +14,21 @@
 //@include [style.js]
 //@include [style-override.js]
 //@include [subtitle-event.js]
-sabre.import("util");
-sabre.import("global-constants");
-sabre.import("color");
-sabre.import("style");
-sabre.import("style-override");
-sabre.import("subtitle-event");
+if (!require) {
+    sabre.import("util");
+    sabre.import("global-constants");
+    sabre.import("color");
+    sabre.import("style");
+    sabre.import("style-override");
+    sabre.import("subtitle-event");
+} else {
+    require("./util.min.js");
+    require("./global-constants.min.js");
+    require("./color.min.js");
+    require("./style.min.js");
+    require("./style-override.min.js");
+    require("./subtitle-event.min.js");
+}
 
 const text_renderer_prototype = global.Object.create(Object, {
     _initialized: {

@@ -18,4 +18,4 @@ export CLOSURE_TYPE_INF_OPTION_NEW=--new_type_inf
 export CLOSURE_TYPE_INF=$CLOSURE_TYPE_INF_OPTION_OLD
 
 export CLOSURE_OUTPUT_WRAPPER_PREFIX="(function(global,external){var window=null;var self=null;var sabre=external.\$;{%output%}if(++sabre.\$==="
-export CLOSURE_OUTPUT_WRAPPER_SUFFIX="){external.\$=null;sabre.\$=null}})(((function(){try{return globalThis||self||window;}catch(e){try{return self;}catch(f){return window;}}})()),((function(){try{return globalThis||self||window;}catch(e){try{return self;}catch(f){return window;}}})()).sabre=(((function(){try{return globalThis||self||window;}catch(e){try{return self;}catch(f){return window;}}})()).sabre||{\$:{\$:0}}));"
+export CLOSURE_OUTPUT_WRAPPER_SUFFIX="){external.\$=null;sabre.\$=null}})(((function(){try{return globalThis||self||window;}catch(e){try{return self;}catch(f){return window;}}})()),((function(){try{return globalThis||global||self||window;}catch(e){try{return self;}catch(f){return window;}}})()).sabre=(((function(){try{return globalThis||global||self||window;}catch(e){try{return self;}catch(f){return window;}}})()).sabre||{\$:{\$:0}}));"

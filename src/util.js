@@ -382,6 +382,15 @@ if (typeof global.OffscreenCanvas !== "undefined") {
 }
 
 /**
+ * Polyfill for CanvasRenderingContext2D.resetTransform
+ */
+global.CanvasRenderingContext2D.prototype["resetTransform"] =
+    global.CanvasRenderingContext2D.prototype["resetTransform"] ??
+    function () {
+        this.setTransform(1, 0, 0, 1, 0, 0);
+    };
+
+/**
  * Compare two strings for equality ignoring case.
  * @param {string} a String 1 in comparison.
  * @param {string} b string 2 in comparison.

@@ -15,13 +15,23 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 //@include [lib/BSpline.js]
-sabre.include("util");
-sabre.import("global-constants");
-sabre.import("color");
-sabre.import("style");
-sabre.import("style-override");
-sabre.import("subtitle-event");
-sabre.import("lib/BSpline");
+if (!require) {
+    sabre.include("util");
+    sabre.import("global-constants");
+    sabre.import("color");
+    sabre.import("style");
+    sabre.import("style-override");
+    sabre.import("subtitle-event");
+    sabre.import("lib/BSpline");
+} else {
+    require("./util.min.js");
+    require("./global-constants.min.js");
+    require("./color.min.js");
+    require("./style.min.js");
+    require("./style-override.min.js");
+    require("./subtitle-event.min.js");
+    require("./lib/BSpline.min.js");
+}
 
 /**
  * Expands bounds if a point is outside them.
