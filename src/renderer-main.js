@@ -18,19 +18,35 @@
 //@include [canvas-2d-shape-renderer.js]
 //@include [lib/BSpline.js]
 //@include [lib/earcut.js]
-sabre.import("util");
-sabre.import("global-constants");
-sabre.import("color");
-sabre.import("style");
-sabre.import("style-override");
-sabre.import("subtitle-event");
-sabre.import("subtitle-parser");
-sabre.import("scheduler");
-sabre.import("shader");
-sabre.import("canvas-2d-text-renderer");
-sabre.import("canvas-2d-shape-renderer");
-sabre.import("lib/BSpline");
-sabre.import("lib/earcut");
+if (!require) {
+    sabre.import("util");
+    sabre.import("global-constants");
+    sabre.import("color");
+    sabre.import("style");
+    sabre.import("style-override");
+    sabre.import("subtitle-event");
+    sabre.import("subtitle-parser");
+    sabre.import("scheduler");
+    sabre.import("shader");
+    sabre.import("canvas-2d-text-renderer");
+    sabre.import("canvas-2d-shape-renderer");
+    sabre.import("lib/BSpline");
+    sabre.import("lib/earcut");
+} else {
+    require("./util.min.js");
+    require("./global-constants.min.js");
+    require("./color.min.js");
+    require("./style.min.js");
+    require("./style-override.min.js");
+    require("./subtitle-event.min.js");
+    require("./subtitle-parser.min.js");
+    require("./scheduler.min.js");
+    require("./shader.min.js");
+    require("./canvas-2d-text-renderer.min.js");
+    require("./canvas-2d-shape-renderer.min.js");
+    require("./lib/BSpline.min.js");
+    require("./lib/earcut.min.js");
+}
 
 /**
  * @fileoverview webgl subtitle compositing code.

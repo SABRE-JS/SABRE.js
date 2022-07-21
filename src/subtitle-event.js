@@ -1,9 +1,16 @@
 //@include [color.js]
 //@include [style.js]
 //@include [style-override.js]
-sabre.import("color");
-sabre.import("style");
-sabre.import("style-override");
+if (!require) {
+    sabre.import("color");
+    sabre.import("style");
+    sabre.import("style-override");
+} else {
+    require("./color.min.js");
+    require("./style.min.js");
+    require("./style-override.min.js");
+}
+
 sabre["SSASubtitleEvent"] = function () {
     let obj = {
         id: NaN,

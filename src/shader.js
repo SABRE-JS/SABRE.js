@@ -91,8 +91,9 @@ const ShaderPrototype = Object.create(Object, {
                     xmlhttp.overrideMimeType("text/plain");
                     xmlhttp.send();
                     if (xmlhttp.status === 200) {
-                        shaderlog[vertexUrl] = xmlhttp.responseText;
-                        this.vertSrc = xmlhttp.responseText;
+                        let response = xmlhttp.responseText;
+                        shaderlog[vertexUrl] = response;
+                        this.vertSrc = response;
                     }
                 } else {
                     this.vertSrc = shaderlog[vertexUrl];
@@ -103,8 +104,9 @@ const ShaderPrototype = Object.create(Object, {
                     xmlhttp.overrideMimeType("text/plain");
                     xmlhttp.send();
                     if (xmlhttp.status === 200) {
-                        shaderlog[fragmentUrl] = xmlhttp.responseText;
-                        this.fragSrc = xmlhttp.responseText;
+                        let response = xmlhttp.responseText;
+                        shaderlog[fragmentUrl] = response;
+                        this.fragSrc = response;
                     }
                 } else {
                     this.fragSrc = shaderlog[fragmentUrl];
@@ -127,14 +129,15 @@ const ShaderPrototype = Object.create(Object, {
                 xmlhttp.overrideMimeType("text/plain");
                 xmlhttp.send();
                 if (xmlhttp.status === 200) {
+                    let response = xmlhttp.responseText;
                     global.localStorage.setItem(
                         storageNameVertex,
-                        xmlhttp.responseText +
+                        response +
                             "\u0003" +
                             (expire * 86400000 + global.Date.now()).toString(16)
                     );
-                    shaderlog[vertexUrl] = xmlhttp.responseText;
-                    this.vertSrc = xmlhttp.responseText;
+                    shaderlog[vertexUrl] = response;
+                    this.vertSrc = response;
                 }
             } else {
                 this.vertSrc = global.localStorage
@@ -155,14 +158,15 @@ const ShaderPrototype = Object.create(Object, {
                 xmlhttp.overrideMimeType("text/plain");
                 xmlhttp.send();
                 if (xmlhttp.status === 200) {
+                    let response = xmlhttp.responseText;
                     global.localStorage.setItem(
                         storageNameFragment,
-                        xmlhttp.responseText +
+                        response +
                             "\u0003" +
                             (expire * 86400000 + global.Date.now()).toString(16)
                     );
-                    shaderlog[fragmentUrl] = xmlhttp.responseText;
-                    this.fragSrc = xmlhttp.responseText;
+                    shaderlog[fragmentUrl] = response;
+                    this.fragSrc = response;
                 }
             } else {
                 this.fragSrc = global.localStorage
