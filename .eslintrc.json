@@ -9,12 +9,14 @@
     "rules":{
         "eqeqeq": ["error","always"],
         "no-unused-vars": "warn",
-        "no-fallthrough": "off"
+        "no-fallthrough": "off",
+        "complexity": "off"
     },
     "globals": {
         "sabre": "readonly",
         "global": "readonly",
-        "external": "readonly"
+        "external": "readonly",
+        "require": "readonly"
     },
     "extends": [
         "eslint:recommended",
