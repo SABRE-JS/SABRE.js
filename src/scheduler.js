@@ -9,7 +9,7 @@
 //@include [style.js]
 //@include [style-override.js]
 //@include [subtitle-event.js]
-if (!require) {
+if (typeof require !== "function") {
     sabre.import("color");
     sabre.import("style");
     sabre.import("style-override");

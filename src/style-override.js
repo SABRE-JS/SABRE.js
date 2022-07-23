@@ -9,7 +9,7 @@
  * @fileoverview This file defines the storage objects for style overrides.
  */
 //@include [color.js]
-if (!require) {
+if (typeof require !== "function") {
     sabre.import("color");
 } else {
     require("./color.min.js");
