@@ -21,28 +21,52 @@ let scriptpath = "";
                 scripturl = new Function("return import.meta.url;")();
             }
         } catch (e) {
-            scripturl = "./";
+            scripturl = "./dummy.js";
             let scripts = global.document.getElementsByTagName("script");
             for (let i = 0; i < scripts.length; i++) {
                 let src = scripts[i].getAttribute("src");
                 if (src === null || src === "") continue;
-                if (src.endsWith("sabre.js")) {
+                if (src.endsWith("sabre.js") || src.endsWith("sabre.min.js")) {
                     scripturl = src;
                     break;
                 }
             }
         }
     } else {
-        scripturl = "./";
+        scripturl = "./dummy.js";
     }
-    let curscript = new global.URL(scripturl);
-    scriptpath =
-        curscript.protocol +
-        "//" +
-        curscript.host +
-        curscript.pathname.match(/^(.*\/).*?$/)[1];
+    {
+        let relative = scripturl.startsWith(".");
+        let absolute = scripturl.startsWith("/");
+        let http = scripturl.startsWith("http");
+        let pageurl = new URL(global.location.href);
+        if (relative || absolute || !http) {
+            if (scripturl.startsWith("//")) {
+                scriptpath = pageurl.protocol + scripturl;
+            } else {
+                if (relative || (!http && !absolute)) {
+                    scriptpath =
+                        pageurl.protocol +
+                        "//" +
+                        pageurl.host +
+                        ":" +
+                        pageurl.port +
+                        pageurl.pathname.match(/^(.*\/).*?$/)[1] +
+                        (scripturl.match(/^(.*\/).*?$/)[1] ?? "/");
+                } else {
+                    scriptpath =
+                        pageurl.protocol +
+                        "//" +
+                        pageurl.host +
+                        ":" +
+                        pageurl.port +
+                        (scripturl.match(/^(.*\/).*?$/)[1] ?? "/");
+                }
+            }
+        }
+    }
 }
-if (!require) {
+if (typeof require !== "function") {
     let includelog = Object.create(Object, {});
 
     /**

@@ -15,7 +15,7 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 //@include [lib/BSpline.js]
-if (!require) {
+if (typeof require !== "function") {
     sabre.include("util");
     sabre.import("global-constants");
     sabre.import("color");

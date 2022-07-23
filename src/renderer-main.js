@@ -18,7 +18,7 @@
 //@include [canvas-2d-shape-renderer.js]
 //@include [lib/BSpline.js]
 //@include [lib/earcut.js]
-if (!require) {
+if (typeof require !== "function") {
     sabre.import("util");
     sabre.import("global-constants");
     sabre.import("color");

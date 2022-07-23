@@ -14,7 +14,7 @@
 //@include [style.js]
 //@include [style-override.js]
 //@include [subtitle-event.js]
-if (!require) {
+if (typeof require !== "function") {
     sabre.import("util");
     sabre.import("global-constants");
     sabre.import("color");
