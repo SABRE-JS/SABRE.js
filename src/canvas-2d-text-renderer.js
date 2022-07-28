@@ -337,8 +337,8 @@ const text_renderer_prototype = global.Object.create(Object, {
                 let measurements = this._ctx.measureText("Ij?!");
                 fontSizeRatio =
                     100 /
-                    (measurements.actualBoundingBoxDescent +
-                        measurements.actualBoundingBoxAscent);
+                    ((measurements.actualBoundingBoxDescent ?? 0) +
+                        (measurements.actualBoundingBoxAscent ?? 100));
                 this._fontSizeRatios[font] = fontSizeRatio;
             }
             font =
@@ -587,11 +587,11 @@ const text_renderer_prototype = global.Object.create(Object, {
             {
                 let fontSize = this._calcFontSize(time, style, overrides);
                 let measurements = this._ctx.measureText(text);
-                this._offsetY += measurements.actualBoundingBoxAscent;
-                this._offsetX += measurements.actualBoundingBoxLeft;
+                this._offsetY += measurements.actualBoundingBoxAscent ?? 0;
+                this._offsetX += measurements.actualBoundingBoxLeft ?? 0;
                 this._width =
-                    measurements.actualBoundingBoxLeft +
-                    measurements.actualBoundingBoxRight;
+                    (measurements.actualBoundingBoxLeft ?? 0) +
+                    (measurements.actualBoundingBoxRight ?? measurements.width);
                 this._textSpacingWidth = measurements.width;
                 if (spacing !== 0) {
                     let kerning = spacing * (text.length - 1);
