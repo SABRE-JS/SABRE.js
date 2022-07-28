@@ -63,6 +63,8 @@ let scriptpath = "";
                         (scripturl.match(/^(.*\/).*?$/)[1] ?? "/");
                 }
             }
+        } else {
+            scriptpath = scripturl.match(/^(.*\/).*?$/)[1] ?? "/";
         }
     }
 }

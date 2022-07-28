@@ -115,14 +115,18 @@ const ShaderPrototype = Object.create(Object, {
             }
             let storageNameVertex = "shader.js|vrtx|" + vertexUrl;
             let storageNameFragment = "shader.js|frag|" + fragmentUrl;
+            let storageNameVertexTime = "shader.js|time|" + vertexUrl;
+            let storageNameFragmentTime = "shader.js|time|" + fragmentUrl;
+
+            let storageDataVertex =
+                global.localStorage.getItem(storageNameVertex);
+            let storageVertexTime = global.localStorage.getItem(
+                storageNameVertexTime
+            );
             if (
-                global.localStorage.getItem(storageNameVertex) === null ||
-                parseInt(
-                    global.localStorage
-                        .getItem(storageNameVertex)
-                        .split("\u0003")[1],
-                    16
-                ) < global.Date.now()
+                storageDataVertex === null ||
+                storageVertexTime === null ||
+                parseInt(storageVertexTime, 16) <= global.Date.now()
             ) {
                 xmlhttp = new XMLHttpRequest();
                 xmlhttp.open("GET", vertexUrl, false);
@@ -130,28 +134,27 @@ const ShaderPrototype = Object.create(Object, {
                 xmlhttp.send();
                 if (xmlhttp.status === 200) {
                     let response = xmlhttp.responseText;
+                    global.localStorage.setItem(storageNameVertex, response);
                     global.localStorage.setItem(
-                        storageNameVertex,
-                        response +
-                            "\u0003" +
-                            (expire * 86400000 + global.Date.now()).toString(16)
+                        storageNameVertexTime,
+                        (expire * 86400000 + global.Date.now()).toString(16)
                     );
                     shaderlog[vertexUrl] = response;
                     this.vertSrc = response;
                 }
             } else {
-                this.vertSrc = global.localStorage
-                    .getItem(storageNameVertex)
-                    .split("\u0003")[0];
+                this.vertSrc = storageDataVertex;
             }
+
+            let storageDataFragment =
+                global.localStorage.getItem(storageNameFragment);
+            let storageFragmentTime = global.localStorage.getItem(
+                storageNameFragmentTime
+            );
             if (
-                global.localStorage.getItem(storageNameFragment) === null ||
-                parseInt(
-                    global.localStorage
-                        .getItem(storageNameFragment)
-                        .split("\u0003")[1],
-                    16
-                ) < global.Date.now()
+                storageDataFragment === null ||
+                storageFragmentTime === null ||
+                parseInt(storageFragmentTime, 16) <= global.Date.now()
             ) {
                 xmlhttp = new XMLHttpRequest();
                 xmlhttp.open("GET", fragmentUrl, false);
@@ -159,19 +162,16 @@ const ShaderPrototype = Object.create(Object, {
                 xmlhttp.send();
                 if (xmlhttp.status === 200) {
                     let response = xmlhttp.responseText;
+                    global.localStorage.setItem(storageNameFragment, response);
                     global.localStorage.setItem(
-                        storageNameFragment,
-                        response +
-                            "\u0003" +
-                            (expire * 86400000 + global.Date.now()).toString(16)
+                        storageNameVertexTime,
+                        (expire * 86400000 + global.Date.now()).toString(16)
                     );
                     shaderlog[fragmentUrl] = response;
                     this.fragSrc = response;
                 }
             } else {
-                this.fragSrc = global.localStorage
-                    .getItem(storageNameFragment)
-                    .split("\u0003")[0];
+                this.fragSrc = storageDataFragment;
             }
         }
     },
