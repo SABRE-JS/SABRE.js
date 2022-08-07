@@ -68,7 +68,7 @@ let scriptpath = "";
         }
     }
 }
-if (typeof require !== "function") {
+if (typeof require !== "function" || ENABLE_DEBUG) {
     let includelog = Object.create(Object, {});
 
     /**
