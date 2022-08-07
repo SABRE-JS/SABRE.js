@@ -8,6 +8,13 @@
 /**
  * @fileoverview advance stubstation alpha subtitle text renderer.
  */
+/**
+ * Determines if we are doing a debug build.
+ * @private
+ * @define {boolean}
+ *
+ */
+const ENABLE_DEBUG = true;
 //@include [util.js]
 //@include [global-constants.js]
 //@include [color.js]
@@ -15,7 +22,7 @@
 //@include [style-override.js]
 //@include [subtitle-event.js]
 //@include [lib/BSpline.js]
-if (typeof require !== "function") {
+if (typeof require !== "function" || ENABLE_DEBUG) {
     sabre.include("util");
     sabre.import("global-constants");
     sabre.import("color");

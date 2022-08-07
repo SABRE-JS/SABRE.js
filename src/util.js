@@ -5,6 +5,13 @@
  |
  |-
  */
+/**
+ * Determines if we are doing a debug build.
+ * @private
+ * @define {boolean}
+ *
+ */
+const ENABLE_DEBUG = true;
 //@include [color.js]
 //@include [style.js]
 //@include [style-override.js]
@@ -359,11 +366,13 @@ const canvas2blob = function (callback /*, type, quality*/) {
     callback(new Blob([arr], { type: "image/bmp" }));
 };
 
-global.HTMLCanvasElement.prototype["toBlob"] =
-    global.HTMLCanvasElement.prototype["toBlob"] ?? canvas2blob;
-global.HTMLCanvasElement.prototype["toBlobHD"] =
-    global.HTMLCanvasElement.prototype["toBlobHD"] ??
-    global.HTMLCanvasElement.prototype["toBlob"];
+if (typeof global.HTMLCanvasElement !== "undefined") {
+    global.HTMLCanvasElement.prototype["toBlob"] =
+        global.HTMLCanvasElement.prototype["toBlob"] ?? canvas2blob;
+    global.HTMLCanvasElement.prototype["toBlobHD"] =
+        global.HTMLCanvasElement.prototype["toBlobHD"] ??
+        global.HTMLCanvasElement.prototype["toBlob"];
+}
 
 if (typeof global.OffscreenCanvas !== "undefined") {
     global.OffscreenCanvas.prototype["toBlob"] =
@@ -384,11 +393,13 @@ if (typeof global.OffscreenCanvas !== "undefined") {
 /**
  * Polyfill for CanvasRenderingContext2D.resetTransform
  */
-global.CanvasRenderingContext2D.prototype["resetTransform"] =
-    global.CanvasRenderingContext2D.prototype["resetTransform"] ??
-    function () {
-        this.setTransform(1, 0, 0, 1, 0, 0);
-    };
+if (typeof global.CanvasRenderingContext2D !== "undefined") {
+    global.CanvasRenderingContext2D.prototype["resetTransform"] =
+        global.CanvasRenderingContext2D.prototype["resetTransform"] ??
+        function () {
+            this.setTransform(1, 0, 0, 1, 0, 0);
+        };
+}
 
 /**
  * Compare two strings for equality ignoring case.

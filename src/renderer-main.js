@@ -5,6 +5,13 @@
  |
  |-
  */
+/**
+ * Determines if we are doing a debug build.
+ * @private
+ * @define {boolean}
+ *
+ */
+const ENABLE_DEBUG = true;
 //@include [util.js]
 //@include [global-constants.js]
 //@include [color.js]
@@ -18,7 +25,7 @@
 //@include [canvas-2d-shape-renderer.js]
 //@include [lib/BSpline.js]
 //@include [lib/earcut.js]
-if (typeof require !== "function") {
+if (typeof require !== "function" || ENABLE_DEBUG) {
     sabre.import("util");
     sabre.import("global-constants");
     sabre.import("color");

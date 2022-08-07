@@ -5,11 +5,18 @@
  |
  |-
  */
+/**
+ * Determines if we are doing a debug build.
+ * @private
+ * @define {boolean}
+ *
+ */
+const ENABLE_DEBUG = true;
 //@include [color.js]
 //@include [style.js]
 //@include [style-override.js]
 //@include [subtitle-event.js]
-if (typeof require !== "function") {
+if (typeof require !== "function" || ENABLE_DEBUG) {
     sabre.import("color");
     sabre.import("style");
     sabre.import("style-override");
