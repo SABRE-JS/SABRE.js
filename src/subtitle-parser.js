@@ -587,6 +587,7 @@ const parser_prototype = global.Object.create(global.Object, {
                         tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp)) style.setItalic(tmp !== 0);
                         else throw "Invalid italic setting in style.";
+                        break;
                     case "BorderStyle":
                         tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp)) style.setBorderStyle(tmp);
