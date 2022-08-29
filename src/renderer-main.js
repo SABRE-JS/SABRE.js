@@ -2062,11 +2062,11 @@ const renderer_prototype = global.Object.create(Object, {
                 );
 
                 let shearMatrix = {
-                    m00: 1 + shear.x * -shear.y,
-                    m01: shear.x,
+                    m00: 1 + -shear.x * shear.y,
+                    m01: -shear.x,
                     m02: 0,
                     m03: 0,
-                    m10: -shear.y,
+                    m10: shear.y,
                     m11: 1,
                     m12: 0,
                     m13: 0,

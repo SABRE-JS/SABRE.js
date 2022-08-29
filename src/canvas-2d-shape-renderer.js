@@ -50,9 +50,9 @@ if (typeof require !== "function" || ENABLE_DEBUG) {
  */
 const expandBounds = function (max, min, x, y) {
     if (x > max[0]) max[0] = x;
-    else if (x < min[0]) min[0] = x;
+    if (x < min[0]) min[0] = x;
     if (y > max[1]) max[1] = y;
-    else if (y < min[1]) min[1] = y;
+    if (y < min[1]) min[1] = y;
 };
 
 const shape_renderer_prototype = global.Object.create(Object, {
@@ -512,8 +512,14 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             this._ctx.closePath();
                             if (outline) this._ctx.stroke();
                             else this._ctx.fill();
-
                             this._ctx.beginPath();
+                            lastpos[0] = parseFloat(localparam[0]);
+                            lastpos[1] = parseFloat(localparam[1]);
+                            this._ctx.moveTo(
+                                xoffset + lastpos[0],
+                                yoffset + lastpos[1]
+                            );
+                            break;
                         case "n":
                             lastpos[0] = parseFloat(localparam[0]);
                             lastpos[1] = parseFloat(localparam[1]);
@@ -643,7 +649,10 @@ const shape_renderer_prototype = global.Object.create(Object, {
             let outline_x = 0;
             let outline_y = 0;
 
-            if (pass === sabre.RenderPasses.OUTLINE) {
+            if (
+                pass === sabre.RenderPasses.OUTLINE ||
+                pass === sabre.RenderPasses.BACKGROUND
+            ) {
                 let outline = this._calcOutline(time, style, overrides);
                 this._width += outline.x * 2;
                 this._height += outline.x * 2;
