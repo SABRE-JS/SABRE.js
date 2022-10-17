@@ -34,7 +34,7 @@ void main(){
     } else {
         vec4 uncolored = texture2D(u_texture, v_texcoord);
         vec4 mask = texture2D(u_mask, v_maskcoord);
-        if(mask.r > 0.0 && mask.g > 0.0 && mask.b > 0.0 && mask.a > 0.0 && mask.rgb != uncolored.rgb){
+        if(mask.rgba != uncolored.rgba){
             if(uncolored.r == 0.0 && uncolored.g == 0.0 && uncolored.b == 0.0 && uncolored.a > 0.0){
                 colored.rgb = u_quaternary_color.rgb;
                 colored.a = uncolored.a*u_quaternary_color.a;

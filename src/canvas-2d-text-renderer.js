@@ -384,8 +384,60 @@ const text_renderer_prototype = global.Object.create(Object, {
             mask
         ) {
             if (mask) {
-                this._ctx.fillStyle = "rgba(255,255,255,1)";
-                this._ctx.strokeStyle = "rgba(255,255,255,1)";
+                if (
+                    pass === sabre.RenderPasses.BACKGROUND &&
+                    style.getBorderStyle() !==
+                        sabre.BorderStyleModes.SRT_STYLE &&
+                    style.getBorderStyle() !==
+                        sabre.BorderStyleModes.SRT_NO_OVERLAP
+                ) {
+                    this._ctx.fillStyle = "rgba(255,255,255,1)";
+                } else {
+                    if (
+                        (overrides.getKaraokeMode() ===
+                            sabre.KaraokeModes.COLOR_SWAP ||
+                            overrides.getKaraokeMode() ===
+                                sabre.KaraokeModes.COLOR_SWEEP) &&
+                        time < overrides.getKaraokeStart()
+                    ) {
+                        this._ctx.fillStyle = "rgba(255,0,255,1)";
+                    } else if (
+                        overrides.getKaraokeMode() ===
+                            sabre.KaraokeModes.COLOR_SWEEP &&
+                        time < overrides.getKaraokeEnd()
+                    ) {
+                        let progress =
+                            Math.max(time - overrides.getKaraokeStart(), 0) /
+                            (overrides.getKaraokeEnd() -
+                                overrides.getKaraokeStart());
+                        let gradient = this._ctx.createLinearGradient(
+                            0,
+                            0,
+                            this._width,
+                            0
+                        );
+                        gradient.addColorStop(0, "rgba(0,255,255,1)");
+                        gradient.addColorStop(progress, "rgba(0,255,255,1)");
+                        gradient.addColorStop(
+                            Math.min(progress + 1 / this._width, 1),
+                            "rgba(255,0,255,1)"
+                        );
+                        gradient.addColorStop(1, "rgba(0,255,255,1)");
+                        this._ctx.fillStyle = gradient;
+                    } else {
+                        this._ctx.fillStyle = "rgba(0,255,255,1)";
+                    }
+
+                    if (
+                        overrides.getKaraokeMode() ===
+                            sabre.KaraokeModes.OUTLINE_TOGGLE &&
+                        time < overrides.getKaraokeStart()
+                    ) {
+                        this._ctx.strokeStyle = "rgba(255,255,0,0)";
+                    } else {
+                        this._ctx.strokeStyle = "rgba(255,255,0,1)";
+                    }
+                }
             } else {
                 if (
                     pass === sabre.RenderPasses.BACKGROUND &&
@@ -661,6 +713,18 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._height *= scale.y * this._pixelScaleRatio.yratio;
             }
 
+            //Fix for antialiasing being included in destination-out
+
+            if (pass === sabre.RenderPasses.OUTLINE) {
+                this._compositeFixFactorX = (this._width + 2) / this._width;
+                this._compositeFixFactorY = (this._height + 2) / this._height;
+                this._width *= this._compositeFixFactorX;
+                this._height *= this._compositeFixFactorY;
+            } else {
+                this._compositeFixFactorX = 1;
+                this._compositeFixFactorY = 1;
+            }
+
             if (!dryRun) {
                 {
                     let cwidth = Math.max(
@@ -709,6 +773,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                     lineTransitionTargetOverrides,
                     pass,
                     mask
+                );
+
+                //Fix the anti-aliasing cutting out the text.
+                this._ctx.scale(
+                    this._compositeFixFactorX,
+                    this._compositeFixFactorY
                 );
 
                 //reset the composite operation
@@ -781,6 +851,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         offsetXUnscaled,
                                         offsetYUnscaled
                                     );
+                                    this._ctx.globalCompositeOperation = "xor";
+                                    this._ctx.fillText(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled
+                                    );
                                 } else {
                                     for (
                                         let i = -outline_x;
@@ -793,6 +869,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             offsetYUnscaled
                                         );
                                     }
+                                    this._ctx.globalCompositeOperation = "xor";
+                                    this._ctx.fillText(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled
+                                    );
                                 }
                             } else {
                                 if (outline_gt_zero) {
@@ -812,6 +894,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         offsetXUnscaled,
                                         offsetYUnscaled
                                     );
+                                    this._ctx.globalCompositeOperation = "xor";
+                                    this._ctx.fillText(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled
+                                    );
                                 } else {
                                     for (
                                         let i = -outline_y;
@@ -824,6 +912,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             offsetYUnscaled + i
                                         );
                                     }
+                                    this._ctx.globalCompositeOperation = "xor";
+                                    this._ctx.fillText(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled
+                                    );
                                 }
                             }
                         } else {
@@ -850,6 +944,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         spacing,
                                         false
                                     );
+                                    this._ctx.globalCompositeOperation = "xor";
+                                    this._drawTextWithRelativeKerning(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled,
+                                        spacing,
+                                        false
+                                    );
                                 } else {
                                     for (
                                         let i = -outline_x;
@@ -864,6 +966,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             false
                                         );
                                     }
+                                    this._ctx.globalCompositeOperation = "xor";
+                                    this._drawTextWithRelativeKerning(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled,
+                                        spacing,
+                                        false
+                                    );
                                 }
                             } else {
                                 if (outline_gt_zero) {
@@ -887,6 +997,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         spacing,
                                         false
                                     );
+                                    this._ctx.globalCompositeOperation = "xor";
+                                    this._drawTextWithRelativeKerning(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled,
+                                        spacing,
+                                        false
+                                    );
                                 } else {
                                     for (
                                         let i = -outline_y;
@@ -901,6 +1019,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             false
                                         );
                                     }
+                                    this._ctx.globalCompositeOperation = "xor";
+                                    this._drawTextWithRelativeKerning(
+                                        text,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled,
+                                        spacing,
+                                        false
+                                    );
                                 }
                             }
                         }
@@ -961,7 +1087,9 @@ const text_renderer_prototype = global.Object.create(Object, {
         value: function () {
             return [
                 this._textSpacingWidth / this._pixelScaleRatio.xratio,
-                this._height / this._pixelScaleRatio.yratio
+                this._height /
+                    this._compositeFixFactorY /
+                    this._pixelScaleRatio.yratio
             ];
         },
         writable: false
@@ -974,8 +1102,12 @@ const text_renderer_prototype = global.Object.create(Object, {
          */
         value: function () {
             return [
-                this._width / this._pixelScaleRatio.xratio,
-                this._height / this._pixelScaleRatio.yratio
+                this._width /
+                    this._compositeFixFactorX /
+                    this._pixelScaleRatio.xratio,
+                this._height /
+                    this._compositeFixFactorY /
+                    this._pixelScaleRatio.yratio
             ];
         },
         writable: false
