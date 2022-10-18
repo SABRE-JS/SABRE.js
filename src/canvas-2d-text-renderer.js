@@ -713,18 +713,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._height *= scale.y * this._pixelScaleRatio.yratio;
             }
 
-            //Fix for antialiasing being included in destination-out
-
-            if (pass === sabre.RenderPasses.OUTLINE) {
-                this._compositeFixFactorX = (this._width + 2) / this._width;
-                this._compositeFixFactorY = (this._height + 2) / this._height;
-                this._width *= this._compositeFixFactorX;
-                this._height *= this._compositeFixFactorY;
-            } else {
-                this._compositeFixFactorX = 1;
-                this._compositeFixFactorY = 1;
-            }
-
             if (!dryRun) {
                 {
                     let cwidth = Math.max(
@@ -773,12 +761,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                     lineTransitionTargetOverrides,
                     pass,
                     mask
-                );
-
-                //Fix the anti-aliasing cutting out the text.
-                this._ctx.scale(
-                    this._compositeFixFactorX,
-                    this._compositeFixFactorY
                 );
 
                 //reset the composite operation
@@ -851,12 +833,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         offsetXUnscaled,
                                         offsetYUnscaled
                                     );
-                                    this._ctx.globalCompositeOperation = "xor";
-                                    this._ctx.fillText(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled
-                                    );
                                 } else {
                                     for (
                                         let i = -outline_x;
@@ -869,12 +845,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             offsetYUnscaled
                                         );
                                     }
-                                    this._ctx.globalCompositeOperation = "xor";
-                                    this._ctx.fillText(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled
-                                    );
                                 }
                             } else {
                                 if (outline_gt_zero) {
@@ -894,12 +864,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         offsetXUnscaled,
                                         offsetYUnscaled
                                     );
-                                    this._ctx.globalCompositeOperation = "xor";
-                                    this._ctx.fillText(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled
-                                    );
                                 } else {
                                     for (
                                         let i = -outline_y;
@@ -912,12 +876,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             offsetYUnscaled + i
                                         );
                                     }
-                                    this._ctx.globalCompositeOperation = "xor";
-                                    this._ctx.fillText(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled
-                                    );
                                 }
                             }
                         } else {
@@ -944,14 +902,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         spacing,
                                         false
                                     );
-                                    this._ctx.globalCompositeOperation = "xor";
-                                    this._drawTextWithRelativeKerning(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled,
-                                        spacing,
-                                        false
-                                    );
                                 } else {
                                     for (
                                         let i = -outline_x;
@@ -966,14 +916,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             false
                                         );
                                     }
-                                    this._ctx.globalCompositeOperation = "xor";
-                                    this._drawTextWithRelativeKerning(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled,
-                                        spacing,
-                                        false
-                                    );
                                 }
                             } else {
                                 if (outline_gt_zero) {
@@ -997,14 +939,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                         spacing,
                                         false
                                     );
-                                    this._ctx.globalCompositeOperation = "xor";
-                                    this._drawTextWithRelativeKerning(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled,
-                                        spacing,
-                                        false
-                                    );
                                 } else {
                                     for (
                                         let i = -outline_y;
@@ -1019,14 +953,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                                             false
                                         );
                                     }
-                                    this._ctx.globalCompositeOperation = "xor";
-                                    this._drawTextWithRelativeKerning(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled,
-                                        spacing,
-                                        false
-                                    );
                                 }
                             }
                         }
@@ -1087,9 +1013,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         value: function () {
             return [
                 this._textSpacingWidth / this._pixelScaleRatio.xratio,
-                this._height /
-                    this._compositeFixFactorY /
-                    this._pixelScaleRatio.yratio
+                this._height / this._pixelScaleRatio.yratio
             ];
         },
         writable: false
@@ -1102,12 +1026,8 @@ const text_renderer_prototype = global.Object.create(Object, {
          */
         value: function () {
             return [
-                this._width /
-                    this._compositeFixFactorX /
-                    this._pixelScaleRatio.xratio,
-                this._height /
-                    this._compositeFixFactorY /
-                    this._pixelScaleRatio.yratio
+                this._width / this._pixelScaleRatio.xratio,
+                this._height / this._pixelScaleRatio.yratio
             ];
         },
         writable: false
