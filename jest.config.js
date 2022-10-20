@@ -11,7 +11,14 @@ const config = {
     },
     testEnvironment: "jsdom",
     testPathIgnorePatterns: ["includes", "test-constants", "test-utils"],
-    extraGlobals: ["Math", "Object", "isNaN", "URL", "parseInt", "parseFloat"],
+    sandboxInjectedGlobals: [
+        "Math",
+        "Object",
+        "isNaN",
+        "URL",
+        "parseInt",
+        "parseFloat"
+    ],
     cacheDirectory: "./tdata/cache"
 };
 
