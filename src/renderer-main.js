@@ -2064,9 +2064,9 @@ const renderer_prototype = global.Object.create(Object, {
                 // prettier-ignore
                 let shearMatrix = {
                     m00: 1 + (-shear.x * -shear.y), m01: -shear.x, m02: 0, m03: 0,
-                    m10: -shear.y,                m11: 1,        m12: 0, m13: 0,
-                    m20: 0,                       m21: 0,        m22: 1, m23: 0,
-                    m30: 0,                       m31: 0,        m32: 0, m33: 1
+                    m10: -shear.y,                  m11: 1,        m12: 0, m13: 0,
+                    m20: 0,                         m21: 0,        m22: 1, m23: 0,
+                    m30: 0,                         m31: 0,        m32: 0, m33: 1
                 };
 
                 preRotationMatrix = this._matrixMultiply4x4(
