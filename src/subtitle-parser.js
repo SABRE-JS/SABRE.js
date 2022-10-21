@@ -716,15 +716,18 @@ const parser_prototype = global.Object.create(global.Object, {
                         tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp)) style.setItalic(tmp !== 0);
                         else throw "Invalid italic setting in style.";
+                        break;
                     case "Underline":
                         tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp)) style.setUnderline(tmp !== 0);
                         else throw "Invalid underline setting in style.";
+                        break;
                     case "StrikeOut":
                         tmp = global.parseInt(value, 10);
                         if (!global.isNaN(tmp)) style.setStrikeout(tmp !== 0);
                         else
                             throw "Invalid Strikeout/Strikethrough setting in style.";
+                        break;
                     case "ScaleX":
                         tmp = global.parseFloat(value);
                         if (!global.isNaN(tmp)) style.setScaleX(tmp);

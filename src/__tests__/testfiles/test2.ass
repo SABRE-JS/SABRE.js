@@ -1,0 +1,14 @@
+[Script Info]
+Title: Test Script
+ScriptType: v4.00+
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+YCbCr Matrix: None
+
+[V4+ Styles]
+Format: Encoding, MarginV, MarginR, MarginL, Alignment, Shadow, Outline, BorderStyle, Angle, Spacing, ScaleY, ScaleX, StrikeOut, Underline, Italic, Bold, BackColour, OutlineColour, SecondaryColour, PrimaryColour, Fontsize, Fontname, Name
+Style: 1,10,10,10,2,2,2,1,0,0,100,100,0,0,0,0,&H00000000,&H00000000,&H000000FF,&H00FFFFFF,48,Arial,Default
+
+[Events]
+Format: Effect, MarginV, MarginR, MarginL, Name, Style, End, Start, Layer, Text
+Dialogue: ,0,0,0,,Default,0:00:05.00,0:00:00.00,0,This file tests Advanced Substation Alpha parsing with a non-standard order.
