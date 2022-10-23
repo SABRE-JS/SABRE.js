@@ -1,0 +1,21 @@
+[Script Info]
+; This is a Sub Station Alpha v4 script.
+; For Sub Station Alpha info and downloads,
+; go to http://www.eswat.demon.co.uk/
+; or email kotus@eswat.demon.co.uk
+!: Here is another comment
+Title: Test Script
+ScriptType: v4.00
+Collisions: Normal
+PlayResY: 480
+PlayResX: 360
+PlayDepth: 0
+
+[v4 Styles]
+Format: Encoding, AlphaLevel, MarginV, MarginR, MarginL, Alignment, Shadow, Outline, BorderStyle, Italic, Bold, BackColour, TertiaryColour, SecondaryColour, PrimaryColour, Fontsize, Fontname, Name
+Style: 1, 0, 20, 20, 20, 2, 3, 2, 1, 0, 200, &H00000080, &H00000000, &H00ffff00, &H00FFFFFF, 18, Arial, Default
+
+[Events]
+Format: Effect, MarginV, MarginR, MarginL, Name, Style, End, Start, Marked, Text
+Comment: And a third comment.
+Dialogue: ,0000,0000,0000,,Default,0:00:08.90,0:00:06.60,Marked=0,This file tests SubStation Alpha parsing with a non-standard order.
