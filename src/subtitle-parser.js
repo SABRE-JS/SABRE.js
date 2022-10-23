@@ -565,7 +565,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     case "SecondaryColour":
                         this._parseColor(style, value, 2);
                         break;
-                    case "OutlineColour":
+                    case "TertiaryColour":
                         this._parseColor(style, value, 3);
                         break;
                     case "BackColour":
@@ -3034,7 +3034,7 @@ const parser_prototype = global.Object.create(global.Object, {
             this._config = /** @type {RendererData} */ ({
                 "info": {},
                 "parser": {},
-                "renderer": {}
+                "renderer": {"default_wrap_style": sabre.WrapStyleModes.SMART}
             });
             if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
                 //check for BOM
