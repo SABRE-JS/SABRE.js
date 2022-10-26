@@ -7,9 +7,6 @@ require('../style-override.js');
 require('../subtitle-event.js');
 require("../subtitle-parser.js");
 
-
-
-
 const assStyleKeys = [
     "Name",
     "Fontname",
@@ -35,6 +32,7 @@ const assStyleKeys = [
     "MarginV",
     "Encoding"
 ];
+
 const assEventKeys = [
     "Layer",
     "Start",
@@ -47,7 +45,6 @@ const assEventKeys = [
     "Effect",
     "Text"
 ];
-
 
 const ssaStyleKeys = [
     "Name",
@@ -70,7 +67,6 @@ const ssaStyleKeys = [
     "Encoding"
 ];
 
-
 const ssaEventKeys = [
     "Marked",
     "Start",
@@ -83,8 +79,6 @@ const ssaEventKeys = [
     "Effect",
     "Text"
 ];
-
-
 
 const loadFile = (file) => {
     const { readFileSync } = require('fs');
@@ -101,7 +95,7 @@ describe("Parser", () => {
                 expect(config.info).not.toBeNull();
                 expect(config.parser).not.toBeNull();
                 expect(config.renderer).not.toBeNull();
-    
+
                 expect(config.info.title).toBe('Test Script');
                 expect(config.info.version).toBe(4);
                 expect(config.info.is_ass).toBe(true);
@@ -238,5 +232,524 @@ describe("Parser", () => {
             });
         });
          
+        describe("Tag Tests",() => {
+            const tag_tests = [
+                {
+                    "tag": "\\alpha",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getPrimaryColor().getA()).toBe(127/255);
+                    }
+                },
+                {
+                    "tag": "\\alpha",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getSecondaryColor().getA()).toBe(127/255);
+                    }
+                },
+                {
+                    "tag": "\\alpha",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getTertiaryColor().getA()).toBe(127/255);
+                    }
+                },
+                {
+                    "tag": "\\alpha",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getQuaternaryColor().getA()).toBe(127/255);
+                    }
+                },
+                {
+                    "tag": "\\alpha",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getPrimaryColor().getA()).toBe(127/255);
+                    }
+                },
+                {
+                    "tag": "\\a",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getAlignment()).toBe(5);
+                    }
+                },
+                {
+                    "tag": "\\an",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getAlignment()).toBe(5);
+                    }
+                },
+                {
+                    "tag": "\\b",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getWeight()).toBe(700);
+                    }
+                },
+                {
+                    "tag": "\\b",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getWeight()).toBe(800);
+                    }
+                },
+                {
+                    "tag": "\\be",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getEdgeBlur()).toBe(5);
+                    }
+                },
+                {
+                    "tag": "\\blur",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getGaussianEdgeBlur()).toBe(20);
+                    }
+                },
+                {
+                    "tag": "\\bord",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getOutlineX()).toBe(5);
+                        expect(event.getOverrides().getOutlineY()).toBe(5);
+                    }
+                },
+                {
+                    "tag": "\\bord",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getOutlineX()).toBe(5);
+                        expect(event.getOverrides().getOutlineY()).toBeNull();
+                    }
+                },
+                {
+                    "tag": "\\bord",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getOutlineX()).toBeNull();
+                        expect(event.getOverrides().getOutlineY()).toBe(5);
+                    }
+                },
+                {
+                    "tag": "\\c",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getPrimaryColor().getR()).toBe(128/255);
+                        expect(event.getOverrides().getPrimaryColor().getG()).toBe(128/255);
+                        expect(event.getOverrides().getPrimaryColor().getB()).toBe(128/255);
+                    }
+                },
+                {
+                    "tag": "\\c",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getPrimaryColor().getR()).toBe(128/255);
+                        expect(event.getOverrides().getPrimaryColor().getG()).toBe(128/255);
+                        expect(event.getOverrides().getPrimaryColor().getB()).toBe(128/255);
+                    }
+                },
+                {
+                    "tag": "\\c",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getSecondaryColor().getR()).toBe(128/255);
+                        expect(event.getOverrides().getSecondaryColor().getG()).toBe(128/255);
+                        expect(event.getOverrides().getSecondaryColor().getB()).toBe(128/255);
+                    }
+                },
+                {
+                    "tag": "\\c",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getTertiaryColor().getR()).toBe(128/255);
+                        expect(event.getOverrides().getTertiaryColor().getG()).toBe(128/255);
+                        expect(event.getOverrides().getTertiaryColor().getB()).toBe(128/255);
+                    }
+                },
+                {
+                    "tag": "\\c",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getQuaternaryColor().getR()).toBe(128/255);
+                        expect(event.getOverrides().getQuaternaryColor().getG()).toBe(128/255);
+                        expect(event.getOverrides().getQuaternaryColor().getB()).toBe(128/255);
+                    }
+                },
+                {
+                    "tag": "\\clip",
+                    "test": (event) =>{
+                        expect(event.getLineOverrides().getClipInverted()).toBe(false);
+                        expect(Array.isArray(event.getLineOverrides().getClip())).toBe(true);
+                        let clip = event.getLineOverrides().getClip();
+                        expect(clip.length).toBe(4);
+                        expect(clip[0]).toBe(0);
+                        expect(clip[1]).toBe(0);
+                        expect(clip[2]).toBe(100);
+                        expect(clip[3]).toBe(101);
+                    }
+                },
+                {
+                    "tag": "\\clip",
+                    "test": (event) =>{
+                        expect(event.getLineOverrides().getClipInverted()).toBe(false);
+                        expect(Array.isArray(event.getLineOverrides().getClip())).toBe(true);
+                        let clip = event.getLineOverrides().getClip();
+                        expect(clip.length).toBe(2);
+                        expect(clip[0]).toBe(1);
+                        expect(clip[1]).toBe("m 0 0 l 100 0 100 101 0 101");
+                    }
+                },
+                {
+                    "tag": "\\fade",
+                    "test": (event) =>{
+                        expect(Array.isArray(event.getLineOverrides().getFade())).toBe(true);
+                        let fade = event.getLineOverrides().getFade();
+                        expect(fade.length).toBe(7);
+                        expect(fade[0]).toBe(1);
+                        expect(fade[1]).toBe(0);
+                        expect(fade[2]).toBe(1);
+                        expect(fade[3]).toBe(21);
+                        expect(fade[4]).toBe(22.25);
+                        expect(fade[5]).toBe(24.75);
+                        expect(fade[6]).toBe(26);
+                    }
+                },
+                {
+                    "tag": "\\fad",
+                    "test": (event) =>{
+                        expect(Array.isArray(event.getLineOverrides().getFade())).toBe(true);
+                        let fade = event.getLineOverrides().getFade();
+                        expect(fade.length).toBe(7);
+                        expect(fade[0]).toBe(0);
+                        expect(fade[1]).toBe(1);
+                        expect(fade[2]).toBe(0);
+                        expect(fade[3]).toBe(22);
+                        expect(fade[4]).toBe(23.25);
+                        expect(fade[5]).toBe(25.75);
+                        expect(fade[6]).toBe(27);
+                    }
+                },
+                {
+                    "tag": "\\fax",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getShearX()).toBe(5);
+                        expect(event.getOverrides().getShearY()).toBe(0);
+                    }
+                },
+                {
+                    "tag": "\\fay",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getShearX()).toBe(0);
+                        expect(event.getOverrides().getShearY()).toBe(5);
+                    },
+                },
+                {
+                    "tag": "\\fe",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getEncoding()).toBe(0);
+                    }
+                },
+                {
+                    "tag": "\\fn",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getFontName()).toBe("Open Sans");
+                    }
+                },
+                {
+                    "tag": "\\frx",
+                    "test": (event) =>{
+                        const rotation = event.getOverrides().getRotation();
+                        expect(Array.isArray(rotation)).toBe(true);
+                        expect(rotation[0]).toBe(45)
+                        expect(rotation[1]).toBe(0);
+                        expect(rotation[2]).toBe(0);
+                    }
+                },
+                {
+                    "tag": "\\fry",
+                    "test": (event) =>{
+                        const rotation = event.getOverrides().getRotation();
+                        expect(Array.isArray(rotation)).toBe(true);
+                        expect(rotation[0]).toBe(0)
+                        expect(rotation[1]).toBe(45);
+                        expect(rotation[2]).toBe(0);
+                    }
+                },
+                {
+                    "tag": "\\frx",
+                    "test": (event) =>{
+                        const rotation = event.getOverrides().getRotation();
+                        expect(Array.isArray(rotation)).toBe(true);
+                        expect(rotation[0]).toBe(0)
+                        expect(rotation[1]).toBe(0);
+                        expect(rotation[2]).toBe(45);
+                    }
+                },
+                {
+                        "tag": "\\fs+",
+                        "test": (event) =>{
+                            expect(event.getOverrides().getFontSizeMod()).toBe(20);
+                        }  
+                },
+                {
+                    "tag": "\\fs-",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getFontSizeMod()).toBe(-20);
+                    }  
+                },
+                {
+                    "tag": "\\fs",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getFontSize()).toBe(100);
+                    }
+                },
+                {
+                    "tag": "\\fscx",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getScaleX()).toBe(2);
+                        expect(event.getOverrides().getScaleY()).toBeNull();
+                    }
+                },
+                {
+                    "tag": "\\fscy",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getScaleX()).toBeNull();
+                        expect(event.getOverrides().getScaleY()).toBe(2);
+                    }
+                },
+                {
+                    "tag": "\\fsp",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getSpacing()).toBe(20);
+                    }
+                },
+                {
+                    "tag": "\\fsp",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getSpacing()).toBe(-20);
+                    }
+                },
+                {
+                    "tag": "\\i",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getItalic()).toBe(true);
+                    }
+                },
+                {
+                    "tag": "\\iclip",
+                    "test": (event) =>{
+                        expect(event.getLineOverrides().getClipInverted()).toBe(true);
+                        expect(Array.isArray(event.getLineOverrides().getClip())).toBe(true);
+                        let clip = event.getLineOverrides().getClip();
+                        expect(clip.length).toBe(4);
+                        expect(clip[0]).toBe(0);
+                        expect(clip[1]).toBe(0);
+                        expect(clip[2]).toBe(100);
+                        expect(clip[3]).toBe(101);
+                    }
+                },
+                {
+                    "tag": "\\iclip",
+                    "test": (event) =>{
+                        expect(event.getLineOverrides().getClipInverted()).toBe(true);
+                        expect(Array.isArray(event.getLineOverrides().getClip())).toBe(true);
+                        let clip = event.getLineOverrides().getClip();
+                        expect(clip.length).toBe(2);
+                        expect(clip[0]).toBe(1);
+                        expect(clip[1]).toBe("m 0 0 l 100 0 100 101 0 101");
+                    }
+                },
+                {
+                    "tag": "\\k",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getKaraokeMode()).toBe(sabre.KaraokeModes.COLOR_SWAP);
+                        expect(event.getOverrides().getKaraokeEnd()).toBe(41);
+                    }
+                },
+                {
+                    "tag": "\\K",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getKaraokeMode()).toBe(sabre.KaraokeModes.COLOR_SWEEP);
+                        expect(event.getOverrides().getKaraokeEnd()).toBe(42);
+                    }
+                },
+                {
+                    "tag": "\\kf",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getKaraokeMode()).toBe(sabre.KaraokeModes.COLOR_SWEEP);
+                        expect(event.getOverrides().getKaraokeEnd()).toBe(43);
+                    }
+                },
+                {
+                    "tag": "\\ko",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getKaraokeMode()).toBe(sabre.KaraokeModes.OUTLINE_TOGGLE);
+                        expect(event.getOverrides().getKaraokeEnd()).toBe(44);
+                    }
+                },
+                {
+                    "tag": "\\kt",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getKaraokeMode()).toBe(sabre.KaraokeModes.OFF);
+                        expect(event.getOverrides().getKaraokeEnd()).toBe(45);
+                    }
+                },
+                {
+                        "tag": "\\move",
+                        "test": (event) =>{
+                            const movement = event.getLineOverrides().getMovement();
+                            expect(Array.isArray(movement)).toBe(true);
+                            expect(movement[0]).toBe(0);
+                            expect(movement[1]).toBe(0);
+                            expect(movement[2]).toBe(100);
+                            expect(movement[3]).toBe(101);
+                            expect(movement[4]).toBe(45);
+                            expect(movement[5]).toBe(50);
+                        }
+                },
+                {
+                    "tag": "\\move",
+                    "test": (event) =>{
+                        const movement = event.getLineOverrides().getMovement();
+                        expect(Array.isArray(movement)).toBe(true);
+                        expect(movement[0]).toBe(0);
+                        expect(movement[1]).toBe(0);
+                        expect(movement[2]).toBe(100);
+                        expect(movement[3]).toBe(101);
+                        expect(movement[4]).toBe(47);
+                        expect(movement[5]).toBe(48);
+                    }
+                },
+                {
+                    "tag": "\\org",
+                    "test": (event) =>{
+                        const org = event.getLineOverrides().getRotationOrigin();
+                        expect(Array.isArray(org)).toBe(true);
+                        expect(org[0]).toBe(100);
+                        expect(org[1]).toBe(101);
+                    }
+                },
+                {
+                    "tag": "\\p",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getDrawingMode()).toBe(true);
+                        expect(event.getOverrides().getDrawingScale()).toBe(2);
+                    }
+                },
+                {
+                    "tag": "\\pbo",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getBaselineOffset()).toBe(5);
+                    }
+                },
+                {
+                    "tag": "\\pos",
+                    "test": (event) =>{
+                        const pos = event.getLineOverrides().getPosition();
+                        expect(Array.isArray(pos)).toBe(true);
+                        expect(pos[0]).toBe(100);
+                        expect(pos[1]).toBe(101);
+                    }
+                },
+                {
+                    "tag": "\\q",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getWrapStyle()).toBe(sabre.WrapStyleModes.SMART_INVERSE);
+                    }
+                },
+                {
+                    "tag": "\\r",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getWeight()).toBeNull();
+                    }
+                },
+                {
+                    "tag": "\\r",
+                    "test": (event) =>{
+                        expect(event.getStyle().getName()).toBe("Bold");
+                    }
+                },
+                {
+                    "tag": "\\s",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getStrikeout()).toBe(true);
+                    }
+                },
+                {
+                    "tag": "\\shad",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getShadowX()).toBe(2.82842712474619);
+                        expect(event.getOverrides().getShadowY()).toBe(2.82842712474619);
+                    }
+                },
+                {
+                    "tag": "\\xshad",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getShadowX()).toBe(5);
+                        expect(event.getOverrides().getShadowY()).toBeNull();
+                    }
+                },
+                {
+                    "tag": "\\yshad",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getShadowX()).toBeNull();
+                        expect(event.getOverrides().getShadowY()).toBe(5);
+                    }
+                },
+                {
+                    "tag": "\\t",
+                    "test": (event) =>{
+                        const transitionOverrides = event.getOverrides().getTransitions();
+                        expect(Array.isArray(transitionOverrides)).toBe(true);
+                        expect(transitionOverrides.length).toBe(1);
+                        expect(transitionOverrides[0].getTransitionStart()).toBe(58);
+                        expect(transitionOverrides[0].getTransitionEnd()).toBe(63);
+                        expect(transitionOverrides[0].getTransitionAcceleration()).toBe(1);
+                        expect(transitionOverrides[0].getFontSize()).toBe(200);
+                    }
+                },
+                {
+                    "tag": "\\t",
+                    "test": (event) =>{
+                        const transitionOverrides = event.getOverrides().getTransitions();
+                        expect(Array.isArray(transitionOverrides)).toBe(true);
+                        expect(transitionOverrides.length).toBe(1);
+                        expect(transitionOverrides[0].getTransitionStart()).toBe(59);
+                        expect(transitionOverrides[0].getTransitionEnd()).toBe(64);
+                        expect(transitionOverrides[0].getTransitionAcceleration()).toBe(2);
+                        expect(transitionOverrides[0].getFontSize()).toBe(200);
+                    }
+                },
+                {
+                    "tag": "\\t",
+                    "test": (event) =>{
+                        const transitionOverrides = event.getOverrides().getTransitions();
+                        expect(Array.isArray(transitionOverrides)).toBe(true);
+                        expect(transitionOverrides.length).toBe(1);
+                        expect(transitionOverrides[0].getTransitionStart()).toBe(61.25);
+                        expect(transitionOverrides[0].getTransitionEnd()).toBe(63.75);
+                        expect(transitionOverrides[0].getTransitionAcceleration()).toBe(1);
+                        expect(transitionOverrides[0].getFontSize()).toBe(200);
+                    }
+                },
+                {
+                    "tag": "\\t",
+                    "test": (event) =>{
+                        const transitionOverrides = event.getOverrides().getTransitions();
+                        expect(Array.isArray(transitionOverrides)).toBe(true);
+                        expect(transitionOverrides.length).toBe(1);
+                        expect(transitionOverrides[0].getTransitionStart()).toBe(62.25);
+                        expect(transitionOverrides[0].getTransitionEnd()).toBe(64.75);
+                        expect(transitionOverrides[0].getTransitionAcceleration()).toBe(2);
+                        expect(transitionOverrides[0].getFontSize()).toBe(200);
+                    }
+                },
+                {
+                    "tag": "\\u",
+                    "test": (event) =>{
+                        expect(event.getOverrides().getUnderline()).toBe(true);
+                    }
+                }
+            ];
+            const parser = new sabre.Parser(() => {});
+            const testFile = loadFile('tag_tests.ass');
+            const counters = {}; 
+            parser.load(testFile, (config) => {
+                for (let index = 1; index < config.renderer.events.length; index+=2) {
+                    const element = config.renderer.events[index];
+                    const testIndex = (index - 1) / 2;
+                    counters[tag_tests[testIndex].tag] = (counters[tag_tests[testIndex].tag] ?? 0) + 1;
+                    test(tag_tests[testIndex].tag+"  #"+counters[tag_tests[testIndex].tag], () => {
+                        tag_tests[testIndex].test(element);
+                    });
+                }
+            });
+        });
     });
 });

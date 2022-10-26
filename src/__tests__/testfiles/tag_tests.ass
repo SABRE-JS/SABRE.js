@@ -1,0 +1,79 @@
+[Script Info]
+Title: Test Script
+ScriptType: v4.00+
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+YCbCr Matrix: None
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,48,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1
+Style: Bold,Arial,48,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:05.00,Default,,0,0,0,,{\1a&H80}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:01.00,0:00:06.00,Default,,0,0,0,,{\2a&H80}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:02.00,0:00:07.00,Default,,0,0,0,,{\3a&H80}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:03.00,0:00:08.00,Default,,0,0,0,,{\4a&H80}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:04.00,0:00:09.00,Default,,0,0,0,,{\alpha&H80}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:05.00,0:00:10.00,Default,,0,0,0,,{\a10}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:06.00,0:00:11.00,Default,,0,0,0,,{\an5}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:07.00,0:00:12.00,Default,,0,0,0,,{\b1}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:08.00,0:00:13.00,Default,,0,0,0,,{\b800}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:09.00,0:00:14.00,Default,,0,0,0,,{\be5}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:10.00,0:00:15.00,Default,,0,0,0,,{\blur20}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:11.00,0:00:16.00,Default,,0,0,0,,{\bord5}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:12.00,0:00:17.00,Default,,0,0,0,,{\xbord5}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:13.00,0:00:18.00,Default,,0,0,0,,{\ybord5}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:14.00,0:00:19.00,Default,,0,0,0,,{\c&H808080&}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:15.00,0:00:20.00,Default,,0,0,0,,{\1c&H808080&}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:16.00,0:00:21.00,Default,,0,0,0,,{\2c&H808080&}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:17.00,0:00:22.00,Default,,0,0,0,,{\3c&H808080&}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:18.00,0:00:23.00,Default,,0,0,0,,{\4c&H808080&}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:19.00,0:00:24.00,Default,,0,0,0,,{\clip(0,0,100,101)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:20.00,0:00:25.00,Default,,0,0,0,,{\clip(1,m 0 0 l 100 0 100 101 0 101)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:21.00,0:00:26.00,Default,,0,0,0,,{\fade(0,255,0,0,1250,1250,0)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:22.00,0:00:27.00,Default,,0,0,0,,{\fad(1250,1250)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:23.00,0:00:28.00,Default,,0,0,0,,{\fax5}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:24.00,0:00:29.00,Default,,0,0,0,,{\fay5}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:25.00,0:00:30.00,Default,,0,0,0,,{\fe0}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:26.00,0:00:31.00,Default,,0,0,0,,{\fnOpen Sans}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:27.00,0:00:32.00,Default,,0,0,0,,{\frx45}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:28.00,0:00:33.00,Default,,0,0,0,,{\fry45}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:29.00,0:00:34.00,Default,,0,0,0,,{\frz45}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:30.00,0:00:35.00,Default,,0,0,0,,{\fs+20}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:31.00,0:00:36.00,Default,,0,0,0,,{\fs-20}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:32.00,0:00:37.00,Default,,0,0,0,,{\fs100}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:33.00,0:00:38.00,Default,,0,0,0,,{\fscx2}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:34.00,0:00:39.00,Default,,0,0,0,,{\fscy2}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:35.00,0:00:40.00,Default,,0,0,0,,{\fsp20}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:36.00,0:00:41.00,Default,,0,0,0,,{\fsp-20}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:37.00,0:00:42.00,Default,,0,0,0,,{\i1}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:38.00,0:00:43.00,Default,,0,0,0,,{\iclip(0,0,100,101)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:39.00,0:00:44.00,Default,,0,0,0,,{\iclip(1,m 0 0 l 100 0 100 101 0 101)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:40.00,0:00:45.00,Default,,0,0,0,,{\k100}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:41.00,0:00:46.00,Default,,0,0,0,,{\K100}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:42.00,0:00:47.00,Default,,0,0,0,,{\kf100}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:43.00,0:00:48.00,Default,,0,0,0,,{\ko100}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:44.00,0:00:49.00,Default,,0,0,0,,{\kt100}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:45.00,0:00:50.00,Default,,0,0,0,,{\move(0,0,100,101)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:46.00,0:00:51.00,Default,,0,0,0,,{\move(0,0,100,101,1000,2000)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:47.00,0:00:52.00,Default,,0,0,0,,{\org(100,101)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:48.00,0:00:53.00,Default,,0,0,0,,{\p2}m 0 0 l 100 0 100 101 0 101
+Dialogue: 0,0:00:49.00,0:00:54.00,Default,,0,0,0,,{\pbo5}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:50.00,0:00:55.00,Default,,0,0,0,,{\pos(100,101)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:51.00,0:00:56.00,Default,,0,0,0,,{\q3}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:52.00,0:00:57.00,Default,,0,0,0,,{\b1\r}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:53.00,0:00:58.00,Default,,0,0,0,,{\rBold}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:54.00,0:00:59.00,Default,,0,0,0,,{\s1}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:55.00,0:01:00.00,Default,,0,0,0,,{\shad4}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:56.00,0:01:01.00,Default,,0,0,0,,{\xshad5}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:57.00,0:01:02.00,Default,,0,0,0,,{\yshad5}This file tests Advanced Substation Alpha parsing.
+Comment: \t test needs to be expanded on 
+Dialogue: 0,0:00:58.00,0:01:03.00,Default,,0,0,0,,{\t(\fs200)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:00:59.00,0:01:04.00,Default,,0,0,0,,{\t(2,\fs200)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:01:00.00,0:01:05.00,Default,,0,0,0,,{\t(1250,3750,\fs200)}This file tests Advanced Substation Alpha parsing.
+Dialogue: 0,0:01:01.00,0:01:06.00,Default,,0,0,0,,{\t(1250,3750,2,\fs200)}This file tests Advanced Substation Alpha parsing.
+Comment: end \t tests
+Dialogue: 0,0:01:02.00,0:01:07.00,Default,,0,0,0,,{\u1}This file tests Advanced Substation Alpha parsing.

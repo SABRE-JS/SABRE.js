@@ -628,7 +628,6 @@ sabre["SSAStyleOverride"] = function () {
         "decreaseFontSizeMod": {
             value: function (/** number */ size) {
                 obj.fontSizeMod -= size;
-                if (obj.fontSizeMod < 0) obj.fontSizeMod = 0;
             },
             writable: false
         },
