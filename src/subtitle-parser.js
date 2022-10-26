@@ -1158,7 +1158,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     transitionTargetOverrides,
                     lineGlobalTransitionTargetOverrides
                 ) {
-                    let weight = global.parseInt(parameters[1], 10);
+                    let weight = global.parseInt(parameters[0], 10);
                     if (isNaN(weight)) return;
                     if (weight === 0) {
                         overrides.setWeight(400);
@@ -1573,6 +1573,50 @@ const parser_prototype = global.Object.create(global.Object, {
             {
                 ass_only: true,
                 ignore_exterior: true,
+                regular_expression: /^fad/,
+                /**
+                 * Handles basic fade animation.
+                 * @param {{start:number,end:number}} timeInfo
+                 * @param {function(SSAStyleDefinition):void} setStyle
+                 * @param {SSAStyleOverride} overrides
+                 * @param {SSALineStyleOverride} lineGlobalOverrides
+                 * @param {function(SSALineTransitionTargetOverride):void} addLineTransitionTargetOverrides
+                 * @param {Array<?string>} parameters
+                 * @param {boolean} isInTransition
+                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
+                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
+                 * @private
+                 */
+                tag_handler: function (
+                    timeInfo,
+                    setStyle,
+                    overrides,
+                    lineGlobalOverrides,
+                    addLineTransitionTargetOverrides,
+                    parameters,
+                    isInTransition,
+                    transitionTargetOverrides,
+                    lineGlobalTransitionTargetOverrides
+                ) {
+                    let t1 = global.parseInt(parameters[0], 10);
+                    let t2 = global.parseInt(parameters[1], 10);
+                    if (isNaN(t1) || isNaN(t2)) return;
+                    t1 = timeInfo.start + t1 / 1000;
+                    t2 = timeInfo.end - t2 / 1000;
+                    lineGlobalOverrides.setFade(
+                        0,
+                        1,
+                        0,
+                        timeInfo.start,
+                        t1,
+                        t2,
+                        timeInfo.end
+                    );
+                }
+            },
+            {
+                ass_only: true,
+                ignore_exterior: true,
                 regular_expression: /^fade/,
                 /**
                  * Handles advanced fade animation.
@@ -1615,10 +1659,10 @@ const parser_prototype = global.Object.create(global.Object, {
                         isNaN(t4)
                     )
                         return;
-                    t1 = timeInfo.start + t1 / 1000;
-                    t2 = timeInfo.start + t2 / 1000;
-                    t3 = timeInfo.end - t3 / 1000;
-                    t4 = timeInfo.end - t4 / 1000;
+                    t1 = timeInfo.start + (t1 / 1000);
+                    t2 = timeInfo.start + (t2 / 1000);
+                    t3 = timeInfo.end - (t3 / 1000);
+                    t4 = timeInfo.end - (t4 / 1000);
                     lineGlobalOverrides.setFade(
                         1 - (a1 & 0xff) / 255,
                         1 - (a2 & 0xff) / 255,
@@ -1627,50 +1671,6 @@ const parser_prototype = global.Object.create(global.Object, {
                         t2,
                         t3,
                         t4
-                    );
-                }
-            },
-            {
-                ass_only: true,
-                ignore_exterior: true,
-                regular_expression: /^fad/,
-                /**
-                 * Handles basic fade animation.
-                 * @param {{start:number,end:number}} timeInfo
-                 * @param {function(SSAStyleDefinition):void} setStyle
-                 * @param {SSAStyleOverride} overrides
-                 * @param {SSALineStyleOverride} lineGlobalOverrides
-                 * @param {function(SSALineTransitionTargetOverride):void} addLineTransitionTargetOverrides
-                 * @param {Array<?string>} parameters
-                 * @param {boolean} isInTransition
-                 * @param {SSATransitionTargetOverride} transitionTargetOverrides
-                 * @param {SSALineTransitionTargetOverride} lineGlobalTransitionTargetOverrides
-                 * @private
-                 */
-                tag_handler: function (
-                    timeInfo,
-                    setStyle,
-                    overrides,
-                    lineGlobalOverrides,
-                    addLineTransitionTargetOverrides,
-                    parameters,
-                    isInTransition,
-                    transitionTargetOverrides,
-                    lineGlobalTransitionTargetOverrides
-                ) {
-                    let t1 = global.parseInt(parameters[0], 10);
-                    let t2 = global.parseInt(parameters[1], 10);
-                    if (isNaN(t1) || isNaN(t2)) return;
-                    t1 = timeInfo.start + t1 / 1000;
-                    t2 = timeInfo.end - t2 / 1000;
-                    lineGlobalOverrides.setFade(
-                        0,
-                        1,
-                        0,
-                        timeInfo.start,
-                        t1,
-                        t2,
-                        timeInfo.end
                     );
                 }
             },
@@ -2461,6 +2461,7 @@ const parser_prototype = global.Object.create(global.Object, {
                                 break;
                             case "y":
                                 overrides.setShadowY(value);
+                                break;
                             default:
                             case null:
                                 if (value < 0) return;

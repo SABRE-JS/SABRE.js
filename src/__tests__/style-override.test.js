@@ -86,13 +86,6 @@ describe("style-override", () => {
                         defaultFontSize - diffFontSize
                     );
                 });
-
-                it("should return 0 if reduced value is less than 0", () => {
-                    styleOverride.setFontSizeMod(diffFontSize);
-                    styleOverride.decreaseFontSizeMod(defaultFontSize);
-                    expect(styleOverride.getFontSizeMod()).toBe(0);
-                    expect(defaultFontSize > diffFontSize).toBeTruthy();
-                });
             });
 
             describe("#resetFontSizeMod", () => {
