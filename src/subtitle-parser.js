@@ -1659,10 +1659,10 @@ const parser_prototype = global.Object.create(global.Object, {
                         isNaN(t4)
                     )
                         return;
-                    t1 = timeInfo.start + (t1 / 1000);
-                    t2 = timeInfo.start + (t2 / 1000);
-                    t3 = timeInfo.end - (t3 / 1000);
-                    t4 = timeInfo.end - (t4 / 1000);
+                    t1 = timeInfo.start + t1 / 1000;
+                    t2 = timeInfo.start + t2 / 1000;
+                    t3 = timeInfo.start + t3 / 1000;
+                    t4 = timeInfo.start + t4 / 1000;
                     lineGlobalOverrides.setFade(
                         1 - (a1 & 0xff) / 255,
                         1 - (a2 & 0xff) / 255,
@@ -3035,7 +3035,7 @@ const parser_prototype = global.Object.create(global.Object, {
             this._config = /** @type {RendererData} */ ({
                 "info": {},
                 "parser": {},
-                "renderer": {"default_wrap_style": sabre.WrapStyleModes.SMART}
+                "renderer": { "default_wrap_style": sabre.WrapStyleModes.SMART }
             });
             if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
                 //check for BOM
