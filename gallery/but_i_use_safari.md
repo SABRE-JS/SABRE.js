@@ -1,4 +1,4 @@
-# Gallery of Screnshots
+# Gallery of Screenshots
 
 ## "BuT I UsE SaFaRi" edition
 
