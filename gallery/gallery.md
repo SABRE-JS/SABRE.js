@@ -1,4 +1,4 @@
-# Gallery of Screnshots
+# Gallery of Screenshots
 
 ### 12/30/2021 - Subtitle Output Achieved!
 
