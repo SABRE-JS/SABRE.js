@@ -1,6 +1,6 @@
 #!/bin/sh
-. "$PWD/sbin/bootstrap.sh"
-. "$PWD/sbin/defines/tools-defines.sh"
+. "$PWD/scripts/bootstrap.sh"
+. "$SCRIPT_BIN_DIR/defines/tools-defines.sh"
 
 LOG_FILE="$PROJECT_ROOT/debug.log"
 rm -f $LOG_FILE

@@ -4,12 +4,12 @@
 
 Versions below 1.0.0 do not recieve security updates, likewise with git builds.
 
-| Version            | Supported          |
-| ------------------ | ------------------ |
-| 1.x.x              | :white_check_mark: |
-| > 1.x.x            | :white_check_mark: |
-| x.x.x-git-xxxx...  | :x:                |
-| < 1.0              | :x:                |
+| Version              | Supported          |
+| -------------------- | ------------------ |
+| 1.x.x                | :white_check_mark: |
+| > 1.x.x              | :white_check_mark: |
+| x.x.x-git-xxxx...    | :x:                |
+| < 0.2.0              | :x:                |
 
 ## Reporting a Vulnerability
 

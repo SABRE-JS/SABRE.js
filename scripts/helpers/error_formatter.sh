@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$PWD/sbin/bootstrap.sh"
+. "$PWD/scripts/bootstrap.sh"
 
 
 FORMATTER=$1
@@ -15,6 +15,7 @@ closure_error_formatter(){
     STATE=0
     while IFS= read -r input_line
     do
+        input_line="$(echo "$input_line" | sed "s/stdin/$2/")"
         if [ $STATE -eq 0 ]; then
             if (echo "$input_line" | grep -Eq "^\\s*.*?:[0-9]+:\\s+WARNING|ERROR\\s+-\\s+\\[.*?\\]\\s+.*\$"); then
                 STATE=1

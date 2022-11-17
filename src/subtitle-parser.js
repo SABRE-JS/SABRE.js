@@ -5,37 +5,13 @@
  |
  |-
  */
-/**
- * Determines if we are doing a debug build.
- * @private
- * @define {boolean}
- *
- */
-const ENABLE_DEBUG = true;
-//@include [util.js]
-//@include [global-constants.js]
-//@include [color.js]
-//@include [style.js]
-//@include [style-override.js]
-//@include [subtitle-event.js]
-//@include [renderer-main.js]
-if (typeof require !== "function" || ENABLE_DEBUG) {
-    sabre.import("util");
-    sabre.import("global-constants");
-    sabre.import("color");
-    sabre.import("style");
-    sabre.import("style-override");
-    sabre.import("subtitle-event");
-    sabre.import("renderer-main");
-} else {
-    require("./util.min.js");
-    require("./global-constants.min.js");
-    require("./color.min.js");
-    require("./style.min.js");
-    require("./style-override.min.js");
-    require("./subtitle-event.min.js");
-    require("./renderer-main.min.js");
-}
+//@include [util]
+//@include [global-constants]
+//@include [color]
+//@include [style]
+//@include [style-override]
+//@include [subtitle-event]
+//@include [renderer-main]
 
 /**
  * @fileoverview subtitle parser code for Substation Alpha and Advanced Substation Alpha.
@@ -43,7 +19,7 @@ if (typeof require !== "function" || ENABLE_DEBUG) {
 
 /**
  * @private
- * @typedef {!{info:Object,parser:Object,renderer:{events:Array<SSASubtitleEvent>}}}
+ * @typedef {!{info:Object,parser:Object,fontserver:Array<Font>,renderer:{events:Array<SSASubtitleEvent>}}}
  */
 var RendererData;
 
@@ -159,9 +135,10 @@ const parser_prototype = global.Object.create(global.Object, {
         writable: true
     },
 
-    _loadFont: {
+    _parseFont: {
         /**
-         * Function to load fonts.
+         * Function to parse fonts.
+         * @type {?function(ArrayBuffer):Font}
          * @private
          */
         value: null,
@@ -551,7 +528,6 @@ const parser_prototype = global.Object.create(global.Object, {
                         style.setName(value);
                         break;
                     case "Fontname":
-                        this._loadFont.call(null, value);
                         style.setFontName(value);
                         break;
                     case "Fontsize":
@@ -680,7 +656,6 @@ const parser_prototype = global.Object.create(global.Object, {
                         style.setName(value);
                         break;
                     case "Fontname":
-                        this._loadFont.call(null, value);
                         style.setFontName(value);
                         break;
                     case "Fontsize":
@@ -1778,7 +1753,6 @@ const parser_prototype = global.Object.create(global.Object, {
                 ) {
                     let fontName = parameters[0];
                     if (fontName === null) return;
-                    this._loadFont.call(null, fontName);
                     overrides.setFontName(/** string */ fontName);
                 }
             },
@@ -2896,20 +2870,78 @@ const parser_prototype = global.Object.create(global.Object, {
         writable: false
     },
 
-    _parseFontName: {
+    _decodeEmbeddedFile: {
         /**
-         * Handles font typing for embedded fonts.
+         * Decodes embedded files.
+         * @param {string} data 
+         * @returns {ArrayBuffer}
+         */
+        value: function(data){
+            const bindata = [];
+            for(let i = 0; i < data.length; i+=4){
+                let chardata = [];
+                for(let j = 0; j < 4; j++){
+                    chardata.push(data.charCodeAt(i) - 33);
+                }
+                bindata.push(((chardata[0]&0x3F)<<2)|((chardata[1]&0x30)>>>4));
+                bindata.push(((chardata[1]&0x0F)<<4)|((chardata[2]&0x3C)>>>2));
+                bindata.push(((chardata[2]&0x03)<<6)|(chardata[3]&0x3F));
+            }
+            const buffer = new ArrayBuffer(bindata.length);
+            const view = new Uint8Array(buffer);
+            for(let i = 0; i < bindata.length; i++){
+                view[i] = bindata[i];
+            }
+            return buffer;
+        },
+        writable: false
+    },
+
+    _handleEmbeddedFont: {
+        /**
+         * Handles embedded font entries.
+         * @private
+         * @param {string} line a line of the subtitle file.
+         */
+        value: (function(){
+            let data = "";
+            let fontNameData = null;
+            return function(line){
+                const foundFontname = line.indexOf("fontname:") === 0;
+                const foundHeading = line.indexOf("[") === 0 && line.indexOf("]") > 0;
+                if(data.length > 0 && fontNameData !== null && (line === "" || line.length < 80 || foundFontname || foundHeading)){
+                    if(!foundFontname||!foundHeading)
+                        data += line;
+                    this._config["renderer"]["fontserver"].push(this._parseFont(this._decodeEmbeddedFile(data)));
+                    data = "";
+                    if(foundHeading)
+                        return false;
+                    return true;
+                }
+                if(foundHeading){
+                    return false;
+                }
+                data += line;
+                return true;
+            };
+        })(),
+        writable: false
+    },
+
+    _parseEmbeddedFontName: {
+        /**
+         * Handles font names for embedded fonts.
          * @private
          * @param {string} internalName filename for encoded font.
          * @return {Object} Info on the font.
          */
         value: function (internalName) {
             let fontNameData =
-                /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff|woff2)$/.exec(
+                /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff)$/.exec(
                     internalName
                 );
             if (fontNameData === null) {
-                fontNameData = /^(.*)\.(ttf|otf|woff|woff2)$/.exec(
+                fontNameData = /^(.*)\.(ttf|otf|woff)$/.exec(
                     internalName
                 );
                 if (fontNameData === null)
@@ -2946,6 +2978,14 @@ const parser_prototype = global.Object.create(global.Object, {
          * @private
          */
         value: function (line) {
+            if (this._heading === "Fonts"){
+                if(this._handleEmbeddedFont(line))
+                    return;
+            }
+            /*if (this._heading === "Graphics"){
+                if(this._handleEmbeddedGraphics(line))
+                    return;
+            }*/
             if (line[0] === "[" && line[line.length - 1] === "]") {
                 //If it's a heading line.
                 this._heading = line.slice(1, line.length - 1); //Set the current heading.
@@ -3009,13 +3049,11 @@ const parser_prototype = global.Object.create(global.Object, {
 
     init: {
         /**
-         * Perform initialization of the library and all it's components. Load default fonts.
-         * @param {function(string):void} loadFont
+         * Perform initialization of the library and all it's components.
+         * @param {function(ArrayBuffer):Font} parseFont
          */
-        value: function (loadFont) {
-            this._loadFont = loadFont;
-            this._loadFont.call(null, "Arial");
-            this._loadFont.call(null, "Open Sans");
+        value: function (parseFont) {
+            this._parseFont = parseFont;
         },
         writable: false
     },
@@ -3024,10 +3062,11 @@ const parser_prototype = global.Object.create(global.Object, {
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
          * @param {string} subsText the passed subtitle file contents.
+         * @param {Array<Font>} fonts fonts nessisary for this subtitle file.
          * @param {function(RendererData):void} callback what we pass the results of the parsing to.
          * @return {void}
          */
-        value: function (subsText, callback) {
+        value: function (subsText, fonts, callback) {
             //Create new default style.
             let defaultStyle = new sabre.SSAStyleDefinition();
             defaultStyle.setName("Default");
@@ -3035,7 +3074,11 @@ const parser_prototype = global.Object.create(global.Object, {
             this._config = /** @type {RendererData} */ ({
                 "info": {},
                 "parser": {},
-                "renderer": { "default_wrap_style": sabre.WrapStyleModes.SMART }
+                "fontserver": fonts.slice(),
+                "renderer": {
+                    "default_wrap_style": sabre.WrapStyleModes.SMART,
+                    "default_collision_mode": sabre.CollisionModes.NORMAL
+                }
             });
             if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
                 //check for BOM
@@ -3056,9 +3099,12 @@ const parser_prototype = global.Object.create(global.Object, {
     }
 });
 
-sabre["Parser"] = function (loadFont) {
+/**
+ * @param {function(ArrayBuffer):Font} parseFont 
+ */
+sabre["Parser"] = function (parseFont) {
     let parser = global.Object.create(parser_prototype);
-    parser.init(loadFont);
+    parser.init(parseFont);
     return parser;
 };
 
@@ -3074,20 +3120,21 @@ const bitmapSupported =
 
 /**
  * The entry point for the library; returns the delegate for controlling the library.
- * @param {function(string):void} loadFont This parameter is a function that loads a font using the CSSFontLoading API for use by the library.
+ * @param {function(ArrayBuffer):Font} parseFont a function that returns an opentype.js Font object when passed an ArrayBuffer.
  */
 
-external["SABRERenderer"] = function (loadFont) {
-    let parser = new sabre["Parser"](loadFont);
+external["SABRERenderer"] = function (parseFont) {
+    let parser = new sabre["Parser"](parseFont);
     let renderer = new sabre.Renderer();
     return Object.freeze({
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
-         * @param {string} subsText
+         * @param {string} subsText the subtitle file's contents.
+         * @param {Array<Font>} fonts preloaded fonts nessisary for this subtitle file (one of these MUST be Arial).
          * @return {void}
          */
-        "loadSubtitles": function (subsText) {
-            parser["load"](subsText, (config) => renderer.load(config));
+        "loadSubtitles": function (subsText, fonts) {
+            parser["load"](subsText, fonts, (config) => renderer.load(config));
         },
         /**
          * Updates the resolution at which the subtitles are rendered (if the player is resized, for example).

@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$PWD/sbin/bootstrap.sh"
+. "$PWD/scripts/bootstrap.sh"
 
 IKVM_DOWNLOAD_URL="http://www.frijters.net/ikvmbin-8.1.5717.0.zip"
 

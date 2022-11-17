@@ -5,17 +5,10 @@
  |
  |-
  */
-/**
- * Determines if we are doing a debug build.
- * @private
- * @define {boolean}
- *
- */
-const ENABLE_DEBUG = true;
-//@include [color.js]
-//@include [style.js]
-//@include [style-override.js]
-//@include [subtitle-event.js]
+//@include [color]
+//@include [style]
+//@include [style-override]
+//@include [subtitle-event]
 /**
  * @fileoverview utility code and polyfills.
  */

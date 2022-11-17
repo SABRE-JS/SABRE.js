@@ -27,7 +27,7 @@ To view the gallery click [here](/gallery/gallery.md) if you're using a decent b
 * include/ -- Browser API definitions and internal API definitions for the Closure Compiler (Files in this folder aren't compiled).
 * bin/ -- Output directory for production code.
 * debugbin/ -- Output directory for debug code.
-* sbin/ -- Contains scripts that are run by the makefile.
+* scripts/ -- Contains scripts that are run by the makefile.
 * tbin/ -- Contains the Closure Compiler and other build tools.
 * temp_files/ -- Temporary files.
 * test/ -- Directory used when running the debug server. 
@@ -35,11 +35,13 @@ To view the gallery click [here](/gallery/gallery.md) if you're using a decent b
 ### Documentation
 How to include the library (from the jsdelivr CDN, this cdn is recommended as they publish usage statistics for each package):
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@sabre-js/sabre/dist/sabre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@sabre-js/sabre@latest/dist/sabre.min.js"></script>
 ```
 How to include the library (from the unpkg CDN, for the more privacy minded):
 ```html
-<script src="https://unpkg.com/@sabre-js/sabre/dist/sabre.min.js"></script>
+<script src="https://unpkg.com/opentype.js@latest/dist/opentype.min.js"></script>
+<script src="https://unpkg.com/@sabre-js/sabre@latest/dist/sabre.min.js"></script>
 ```
 
 You can retrieve an instance of the library by calling `sabre.SABRERenderer` like so from a `load` event handler:
@@ -47,47 +49,23 @@ You can retrieve an instance of the library by calling `sabre.SABRERenderer` lik
 let renderer;
 window.addEventListener("load",() => {
     let subs = "";
-    // load the contents of the subtitle file into subs
-    // pass the font loading function to the renderer
-    renderer = sabre.SABRERenderer(loadFont);
-    renderer.loadSubtitles(subs);
+    let fonts = [];
+    // load the contents of the subtitle file into subs.
+    // YOUR CODE HERE
+    // load the fonts using opentype.js and put them in
+    // the fonts array.
+    // YOUR CODE HERE
+    // pass the font parsing function to the renderer
+    renderer = sabre.SABRERenderer(parseFont);
+    renderer.loadSubtitles(subs,fonts);
     renderer.setViewport(1280,720); // use the video player's dimensions.
     // schedule your frame callback using either requestAnimationFrame or requestVideoFrameCallback
 });
 ```
-and passing it a function that loads fonts using the CSS Font loading API.
-
-Here we provide a font loading function that you can use for testing:
+and passing it a function that loads fonts using opentype.js as shown below:
 ```js
-function loadFont(name) {
-    // check if font is already loaded
-    if (!document.fonts.check("12px '" + name + "'")){
-        // if the name has an extension, load from local fonts
-        if (name.indexOf(".") !== -1) {
-            const newFont = new FontFace(name, `url(./fonts/${name})`);
-            newFont.load().then((font) => document.fonts.add(font));
-        }else{
-            // otherwise, load from google fonts and add stylesheet to document
-            let link = document.createElement("link");
-            link.setAttribute("rel", "stylesheet");
-            link.setAttribute("media", "print");
-            link.setAttribute("type", "text/css");
-            link.setAttribute("onload", "this.media='all';");
-            link.setAttribute(
-                "href",
-                `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
-            );
-            document.head.appendChild(link);
-        }        
-    }
-    //Force the font to load.
-    let force_load = document.createElement("span");
-    force_load.setAttribute(
-        "style",
-        `font-family: '${name}';position:absolute;top:-999999px;left:0px;`
-    );
-    force_load.appendChild(document.createTextNode("Force Load"));
-    document.body.appendChild(force_load);
+function parseFont(data) {
+    return opentype.parse(data);
 }
 ```
 
@@ -103,7 +81,7 @@ to render a frame of subtitles.
 #### Functions
 
 <dl>
-<dt><a href="#loadSubtitles">loadSubtitles(subsText)</a> ⇒ <code>void</code></dt>
+<dt><a href="#loadSubtitles">loadSubtitles(subsText, fonts)</a> ⇒ <code>void</code></dt>
 <dd><p>Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.</p>
 </dd>
 <dt><a href="#setViewport">setViewport(width, height)</a> ⇒ <code>void</code></dt>
@@ -123,14 +101,15 @@ to render a frame of subtitles.
 </dd>
 </dl>
 
-#### loadSubtitles(subsText) ⇒ <code>void</code>
+#### loadSubtitles(subsText, fonts) ⇒ <code>void</code>
 Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
 
 **Kind**: global function  
 
-| Param | Type |
-| --- | --- |
-| subsText | <code>string</code> | 
+| Param | Type | Description |
+| --- | --- | --- |
+| subsText | <code>string</code> | the subtitle file's contents. |
+| fonts | <code>Array.&lt;Font&gt;</code> | preloaded fonts nessisary for this subtitle file (one of these MUST be Arial). |
 
 <a name="setViewport"></a>
 

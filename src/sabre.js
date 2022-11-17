@@ -3,13 +3,6 @@
  *----------------
  *  sabre.js is copyright Patrick Rhodes Martin 2013-2022.
  */
-/**
- * Determines if we import *.min.js or *.js
- * @private
- * @define {boolean}
- *
- */
-const ENABLE_DEBUG = true;
 let scriptpath = "";
 {
     let scripturl;
@@ -68,7 +61,7 @@ let scriptpath = "";
         }
     }
 }
-if (typeof require !== "function" || ENABLE_DEBUG) {
+if (typeof require !== "function") {
     let includelog = Object.create(Object, {});
 
     /**
@@ -77,7 +70,7 @@ if (typeof require !== "function" || ENABLE_DEBUG) {
      * @param {function(boolean)=} callback Callback on success or failure.
      */
     sabre["import"] = function (scriptName, callback) {
-        if (!ENABLE_DEBUG) {
+        if (!DEBUG) {
             scriptName += ".min.js";
         } else {
             scriptName += ".js";
@@ -123,7 +116,7 @@ if (typeof require !== "function" || ENABLE_DEBUG) {
      * @param {function(boolean)=} callback Callback on success or failure.
      */
     sabre["include"] = function (scriptName, callback) {
-        if (!ENABLE_DEBUG) {
+        if (!DEBUG) {
             scriptName += ".min.js";
         } else {
             scriptName += ".js";

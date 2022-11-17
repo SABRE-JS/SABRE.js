@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$PWD/sbin/bootstrap.sh"
+. "$PWD/scripts/bootstrap.sh"
 
 find "$DEBUG_BIN_DIR/" -type f -not -name .gitignore | xargs rm -f 
 find "$BIN_DIR/" -type f -not -name .gitignore | xargs rm -f 

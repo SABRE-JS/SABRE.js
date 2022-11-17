@@ -1,22 +1,6 @@
-/**
- * Determines if we are doing a debug build.
- * @private
- * @define {boolean}
- *
- */
-const ENABLE_DEBUG = true;
-//@include [color.js]
-//@include [style.js]
-//@include [style-override.js]
-if (typeof require !== "function" || ENABLE_DEBUG) {
-    sabre.import("color");
-    sabre.import("style");
-    sabre.import("style-override");
-} else {
-    require("./color.min.js");
-    require("./style.min.js");
-    require("./style-override.min.js");
-}
+//@include [color]
+//@include [style]
+//@include [style-override]
 
 sabre["SSASubtitleEvent"] = function () {
     let obj = {

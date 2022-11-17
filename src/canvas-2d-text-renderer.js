@@ -8,34 +8,12 @@
 /**
  * @fileoverview advanced stubstation alpha subtitles text renderer.
  */
-/**
- * Determines if we are doing a debug build.
- * @private
- * @define {boolean}
- *
- */
-const ENABLE_DEBUG = true;
-//@include [util.js]
-//@include [global-constants.js]
-//@include [color.js]
-//@include [style.js]
-//@include [style-override.js]
-//@include [subtitle-event.js]
-if (typeof require !== "function" || ENABLE_DEBUG) {
-    sabre.import("util");
-    sabre.import("global-constants");
-    sabre.import("color");
-    sabre.import("style");
-    sabre.import("style-override");
-    sabre.import("subtitle-event");
-} else {
-    require("./util.min.js");
-    require("./global-constants.min.js");
-    require("./color.min.js");
-    require("./style.min.js");
-    require("./style-override.min.js");
-    require("./subtitle-event.min.js");
-}
+//@include [util]
+//@include [global-constants]
+//@include [color]
+//@include [style]
+//@include [style-override]
+//@include [subtitle-event]
 
 const text_renderer_prototype = global.Object.create(Object, {
     _initialized: {
@@ -74,19 +52,17 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
-    _lastFont: {
+    _fontInfo:{
         /**
-         * Cache the last font so that if it's the same we don't need to re-set the font as that's expensive (apparently).
-         * @type {string}
+         * @type {?{font:!Font,size:number,italic:boolean,foundItalic:boolean,weight:number,foundWeight:number}}
          */
-        value: "",
+        value: null,
         writable: true
     },
 
-    _fontSizeRatios: {
+    _requestFont:{
         /**
-         * Cache of font size ratios, because we don't want to set the font size twice.
-         * @type {Object<string,number>}
+         * @type {?function(string,number,boolean):!{font:Font,foundItalic:boolean,foundWeight:number}}
          */
         value: null,
         writable: true
@@ -154,7 +130,6 @@ const text_renderer_prototype = global.Object.create(Object, {
             }
             this._height = this._width = 1;
             this._ctx = this._canvas.getContext("2d", options);
-            this._fontSizeRatios = {};
             this._initialized = true;
         },
         writable: false
@@ -333,32 +308,14 @@ const text_renderer_prototype = global.Object.create(Object, {
             let fontName = overrides.getFontName() ?? style.getFontName();
             let fontWeight = overrides.getWeight() ?? style.getWeight();
             let fontItalicized = overrides.getItalic() ?? style.getItalic();
-            let font = "100px '" + fontName + "', 'Arial', 'Open Sans'";
-            font = fontWeight + " " + font;
-            if (fontItalicized) font = "italic " + font;
-            let fontSizeRatio = this._fontSizeRatios[font] ?? null;
-            let badFont = false;
-            if (fontSizeRatio === null) {
-                badFont = true;
-                this._ctx.font = font;
-                let measurements = this._ctx.measureText("Ij?!");
-                fontSizeRatio =
-                    100 /
-                    ((measurements.actualBoundingBoxDescent ?? 0) +
-                        (measurements.actualBoundingBoxAscent ?? 100));
-                this._fontSizeRatios[font] = fontSizeRatio;
-            }
-            font =
-                fontSize * fontSizeRatio +
-                "px '" +
-                fontName +
-                "', 'Arial', 'Open Sans'";
-            font = fontWeight + " " + font;
-            if (fontItalicized) font = "italic " + font;
-            if (this._lastFont !== font || badFont) {
-                this._ctx.font = font;
-                this._lastFont = font;
-            }
+            let {font,foundItalic,foundWeight} = this._requestFont(fontName,fontWeight,fontItalicized);
+            this._fontInfo = {};
+            this._fontInfo.font = font;
+            this._fontInfo.foundItalic = foundItalic;
+            this._fontInfo.foundWeight = foundWeight;
+            this._fontInfo.size = fontSize;
+            this._fontInfo.weight = fontWeight;
+            this._fontInfo.italic = fontItalicized;
         },
         writable: false
     },
@@ -578,26 +535,39 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    _drawTextWithRelativeKerning: {
+    _drawGlyphs: {
         /**
-         * Draws text with relative kerning.
-         * @param {string} text the text.
+         * Draws glyphs with specified kerning offset.
+         * @param {Array<Glyph>} glyphs the text.
          * @param {number} offsetX the offset of the text in the x coordinate.
          * @param {number} offsetY the offset of the text in the y coordinate.
-         * @param {number} kerning the amount to kern by.
+         * @param {number} kerning_offset the amount to offset kerning by.
          * @param {boolean} stroke if true, stroke text, if false fill it.
          */
-        value: function (text, offsetX, offsetY, kerning, stroke) {
-            let func = stroke ? this._ctx.strokeText : this._ctx.fillText;
+        value: function (glyphs, offsetX, offsetY, kerning_offset, stroke) {
             let letter_offset = 0;
-            for (let i = 0; i < text.length; i++) {
-                func.call(
-                    this._ctx,
-                    text[i],
-                    offsetX + (kerning * i + letter_offset),
-                    offsetY
-                );
-                letter_offset += this._ctx.measureText(text[i]).width;
+            const fontSize = this._fontInfo.size;
+            const fontUnitsScale = this._fontInfo.font.unitsPerEm || 1000;
+            const yoffset = (this._fontInfo.font.ascender * (fontSize/fontUnitsScale));
+            for (let i = 0; i < glyphs.length; i++) {
+                const path = glyphs[i].getPath(
+                    offsetX + letter_offset,
+                    offsetY + yoffset,
+                    fontSize
+                )
+                path.fill = null;
+                path.stroke = null;
+                path.draw(this._ctx);
+                if(stroke){
+                    this._ctx.stroke();
+                }else{
+                    this._ctx.fill();
+                }
+                let kerning = 0;
+                if(i+1 < glyphs.length){
+                    kerning += this._fontInfo.font.getKerningValue(glyphs[i],glyphs[i+1]);
+                }
+                letter_offset += ((glyphs[i].advanceWidth + kerning) * (fontSize/fontUnitsScale)) + kerning_offset;
             }
         },
         writable: false
@@ -615,7 +585,6 @@ const text_renderer_prototype = global.Object.create(Object, {
         value: function (time, event, pass, dryRun, mask) {
             if (!this._initialized) this._init();
 
-            let text = event.getText();
             let style = event.getStyle();
             let overrides = event.getOverrides();
             let lineOverrides = event.getLineOverrides();
@@ -642,22 +611,34 @@ const text_renderer_prototype = global.Object.create(Object, {
             let spacing = this._calcSpacing(time, style, overrides);
             let scale = this._calcScale(time, style, overrides);
 
+            let glyphs = this._fontInfo.font.stringToGlyphs(event.getText());
+            if(glyphs.length )
             //calculate size of text without scaling.
             {
-                let fontSize = this._calcFontSize(time, style, overrides);
-                let measurements = this._ctx.measureText(text);
-                this._offsetY += measurements.actualBoundingBoxAscent ?? 0;
-                this._offsetX += measurements.actualBoundingBoxLeft ?? 0;
-                this._width =
-                    (measurements.actualBoundingBoxLeft ?? 0) +
-                    (measurements.actualBoundingBoxRight ?? measurements.width);
-                this._textSpacingWidth = measurements.width;
-                if (spacing !== 0) {
-                    let kerning = spacing * (text.length - 1);
-                    this._width += kerning;
-                    this._textSpacingWidth += kerning;
-                }
+                const fontSize = this._fontInfo.size;
+                const fontUnitsScale = this._fontInfo.font.unitsPerEm||1000;
+                
                 this._height = fontSize;
+
+                this._textSpacingWidth = 0;
+
+                if(glyphs.length > 0) {
+                    const firstSpacing = Math.max(-glyphs[0].getBoundingBox().x1,0) * (fontSize/fontUnitsScale);
+                    const lastSpacing = Math.max(0,glyphs[glyphs.length-1].getBoundingBox().x2) * (fontSize/fontUnitsScale);
+                    this._offsetX += firstSpacing;
+
+                    this._width = firstSpacing+lastSpacing;
+                
+                    for(let i = 0; i < glyphs.length; i++){
+                        let kerning = 0;
+                        if(i+1 < glyphs.length){
+                            kerning += this._fontInfo.font.getKerningValue(glyphs[i],glyphs[i+1]);
+                        }
+                        kerning = ((glyphs[i].advanceWidth + kerning) * (fontSize/fontUnitsScale)) + spacing;
+                        this._textSpacingWidth += kerning;
+                        this._width += kerning;
+                    }
+                }
             }
 
             let borderStyle = event.getStyle().getBorderStyle();
@@ -740,7 +721,6 @@ const text_renderer_prototype = global.Object.create(Object, {
                         if (this._canvas.width < cwidth) {
                             this._canvas.width = cwidth;
                         }
-                        this._lastFont = "";
                     }
                 }
                 this._handleStyling(
@@ -775,21 +755,13 @@ const text_renderer_prototype = global.Object.create(Object, {
                             case sabre.BorderStyleModes.NORMAL:
                             default:
                                 {
-                                    if (spacing === 0) {
-                                        this._ctx.fillText(
-                                            text,
-                                            offsetXUnscaled,
-                                            offsetYUnscaled
-                                        );
-                                    } else {
-                                        this._drawTextWithRelativeKerning(
-                                            text,
-                                            offsetXUnscaled,
-                                            offsetYUnscaled,
-                                            spacing,
-                                            false
-                                        );
-                                    }
+                                    this._drawGlyphs(
+                                        glyphs,
+                                        offsetXUnscaled,
+                                        offsetYUnscaled,
+                                        spacing,
+                                        false
+                                    );
                                 }
                                 break;
                             case sabre.BorderStyleModes.SRT_STYLE:
@@ -813,170 +785,106 @@ const text_renderer_prototype = global.Object.create(Object, {
                         let outline_x_bigger = outline_x > outline_y;
                         let outline_gt_zero = outline_x > 0 && outline_y > 0;
                         this._ctx.fillStyle = this._ctx.strokeStyle;
-                        if (spacing === 0) {
-                            // Smear outline
-                            if (outline_x_bigger) {
-                                if (outline_gt_zero) {
-                                    for (
-                                        let i = -outline_x / outline_y;
-                                        i <= outline_x / outline_y;
-                                        i += outline_y / outline_x
-                                    ) {
-                                        this._ctx.strokeText(
-                                            text,
-                                            offsetXUnscaled + i,
-                                            offsetYUnscaled
-                                        );
-                                    }
-                                    this._ctx.fillText(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled
+                        // Smear outline
+                        if (outline_x_bigger) {
+                            if (outline_gt_zero) {
+                                for (
+                                    let i = -outline_x / outline_y;
+                                    i <= outline_x / outline_y;
+                                    i += outline_y / outline_x
+                                ) {
+                                    this._drawGlyphs(
+                                        glyphs,
+                                        offsetXUnscaled + i,
+                                        offsetYUnscaled,
+                                        spacing,
+                                        true
                                     );
-                                } else {
-                                    for (
-                                        let i = -outline_x;
-                                        i <= outline_x;
-                                        i++
-                                    ) {
-                                        this._ctx.fillText(
-                                            text,
-                                            offsetXUnscaled + i,
-                                            offsetYUnscaled
-                                        );
-                                    }
                                 }
+                                this._drawGlyphs(
+                                    glyphs,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled,
+                                    spacing,
+                                    false
+                                );
                             } else {
-                                if (outline_gt_zero) {
-                                    for (
-                                        let i = -outline_y / outline_x;
-                                        i <= outline_y / outline_x;
-                                        i += outline_x / outline_y
-                                    ) {
-                                        this._ctx.strokeText(
-                                            text,
-                                            offsetXUnscaled,
-                                            offsetYUnscaled + i
-                                        );
-                                    }
-                                    this._ctx.fillText(
-                                        text,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled
+                                for (
+                                    let i = -outline_x;
+                                    i <= outline_x;
+                                    i++
+                                ) {
+                                    this._drawGlyphs(
+                                        glyphs,
+                                        offsetXUnscaled + i,
+                                        offsetYUnscaled,
+                                        spacing,
+                                        false
                                     );
-                                } else {
-                                    for (
-                                        let i = -outline_y;
-                                        i <= outline_y;
-                                        i++
-                                    ) {
-                                        this._ctx.fillText(
-                                            text,
-                                            offsetXUnscaled,
-                                            offsetYUnscaled + i
-                                        );
-                                    }
                                 }
                             }
                         } else {
-                            // Smear outline
-                            if (outline_x_bigger) {
-                                if (outline_gt_zero) {
-                                    for (
-                                        let i = -outline_x / outline_y;
-                                        i <= outline_x / outline_y;
-                                        i += outline_y / outline_x
-                                    ) {
-                                        this._drawTextWithRelativeKerning(
-                                            text,
-                                            offsetXUnscaled + i,
-                                            offsetYUnscaled,
-                                            spacing,
-                                            true
-                                        );
-                                    }
-                                    this._drawTextWithRelativeKerning(
-                                        text,
+                            if (outline_gt_zero) {
+                                for (
+                                    let i = -outline_y / outline_x;
+                                    i <= outline_y / outline_x;
+                                    i += outline_x / outline_y
+                                ) {
+                                    this._drawGlyphs(
+                                        glyphs,
                                         offsetXUnscaled,
-                                        offsetYUnscaled,
+                                        offsetYUnscaled + i,
                                         spacing,
-                                        false
+                                        true
                                     );
-                                } else {
-                                    for (
-                                        let i = -outline_x;
-                                        i <= outline_x;
-                                        i++
-                                    ) {
-                                        this._drawTextWithRelativeKerning(
-                                            text,
-                                            offsetXUnscaled + i,
-                                            offsetYUnscaled,
-                                            spacing,
-                                            false
-                                        );
-                                    }
                                 }
+                                this._drawGlyphs(
+                                    glyphs,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled,
+                                    spacing,
+                                    false
+                                );
                             } else {
-                                if (outline_gt_zero) {
-                                    for (
-                                        let i = -outline_y / outline_x;
-                                        i <= outline_y / outline_x;
-                                        i += outline_x / outline_y
-                                    ) {
-                                        this._drawTextWithRelativeKerning(
-                                            text,
-                                            offsetXUnscaled,
-                                            offsetYUnscaled + i,
-                                            spacing,
-                                            true
-                                        );
-                                    }
-                                    this._drawTextWithRelativeKerning(
-                                        text,
+                                for (
+                                    let i = -outline_y;
+                                    i <= outline_y;
+                                    i++
+                                ) {
+                                    this._drawGlyphs(
+                                        glyphs,
                                         offsetXUnscaled,
-                                        offsetYUnscaled,
+                                        offsetYUnscaled + i,
                                         spacing,
                                         false
                                     );
-                                } else {
-                                    for (
-                                        let i = -outline_y;
-                                        i <= outline_y;
-                                        i++
-                                    ) {
-                                        this._drawTextWithRelativeKerning(
-                                            text,
-                                            offsetXUnscaled,
-                                            offsetYUnscaled + i,
-                                            spacing,
-                                            false
-                                        );
-                                    }
                                 }
                             }
                         }
                     } else {
-                        if (spacing === 0)
-                            this._ctx.fillText(
-                                text,
-                                offsetXUnscaled,
-                                offsetYUnscaled
-                            );
-                        else {
-                            this._drawTextWithRelativeKerning(
-                                text,
-                                offsetXUnscaled,
-                                offsetYUnscaled,
-                                spacing,
-                                false
-                            );
-                        }
+                        this._drawGlyphs(
+                            glyphs,
+                            offsetXUnscaled,
+                            offsetYUnscaled,
+                            spacing,
+                            false
+                        );
                     }
                 }
             }
         },
         writable: false
+    },
+
+    "setRequestFont": {
+        /**
+         * Sets the function used to request fonts from the font server.
+         * @param {!function(string,number,boolean):!{font:Font,foundItalic:boolean,foundWeight:number}} callback the callback function to fetch a font.
+         */
+        value: function(callback){
+            this._requestFont = callback;
+        },
+        writable:false
     },
 
     "setPixelScaleRatio": {

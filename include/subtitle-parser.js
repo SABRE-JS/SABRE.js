@@ -1,5 +1,5 @@
 /**
- * @typedef {!{info:Object,parser:Object,renderer:{events:Array<SSASubtitleEvent>}}}
+ * @typedef {!{info:Object,parser:Object,fontserver:Array<Font>,renderer:{events:Array<SSASubtitleEvent>}}}
  */
 var RendererData;
 

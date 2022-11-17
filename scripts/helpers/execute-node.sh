@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$PWD/sbin/bootstrap.sh"
+. "$PWD/scripts/bootstrap.sh"
 . "$SCRIPT_BIN_DIR/defines/tools-defines.sh"
 
 if [ ! -d "$TOOL_BIN_DIR/node_tools" ]; then 
