@@ -1,6 +1,7 @@
 /**
  * @typedef {!{
  *              renderEvent:function(number,SSASubtitleEvent,number,boolean,boolean):void,
+ *              setRequestFont:function(!function(string):!{font:Font,foundItalic:boolean,foundWeight:number}):void,
  *              setPixelScaleRatio:function(number,number):void,
  *              getOffset:function():Array<number>,
  *              getDimensions:function():Array<number>,

@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$PWD/sbin/bootstrap.sh"
+. "$PWD/scripts/bootstrap.sh"
 . "$SCRIPT_BIN_DIR/defines/tools-defines.sh"
 
 RESULT_NEW=0

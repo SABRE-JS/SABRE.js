@@ -5,28 +5,10 @@
  |
  |-
  */
-/**
- * Determines if we are doing a debug build.
- * @private
- * @define {boolean}
- *
- */
-const ENABLE_DEBUG = true;
-//@include [color.js]
-//@include [style.js]
-//@include [style-override.js]
-//@include [subtitle-event.js]
-if (typeof require !== "function" || ENABLE_DEBUG) {
-    sabre.import("color");
-    sabre.import("style");
-    sabre.import("style-override");
-    sabre.import("subtitle-event");
-} else {
-    require("./color.min.js");
-    require("./style.min.js");
-    require("./style-override.min.js");
-    require("./subtitle-event.min.js");
-}
+//@include [color]
+//@include [style]
+//@include [style-override]
+//@include [subtitle-event]
 /**
  * @private
  * @typedef {!{

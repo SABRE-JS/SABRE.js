@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$PWD/sbin/bootstrap.sh"
+. "$PWD/scripts/bootstrap.sh"
 
 if [ ! -x "$(command -v curl)" ]; then
     sudo apt-get update && sudo apt-get curl

@@ -1,6 +1,6 @@
 /**
  * @typedef {{
- *      load:function(!{info:Object,parser:Object,renderer:{events:Array<SSASubtitleEvent>}}):void,
+ *      load:function(RendererData):void,
  *      updateViewport:function(number,number):void,
  *      canRender:function():boolean,
  *      frame:function(number):void,

@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$PWD/sbin/bootstrap.sh"
+. "$PWD/scripts/bootstrap.sh"
 . "$SCRIPT_BIN_DIR/defines/tools-defines.sh"
 . "$SCRIPT_BIN_DIR/defines/closure-defines.sh"
 
@@ -42,25 +42,31 @@ do
             touch "$PROJECT_INCLUDE_DIR/$f"
         fi
 
+        SOURCE_CODE="$(cat "$PROJECT_SOURCE_DIR/$f")"
+
         WRAPPER="$CLOSURE_OUTPUT_WRAPPER_PREFIX$FILE_COUNT$CLOSURE_OUTPUT_WRAPPER_SUFFIX"
         DEBUG_PREFIX="$(echo "$WRAPPER" | sed 's/^\(.*\)%output%.*$/\1/g')"
         DEBUG_SUFFIX="$(echo "$WRAPPER" | sed 's/^.*%output%\(.*\)$/\1/g')"
-        echo "$DEBUG_PREFIX" > "$OUTPUT_FILE_DEBUG"
-        cat "$PROJECT_SOURCE_DIR/$f" >> "$OUTPUT_FILE_DEBUG"
-        echo "$DEBUG_SUFFIX" >> "$OUTPUT_FILE_DEBUG"
-
+        
 		INCLUDE_LIST="--externs '$PROJECT_INCLUDE_DIR/shared.include.js' --externs '$PROJECT_INCLUDE_DIR/sabre.js'"
-		FILES_TO_INCLUDE="$(cat "$PROJECT_SOURCE_DIR/$f" | grep -E "//@include \[..*?\]" | sed -E "s|//@include \[(..*?)\]|\1|g" | tr '\r\n' ' ' | tr '\n' ' ')"
-		for include in $FILES_TO_INCLUDE
+		FILES_TO_INCLUDE="$(echo "$SOURCE_CODE" | grep -E "//@include \[..*?\]" | sed -E "s|//@include \[(..*?)\]|\1.js|g" | tr '\r\n' ' ' | tr '\n' ' ')"
+        SOURCE_CODE_DEBUG="const DEBUG=true;$(echo "$SOURCE_CODE" | sed -E 's~//@include \[(..*?)\]~if(typeof require !== "function"){sabre.import("\1");}else{require("./\1.js");}~g')"
+        SOURCE_CODE_BUILD="const DEBUG=false;$(echo "$SOURCE_CODE" | sed -E 's~//@include \[(..*?)\]~if(typeof require !== "function"){sabre.import("\1");}else{require("./\1.min.js");}~g')"
+
+        echo "$DEBUG_PREFIX" > "$OUTPUT_FILE_DEBUG"
+        echo "$SOURCE_CODE_DEBUG" >> "$OUTPUT_FILE_DEBUG"
+        echo "$DEBUG_SUFFIX" >> "$OUTPUT_FILE_DEBUG"
+		
+        for include in $FILES_TO_INCLUDE
 		do
 			if [ ! "$include" = "$f" ]; then
 				INCLUDE_LIST="$INCLUDE_LIST --externs '$PROJECT_INCLUDE_DIR/$include'"
 			fi
 		done
-        $SCRIPT_BIN_DIR/helpers/execute-java.sh -jar "\"$TOOL_BIN_DIR/closure.jar\"" $CLOSURE_TYPE_INF --define='ENABLE_DEBUG=false' --jscomp_off=unknownDefines --jscomp_off=globalThis --jscomp_error=visibility --assume_function_wrapper --compilation_level=$CLOSURE_COMPILATION_LEVEL --warning_level=$CLOSURE_LOGGING_DETAIL --language_in=$CLOSURE_INPUT_LANGUAGE_VERSION --language_out=$CLOSURE_OUTPUT_LANGUAGE_VERSION --use_types_for_optimization=$CLOSURE_ENABLE_TYPED_OPTIMIZATION --assume_function_wrapper --output_wrapper="\"$CLOSURE_OUTPUT_WRAPPER_PREFIX$FILE_COUNT$CLOSURE_OUTPUT_WRAPPER_SUFFIX\"" $INCLUDE_LIST --js "\"$PROJECT_SOURCE_DIR/$f\"" --create_source_map "\"$OUTPUT_SOURCEMAP\"" --js_output_file "\"$OUTPUT_FILE\"" 2>&1 | $SCRIPT_BIN_DIR/helpers/error_formatter.sh closure | tee -a $LOG_FILE
+        echo "$SOURCE_CODE_BUILD" | $SCRIPT_BIN_DIR/helpers/execute-java.sh -jar "\"$TOOL_BIN_DIR/closure.jar\"" $CLOSURE_TYPE_INF --jscomp_off=unknownDefines --jscomp_off=globalThis --jscomp_error=visibility --assume_function_wrapper --compilation_level=$CLOSURE_COMPILATION_LEVEL --warning_level=$CLOSURE_LOGGING_DETAIL --language_in=$CLOSURE_INPUT_LANGUAGE_VERSION --language_out=$CLOSURE_OUTPUT_LANGUAGE_VERSION --use_types_for_optimization=$CLOSURE_ENABLE_TYPED_OPTIMIZATION --assume_function_wrapper --output_wrapper="\"$CLOSURE_OUTPUT_WRAPPER_PREFIX$FILE_COUNT$CLOSURE_OUTPUT_WRAPPER_SUFFIX\"" $INCLUDE_LIST --js - --create_source_map "\"$OUTPUT_SOURCEMAP\"" --js_output_file "\"$OUTPUT_FILE\"" 2>&1 | $SCRIPT_BIN_DIR/helpers/error_formatter.sh closure "$PROJECT_SOURCE_DIR/$f" | tee -a $LOG_FILE
         
         sed -i "s|$OUTPUT_FILE|$(basename $OUTPUT_FILE)|g" "$OUTPUT_SOURCEMAP"
-        sed -i "s|$PROJECT_SOURCE_DIR/$f|$(basename $f)|g" "$OUTPUT_SOURCEMAP"
+        sed -i "s|stdin|$(basename $f)|g" "$OUTPUT_SOURCEMAP"
 
         echo "" >> "$OUTPUT_FILE"
         echo "//# sourceMappingURL=$(basename "$OUTPUT_SOURCEMAP")" >> "$OUTPUT_FILE"

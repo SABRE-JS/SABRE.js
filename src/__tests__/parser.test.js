@@ -90,7 +90,7 @@ describe("Parser", () => {
         test("Does basic Advanced SubStation Alpha Subtitles parsing work?", () => {
             const parser = new sabre.Parser(() => {});
             const testFile = loadFile('test1.ass');
-            parser.load(testFile, (config) => {
+            parser.load(testFile, [], (config) => {
                 expect(config).not.toBeNull();
                 expect(config.info).not.toBeNull();
                 expect(config.parser).not.toBeNull();
@@ -125,7 +125,7 @@ describe("Parser", () => {
         test("Does Advanced SubStation Alpha Subtitles parsing work with arbitrary format ordering?", () => {
             const parser = new sabre.Parser(() => {});
             const testFile = loadFile('test2.ass');
-            parser.load(testFile, (config) => {
+            parser.load(testFile, [], (config) => {
                 expect(config).not.toBeNull();
                 expect(config.info).not.toBeNull();
                 expect(config.parser).not.toBeNull();
@@ -161,7 +161,7 @@ describe("Parser", () => {
         test("Does basic SubStation Alpha Subtitles parsing work?", () => {
             const parser = new sabre.Parser(() => {});
             const testFile = loadFile('test1.ssa');
-            parser.load(testFile, (config) => {
+            parser.load(testFile, [], (config) => {
                 expect(config).not.toBeNull();
                 expect(config.info).not.toBeNull();
                 expect(config.parser).not.toBeNull();
@@ -197,7 +197,7 @@ describe("Parser", () => {
         test("Does SubStation Alpha Subtitles parsing work with arbitrary format ordering?", () => {
             const parser = new sabre.Parser(() => {});
             const testFile = loadFile('test2.ssa');
-            parser.load(testFile, (config) => {
+            parser.load(testFile, [], (config) => {
                 expect(config).not.toBeNull();
                 expect(config.info).not.toBeNull();
                 expect(config.parser).not.toBeNull();
@@ -740,7 +740,7 @@ describe("Parser", () => {
             const parser = new sabre.Parser(() => {});
             const testFile = loadFile('tag_tests.ass');
             const counters = {}; 
-            parser.load(testFile, (config) => {
+            parser.load(testFile, [], (config) => {
                 for (let index = 1; index < config.renderer.events.length; index+=2) {
                     const element = config.renderer.events[index];
                     const testIndex = (index - 1) / 2;

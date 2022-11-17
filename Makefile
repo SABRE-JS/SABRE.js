@@ -3,7 +3,7 @@
 all: local
 
 _pre-commit:
-	@sh ./sbin/commands/pre-commit.sh
+	@sh ./scripts/commands/pre-commit.sh
 
 help:
 	@echo "Valid Targets:"
@@ -11,37 +11,37 @@ help:
 
 test:
 	@echo "Testing..."
-	@sh ./sbin/commands/test.sh
+	@sh ./scripts/commands/test.sh
 	
 pkg: test rebuild
 	@echo "Packaging..."
-	@sh ./sbin/commands/npm-package.sh
+	@sh ./scripts/commands/npm-package.sh
 
 run: local
 	@echo "Launching..."
-	@sh ./sbin/commands/local-debug.sh
+	@sh ./scripts/commands/local-debug.sh
 	
 local:
 	@echo "Compiling locally."
-	@sh ./sbin/commands/local-compile.sh
+	@sh ./scripts/commands/local-compile.sh
 	
 remote:
 	@echo "Compiling remotely."
-	@sh ./sbin/commands/remote-compile.sh
+	@sh ./scripts/commands/remote-compile.sh
 	
 clean:
 	@echo "Cleaning build directorys."
-	@sh ./sbin/commands/clean.sh
+	@sh ./scripts/commands/clean.sh
 	
 rebuild: clean local
 
 cleanup:
 	@echo "Cleaning up build tools."
-	@sh ./sbin/commands/cleanup.sh
+	@sh ./scripts/commands/cleanup.sh
 	
 buildfix: 
 	@echo "Fixing build tools."
-	@find ./sbin/ -name *.sh -print | xargs chmod +x
+	@find ./scripts/ -name *.sh -print | xargs chmod +x
 
 genreadme:
 	@jsdoc2md -d 4 --template README.hbs --files src/*.js > README.md

@@ -1,6 +1,6 @@
 bin/*
 build/*
-sbin/*
+scripts/*
 tbin/*
 tdata/*
 temp_files/*

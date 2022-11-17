@@ -5,55 +5,20 @@
  |
  |-
  */
-/**
- * Determines if we are doing a debug build.
- * @private
- * @define {boolean}
- *
- */
-const ENABLE_DEBUG = true;
-//@include [util.js]
-//@include [global-constants.js]
-//@include [color.js]
-//@include [style.js]
-//@include [style-override.js]
-//@include [subtitle-event.js]
-//@include [subtitle-parser.js]
-//@include [scheduler.js]
-//@include [shader.js]
-//@include [canvas-2d-text-renderer.js]
-//@include [canvas-2d-shape-renderer.js]
-//@include [lib/BSpline.js]
-//@include [lib/earcut.js]
-if (typeof require !== "function" || ENABLE_DEBUG) {
-    sabre.import("util");
-    sabre.import("global-constants");
-    sabre.import("color");
-    sabre.import("style");
-    sabre.import("style-override");
-    sabre.import("subtitle-event");
-    sabre.import("subtitle-parser");
-    sabre.import("scheduler");
-    sabre.import("shader");
-    sabre.import("canvas-2d-text-renderer");
-    sabre.import("canvas-2d-shape-renderer");
-    sabre.import("lib/BSpline");
-    sabre.import("lib/earcut");
-} else {
-    require("./util.min.js");
-    require("./global-constants.min.js");
-    require("./color.min.js");
-    require("./style.min.js");
-    require("./style-override.min.js");
-    require("./subtitle-event.min.js");
-    require("./subtitle-parser.min.js");
-    require("./scheduler.min.js");
-    require("./shader.min.js");
-    require("./canvas-2d-text-renderer.min.js");
-    require("./canvas-2d-shape-renderer.min.js");
-    require("./lib/BSpline.min.js");
-    require("./lib/earcut.min.js");
-}
+//@include [util]
+//@include [global-constants]
+//@include [color]
+//@include [style]
+//@include [style-override]
+//@include [subtitle-event]
+//@include [subtitle-parser]
+//@include [scheduler]
+//@include [shader]
+//@include [font-server]
+//@include [canvas-2d-text-renderer]
+//@include [canvas-2d-shape-renderer]
+//@include [lib/BSpline]
+//@include [lib/earcut]
 
 /**
  * @fileoverview webgl subtitle compositing code.
@@ -62,7 +27,7 @@ if (typeof require !== "function" || ENABLE_DEBUG) {
  * @private
  * @typedef {!{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number,alignmentOffsetX:number,alignmentOffsetY:number}}
  */
-var CollisionInfo;
+let CollisionInfo;
 /**
  * Is ImageBitmap Supported.
  * @type {boolean}
@@ -86,6 +51,12 @@ const renderer_prototype = global.Object.create(Object, {
 
     _scheduler: {
         /** @type {?SubtitleScheduler} */
+        value: null,
+        writable: true
+    },
+
+    _fontServer: {
+        /** @type {?FontServer} */
         value: null,
         writable: true
     },
@@ -275,18 +246,65 @@ const renderer_prototype = global.Object.create(Object, {
     //END LOCAL VARIABLES
     //BEGIN LOCAL FUNCTIONS
 
+    _findFont: {
+        value: function(name,weight,italic){
+            const fonts = this._fontServer.getFontsAndInfo(name);
+            let result = null;
+            let bestScore = 0;
+            for(let i = 0; i < fonts.length; i++){
+                let foundItalic = (fonts[i].selection & 1) > 0;
+                let foundWeight = fonts[i].weight;
+                let score = 0;
+                if(foundItalic === italic){
+                    score += 10;
+                }
+                score += 8-(Math.abs(weight-foundWeight)/100);
+                if(score > bestScore){
+                    bestScore = score;
+                    result = {"font":fonts[i].font,"foundItalic":foundItalic,"foundWeight":foundWeight};
+                    result["font"].ascender = fonts[i].ascent;
+                    result["font"].descender = -fonts[i].descent;
+                    result["font"].unitsPerEm = fonts[i].ascent + fonts[i].descent;
+                }
+            }
+            if(result === null){
+                const arial_fonts = this._fontServer.getFontsAndInfo("Arial");
+                for(let i = 0; i < arial_fonts.length; i++){
+                    let foundItalic = (arial_fonts[i].selection & 1) > 0;
+                    let foundWeight = arial_fonts[i].weight;
+                    let score = 0;
+                    if(foundItalic === italic){
+                        score += 10;
+                    }
+                    score += 8-(Math.abs(weight-foundWeight)/100);
+                    if(score > bestScore){
+                        bestScore = score;
+                        result = {"font":arial_fonts[i].font,"foundItalic":foundItalic,"foundWeight":foundWeight};
+                        result["font"].ascender = arial_fonts[i].ascent;
+                        result["font"].descender = -arial_fonts[i].descent;
+                        result["font"].unitsPerEm = arial_fonts[i].ascent + arial_fonts[i].descent;
+                    }
+                }
+            }
+            if(result === null)
+                throw "You forgot to include the font Arial.";
+            return result;
+        },
+        writable: false
+    },
+
     _bezierCurve: {
         value: function (t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
-            var cX = 3 * (p1x - p0x),
+            let cX = 3 * (p1x - p0x),
                 bX = 3 * (p2x - p1x) - cX,
                 aX = p3x - p0x - cX - bX;
 
-            var cY = 3 * (p1y - p0y),
+            let cY = 3 * (p1y - p0y),
                 bY = 3 * (p2y - p1y) - cY,
                 aY = p3y - p0y - cY - bY;
 
-            var x = aX * Math.pow(t, 3) + bX * Math.pow(t, 2) + cX * t + p0x;
-            var y = aY * Math.pow(t, 3) + bY * Math.pow(t, 2) + cY * t + p0y;
+            let x = aX * Math.pow(t, 3) + bX * Math.pow(t, 2) + cX * t + p0x;
+            let y = aY * Math.pow(t, 3) + bY * Math.pow(t, 2) + cY * t + p0y;
 
             return [x, y];
         },
@@ -420,7 +438,7 @@ const renderer_prototype = global.Object.create(Object, {
 
     _rectangleOffset: {
         value: function (x1, y1, w1, h1, x2, y2, w2, h2) {
-            var m = [0, 0];
+            let m = [0, 0];
             if (x1 >= x2 && x1 < x2 + w2 && y1 >= y2 && y1 < y2 + h2) {
                 if (
                     Math.pow(x1 + w1 - x2, 2) + Math.pow(y1 + h1 - y2, 2) <
@@ -1401,8 +1419,8 @@ const renderer_prototype = global.Object.create(Object, {
                         let styleMargins = style.getMargins();
                         let overrideMargins = overrides.getMargins();
                         {
-                            marginLeft = overrideMargins[0] || styleMargins[0];
-                            marginRight = overrideMargins[1] || styleMargins[1];
+                            marginLeft = overrideMargins[0] ?? styleMargins[0];
+                            marginRight = overrideMargins[1] ?? styleMargins[1];
                         }
                     }
 
@@ -3390,6 +3408,13 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {void}
          */
         value: function (config) {
+            this._fontServer = new sabre.FontServer(config);
+            const _this = this;
+            const requestFont = function(name,weight,italic){
+                return _this._findFont(name,weight,italic);
+            }
+            this._textRenderer.setRequestFont(requestFont);
+            this._textMaskRenderer.setRequestFont(requestFont);
             this._config = config;
             this._scheduler.setEvents(
                 /** @type {Array<SSASubtitleEvent>} */ (
@@ -3416,7 +3441,7 @@ const renderer_prototype = global.Object.create(Object, {
                 );
             }
 
-            var _this = this;
+            
             this._compositingCanvas.addEventListener(
                 "webglcontextlost",
                 function (event) {

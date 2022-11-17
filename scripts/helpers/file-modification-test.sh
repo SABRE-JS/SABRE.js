@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$PWD/sbin/bootstrap.sh"
+. "$PWD/scripts/bootstrap.sh"
 FORMAT_OPTION=-c
 FORMAT_TYPE="%Y"
 if [ "$NIX_TYPE" = "bsd" ]; then
