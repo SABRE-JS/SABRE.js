@@ -67,41 +67,6 @@ var Path;
 var Glyph;
 
 /**
- * @typedef {{tableName:string}}
- */
-var OpenTypeTable;
-
-/**
- * @typedef {{tableName:string,yMin:number,yMax:number}}
- */
-var HeadTable;
-
-/**
- * @typedef {{tableName:string,usWeightClass:number,fsSelection:number,usWinAscent:number,usWinDescent:number,sTypoAscent:number,sTypoDescent:number}}
- */
-var OS2Table
-
-/**
- * @typedef {{name:string,type:string}}
- */
- var NameTableEntry;
-
-/**
- * @typedef {{name:string,type:string,value:{platformID:number,nameID:number,encodingID:number,offset:number,length:number}}}
- */
-var RecordEntry
-
-/**
- * @typedef {{name:string,type:string,value:Array<number>}}
- */
-var StringsEntry;
-
-/**
- * @typedef {{tableName:string,fields:Array<NameTableEntry|RecordEntry|StringsEntry>}}
- */
-var NameTable;
-
-/**
- * @typedef {{unitsPerEm:number,ascender:number,descender:number,tables:{os2:{usWeightClass:number,fsSelection:number,usWinAscent:number,usWinDescent:number,sTypoAscent:number,sTypoDescent:number},name:{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}}},stringToGlyphs:function(string):Array<Glyph>,getKerningValue:function(Glyph,Glyph):number,toTables:function():{tables:Array<OpenTypeTable|OS2Table|NameTable>}}}
+ * @typedef {{unitsPerEm:number,ascender:number,descender:number,tables:{os2:{usWeightClass:number,fsSelection:number,usWinAscent:number,usWinDescent:number,sTypoAscent:number,sTypoDescent:number},name:{unicode:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}},macintosh:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}},windows:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}}}},stringToGlyphs:function(string):Array<Glyph>,getKerningValue:function(Glyph,Glyph):number}}
  */
 var Font;
