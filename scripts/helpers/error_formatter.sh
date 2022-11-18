@@ -15,7 +15,7 @@ closure_error_formatter(){
     STATE=0
     while IFS= read -r input_line
     do
-        input_line="$(echo "$input_line" | sed "s/stdin/$2/")"
+        input_line="$(echo "$input_line" | sed "s'stdin'$1'")"
         if [ $STATE -eq 0 ]; then
             if (echo "$input_line" | grep -Eq "^\\s*.*?:[0-9]+:\\s+WARNING|ERROR\\s+-\\s+\\[.*?\\]\\s+.*\$"); then
                 STATE=1
@@ -32,7 +32,7 @@ closure_error_formatter(){
 
 case $FORMATTER in
     closure)
-        closure_error_formatter
+        closure_error_formatter $2
         ;;
     *)
         echo "ERROR: Unknown error formatter" 1>&2

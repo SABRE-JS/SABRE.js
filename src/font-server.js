@@ -31,18 +31,10 @@ const nameTypes = Object.freeze({
     TRADEMARK: 7
 });
 
-const font_server_prototype = Object.create(Object,{
+const font_server_prototype = Object.create(Object, {
     _fonts: {
         /**
          * @type {?Array<Font>}
-         */
-        value: null,
-        writable: true
-    },
-
-    _fontTables : {
-        /**
-         * @type {?Array<{tables:Array<OpenTypeTable|OS2Table|NameTable>}>}
          */
         value: null,
         writable: true
@@ -59,36 +51,31 @@ const font_server_prototype = Object.create(Object,{
     _wcharByteArrayToString: {
         /**
          * converts a wchar byte array to a string.
-         * @param {Array<number>} arr 
+         * @param {Array<number>} arr
          * @returns {string}
          */
-        value: function(arr){
+        value: function (arr) {
             let array = [];
-            for (var i = 0; i < arr.length; i+=2) {
-                array.push(parseInt((arr[i]<<8)|arr[i+1], 10));
+            for (var i = 0; i < arr.length; i += 2) {
+                array.push(parseInt((arr[i] << 8) | arr[i + 1], 10));
             }
-            return String.fromCharCode.apply(null,array);
+            return String.fromCharCode.apply(null, array);
         },
         writable: false
     },
 
     init: {
-        value: function(config){
+        value: function (config) {
             this._fonts = config.fontserver;
-            //this._fontTables = [];
             this._fontMapping = {};
-            /*for(let i = 0; i < this._fonts.length; i++){
-                this._fontTables[i] = this._fonts[i].toTables();
-            }*/
         },
         writable: false
     },
 
     _fixUnsignedToSignedShort: {
-        value: function(num){
-            num = 0xFFFF & num;
-            if(num > 0x7FFF)
-                num = -(0xFFFF & ((~num)+1));
+        value: function (num) {
+            num = 0xffff & num;
+            if (num > 0x7fff) num = -(0xffff & (~num + 1));
             return num;
         },
         writable: false
@@ -97,115 +84,56 @@ const font_server_prototype = Object.create(Object,{
     "getFontsAndInfo": {
         /**
          * @private
-         * @param {string} name 
+         * @param {string} name
          * @returns {Array<{font:Font,ascent:number,descent:number,weight:number,selection:number}>} the resulting font and info.
          */
-        value: function(name){
+        value: function (name) {
             name = name.toLowerCase().trim();
-            if(this._fontMapping[name])
-                return this._fontMapping[name];
+            if (this._fontMapping[name]) return this._fontMapping[name];
             let results = [];
-            for(let i = 0; i < this._fonts.length; i++){
-                // /**
-                //  * @type {?NameTable}
-                //  */
-                // let namesTable = null;
-                // /**
-                //  * @type {?OS2Table}
-                //  */
-                // let os2Table = null;
-                // /**
-                //  * @type {?HeadTable}
-                //  */
-                // let headTable = null;
-                // const container = this._fontTables[i];
-                // for(let j = 0; j < container.tables.length && (namesTable === null || os2Table === null || headTable === null); j++)
-                // {
-                //     let table = /** @type {OpenTypeTable} */ (container.tables[j]);
-                //     if(table.tableName === "name"){
-                //         namesTable = /** @type {?NameTable} */ (table);
-                //     }
-                //     if(table.tableName === "OS/2"){
-                //         os2Table = /** @type {?OS2Table} */ (table);
-                //     }
-                //     if(table.tableName === "head"){
-                //         headTable = /** @type {?HeadTable} */ (table);
-                //     }
-                // }
-                // if(namesTable === null||os2Table === null)
-                //     continue;
-                // const fullnames = [];
-                // const familynames = [];
-                // const subfamilynames = [];
-                // {
-                //     const nameTargets = [];
-                //     let namesArray = null;
-                //     for(let j = 0; j < namesTable.fields.length; j++){
-                //         const field = /** @type {NameTableEntry} */ (namesTable.fields[j]);
-                //         if(field.name === "strings" && field.type === "LITERAL"){
-                //             namesArray = (/** @type {StringsEntry} */ (field)).value;
-                //         }else if(field.type === "RECORD"){
-                //             const record = (/** RecordEntry */ (field));
-                //             if(record.value.platformID === platforms.MICROSOFT){
-                //                 nameTargets.push({type:record.value.nameID,offset:record.value.offset,length:record.value.length})
-                //             }
-                //         }
-                //     }
-                //     if(namesArray === null)
-                //         continue;
-                //     for(let j = 0; j < nameTargets.length; j++){
-                //         const offset = nameTargets[j].offset;
-                //         const offset_end = nameTargets[j].offset+nameTargets[j].length;
-                //         const nameType = nameTargets[j].type;
-                //         const text = this._wcharByteArrayToString(namesArray.slice(offset,offset_end));
-                //         switch(nameType){
-                //             case nameTypes.FULL_NAME:
-                //                 fullnames.push(text);
-                //                 break;
-                //             case nameTypes.FONT_FAMILY:
-                //                 familynames.push(text);
-                //                 break;
-                //             case nameTypes.FONT_SUBFAMILY:
-                //                 subfamilynames.push(text);
-                //                 break;
-                //             default:
-                //                 break;
-                //         }
-                //     }
-                // }
-
-                // let add_font = false;
-                // for(let j = 0; j < fullnames.length && !add_font; j++){
-                //     if(fullnames[j].toLowerCase().trim() === name){
-                //         add_font = true;
-                //         break;
-                //     }
-                // }
-                // for(let j = 0; j < familynames.length && !add_font; j++){
-                //     if(familynames[j].toLowerCase().trim() === name){
-                //         add_font = true;
-                //         break;
-                //     }
-                // }
-                // for(let j = 0; j < familynames.length && !add_font; j++){
-                //     for(let k = 0; k < subfamilynames.length && !add_font; k++){
-                //         if((familynames[j].toLowerCase().trim() + " " + subfamilynames[k].toLowerCase().trim()) === name){
-                //             add_font = true;
-                //             break;
-                //         }
-                //     }
-                // }
-
-                let add_font = false;
-                let font_family = this._fonts[i].tables.name.fontFamily.en.toLowerCase().trim();
-                if(font_family === name)
-                    add_font = true;
-                if(this._fonts[i].tables.name.fullName.en.toLowerCase().trim() === nameTypes)
-                    add_font = true;
-                if(font_family + " " + this._fonts[i].tables.name.fontSubfamily.en.toLowerCase().trim() === name)
-                    add_font = true;
-                if(add_font)
-                    results.push({"font":this._fonts[i],"ascent":this._fixUnsignedToSignedShort(this._fonts[i].tables.os2.usWinAscent)||this._fonts[i].tables.os2.sTypoAscent||this._fonts[i].tables.head.yMax,"descent":this._fixUnsignedToSignedShort(this._fonts[i].tables.os2.usWinDescent)||(-(this._fonts[i].tables.os2.sTypoDescent||this._fonts[i].tables.head.yMin)),"weight":this._fonts[i].tables.os2.usWeightClass,"selection":this._fonts[i].tables.os2.fsSelection});
+            for (let i = 0; i < this._fonts.length; i++) {
+                let addFont = false;
+                const nameTable = this._fonts[i].tables.name;
+                const fontFamily =
+                    nameTable?.windows?.fontFamily?.en ??
+                    nameTable?.unicode?.unicode?.fontFamily?.en ??
+                    nameTable?.macintosh?.fontFamily?.en;
+                const fullName =
+                    nameTable?.windows?.fullName?.en ??
+                    nameTable?.unicode?.unicode?.fullName?.en ??
+                    nameTable?.macintosh?.fullName?.en;
+                if (fontFamily) {
+                    if (fontFamily.toLowerCase().trim() === name)
+                        addFont = true;
+                }
+                if (fullName) {
+                    if (fullName.toLowerCase().trim() === nameTypes)
+                        addFont = true;
+                }
+                if (addFont) {
+                    const font = this._fonts[i];
+                    const ascent =
+                        this._fixUnsignedToSignedShort(
+                            font.tables.os2.usWinAscent
+                        ) ||
+                        font.tables.os2.sTypoAscent ||
+                        font.tables.head.yMax;
+                    const descent =
+                        this._fixUnsignedToSignedShort(
+                            font.tables.os2.usWinDescent
+                        ) ||
+                        -(
+                            font.tables.os2.sTypoDescent ||
+                            font.tables.head.yMin
+                        );
+                    results.push({
+                        "font": font,
+                        "ascent": ascent,
+                        "descent": descent,
+                        "weight": font.tables.os2.usWeightClass,
+                        "selection": font.tables.os2.fsSelection
+                    });
+                }
             }
             this._fontMapping[name] = results;
             return results;
@@ -215,10 +143,10 @@ const font_server_prototype = Object.create(Object,{
 /**
  * Creates a FontServer
  * @private
- * @param {RendererData} config 
+ * @param {RendererData} config
  */
-sabre["FontServer"] = function(config){
+sabre["FontServer"] = function (config) {
     let server = Object.create(font_server_prototype);
-    server.init(config)
+    server.init(config);
     return server;
-}
+};
