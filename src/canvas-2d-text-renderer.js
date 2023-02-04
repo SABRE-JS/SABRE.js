@@ -52,7 +52,43 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
-    _fontInfo:{
+    _glyphs: {
+        /**
+         * The Glyphs that make up the event being rendered.
+         * @type {Array<Glyph>}
+         */
+        value: [],
+        writable: true
+    },
+
+    _glyphIndex: {
+        /**
+         * The index in the Glyphs array.
+         * @type {!number}
+         */
+        value: 0,
+        writable: true
+    },
+
+    _spacing: {
+        /**
+         * The relative kerning factor of the event being rendered.
+         * @type {number}
+         */
+        value: 0,
+        writable: true
+    },
+
+    _scale: {
+        /**
+         * The scale factors of the event being rendered.
+         * @type {{x:number,y:number}}
+         */
+        value: { x: 1, y: 1 },
+        writable: true
+    },
+
+    _fontInfo: {
         /**
          * @type {?{font:!Font,size:number,italic:boolean,foundItalic:boolean,weight:number,foundWeight:number}}
          */
@@ -60,7 +96,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
-    _requestFont:{
+    _requestFont: {
         /**
          * @type {?function(string,number,boolean):!{font:Font,foundItalic:boolean,foundWeight:number}}
          */
@@ -70,7 +106,7 @@ const text_renderer_prototype = global.Object.create(Object, {
 
     _offsetX: {
         /**
-         * The offset in the x coordinate.
+         * The internal offset in the x coordinate.
          * @type {number}
          */
         value: 0,
@@ -79,7 +115,25 @@ const text_renderer_prototype = global.Object.create(Object, {
 
     _offsetY: {
         /**
-         * The offset in the y coordinate.
+         * The internal offset in the y coordinate.
+         * @type {number}
+         */
+        value: 0,
+        writable: true
+    },
+
+    _eOffsetX: {
+        /**
+         * The external offset in the x coordinate.
+         * @type {number}
+         */
+        value: 0,
+        writable: true
+    },
+
+    _eOffsetY: {
+        /**
+         * The external offset in the y coordinate.
          * @type {number}
          */
         value: 0,
@@ -172,22 +226,9 @@ const text_renderer_prototype = global.Object.create(Object, {
     _setScale: {
         /**
          * Sets up the canvas to render to the correct scale.
-         * @param {number} time
-         * @param {SSAStyleDefinition} style
-         * @param {SSAStyleOverride} overrides
-         * @param {SSALineStyleOverride} lineOverrides
-         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
-         * @param {number} pass
          */
-        value: function (
-            time,
-            style,
-            overrides,
-            lineOverrides,
-            lineTransitionTargetOverrides,
-            pass
-        ) {
-            let scale = this._calcScale(time, style, overrides);
+        value: function () {
+            let scale = this._scale;
             this._ctx.scale(
                 scale.x * this._pixelScaleRatio.xratio,
                 scale.y * this._pixelScaleRatio.yratio
@@ -236,20 +277,8 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
-         * @param {SSALineStyleOverride} lineOverrides
-         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
-         * @param {number} pass
-         * @param {boolean} mask
          */
-        value: function (
-            time,
-            style,
-            overrides,
-            lineOverrides,
-            lineTransitionTargetOverrides,
-            pass,
-            mask
-        ) {
+        value: function (time, style, overrides) {
             let outline = this._calcOutline(time, style, overrides);
 
             this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
@@ -290,25 +319,17 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
-         * @param {SSALineStyleOverride} lineOverrides
-         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
-         * @param {number} pass
-         * @param {boolean} mask
          */
-        value: function (
-            time,
-            style,
-            overrides,
-            lineOverrides,
-            lineTransitionTargetOverrides,
-            pass,
-            mask
-        ) {
+        value: function (time, style, overrides) {
             let fontSize = this._calcFontSize(time, style, overrides);
             let fontName = overrides.getFontName() ?? style.getFontName();
             let fontWeight = overrides.getWeight() ?? style.getWeight();
             let fontItalicized = overrides.getItalic() ?? style.getItalic();
-            let {font,foundItalic,foundWeight} = this._requestFont(fontName,fontWeight,fontItalicized);
+            let { font, foundItalic, foundWeight } = this._requestFont(
+                fontName,
+                fontWeight,
+                fontItalicized
+            );
             this._fontInfo = {};
             this._fontInfo.font = font;
             this._fontInfo.foundItalic = foundItalic;
@@ -326,20 +347,10 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
-         * @param {SSALineStyleOverride} lineOverrides
-         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          * @param {boolean} mask
          */
-        value: function (
-            time,
-            style,
-            overrides,
-            lineOverrides,
-            lineTransitionTargetOverrides,
-            pass,
-            mask
-        ) {
+        value: function (time, style, overrides, pass, mask) {
             if (mask) {
                 if (
                     pass === sabre.RenderPasses.BACKGROUND &&
@@ -485,183 +496,154 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
-         * @param {SSALineStyleOverride} lineOverrides
-         * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          * @param {boolean} mask
          */
-        value: function (
-            time,
-            style,
-            overrides,
-            lineOverrides,
-            lineTransitionTargetOverrides,
-            pass,
-            mask
-        ) {
+        value: function (time, style, overrides, pass, mask) {
             this._ctx.textAlign = "left";
             this._ctx.textBaseline = "top";
             this._ctx.lineCap = "round";
             this._ctx.lineJoin = "round";
             //TODO: Strikeout/Strikethrough
-            this._setOutline(
-                time,
-                style,
-                overrides,
-                lineOverrides,
-                lineTransitionTargetOverrides,
-                pass,
-                mask
-            );
-            this._setFont(
-                time,
-                style,
-                overrides,
-                lineOverrides,
-                lineTransitionTargetOverrides,
-                pass,
-                mask
-            );
-            this._setColors(
-                time,
-                style,
-                overrides,
-                lineOverrides,
-                lineTransitionTargetOverrides,
-                pass,
-                mask
-            );
+            this._setOutline(time, style, overrides);
+            this._setFont(time, style, overrides);
+            this._setColors(time, style, overrides, pass, mask);
         },
         writable: false
     },
 
-    _drawGlyphs: {
+    _drawGlyph: {
         /**
          * Draws glyphs with specified kerning offset.
-         * @param {Array<Glyph>} glyphs the text.
+         * @param {Glyph} glyph the text.
          * @param {number} offsetX the offset of the text in the x coordinate.
          * @param {number} offsetY the offset of the text in the y coordinate.
-         * @param {number} kerning_offset the amount to offset kerning by.
          * @param {boolean} stroke if true, stroke text, if false fill it.
          */
-        value: function (glyphs, offsetX, offsetY, kerning_offset, stroke) {
+        value: function (glyph, offsetX, offsetY, stroke) {
             let letter_offset = 0;
             const fontSize = this._fontInfo.size;
             const fontUnitsScale = this._fontInfo.font.unitsPerEm || 1000;
-            const yoffset = (this._fontInfo.font.ascender * (fontSize/fontUnitsScale));
-            for (let i = 0; i < glyphs.length; i++) {
-                const path = glyphs[i].getPath(
-                    offsetX + letter_offset,
-                    offsetY + yoffset,
-                    fontSize
-                )
-                path.fill = null;
-                path.stroke = null;
-                path.draw(this._ctx);
-                if(stroke){
-                    this._ctx.stroke();
-                }else{
-                    this._ctx.fill();
-                }
-                let kerning = 0;
-                if(i+1 < glyphs.length){
-                    kerning += this._fontInfo.font.getKerningValue(glyphs[i],glyphs[i+1]);
-                }
-                letter_offset += ((glyphs[i].advanceWidth + kerning) * (fontSize/fontUnitsScale)) + kerning_offset;
+            const yoffset =
+                this._fontInfo.font.ascender * (fontSize / fontUnitsScale);
+            const path = glyph.getPath(
+                offsetX + letter_offset,
+                offsetY + yoffset,
+                fontSize
+            );
+            path.fill = null;
+            path.stroke = null;
+            path.draw(this._ctx);
+            if (stroke) {
+                this._ctx.stroke();
+            } else {
+                this._ctx.fill();
             }
         },
         writable: false
     },
 
-    "renderEvent": {
+    "calcBounds": {
         /**
-         * Render an event.
+         * Calculate the bounds of the subtitle.
          * @param {number} time the time relative to the start of the event.
-         * @param {SSASubtitleEvent} event the subtitle event to render
-         * @param {number} pass the pass we are on.
-         * @param {boolean} dryRun is this a dry run for positioning.
-         * @param {boolean} mask is this a mask for setable colors.
+         * @param {SSASubtitleEvent} event the subtitle event
          */
-        value: function (time, event, pass, dryRun, mask) {
+        value: function (time, event) {
             if (!this._initialized) this._init();
 
-            let style = event.getStyle();
-            let overrides = event.getOverrides();
-            let lineOverrides = event.getLineOverrides();
-            let lineTransitionTargetOverrides =
-                event.getLineTransitionTargetOverrides();
+            const style = event.getStyle();
+            const overrides = event.getOverrides();
+
+            this._setFont(time, style, overrides);
 
             this._offsetX = this._offsetY = 0;
+            this._eOffsetX = this._eOffsetY = 0;
 
-            //Reset the scaling from previous subtitles.
-            this._ctx.resetTransform();
+            const glyphs = this._fontInfo.font.stringToGlyphs(event.getText());
 
-            this._handleStyling(
-                time,
-                style,
-                overrides,
-                lineOverrides,
-                lineTransitionTargetOverrides,
-                pass,
-                mask
-            );
+            const spacing = this._calcSpacing(time, style, overrides);
+            const scale = this._calcScale(time, style, overrides);
 
-            let noDraw = false;
-            //These are used in multiple places, so to avoid recalculation we put it in the function scope.
-            let spacing = this._calcSpacing(time, style, overrides);
-            let scale = this._calcScale(time, style, overrides);
-
-            let glyphs = this._fontInfo.font.stringToGlyphs(event.getText());
-            if(glyphs.length )
-            //calculate size of text without scaling.
             {
                 const fontSize = this._fontInfo.size;
-                const fontUnitsScale = this._fontInfo.font.unitsPerEm||1000;
-                
+                const fontUnitsScale = this._fontInfo.font.unitsPerEm || 1000;
+
                 this._height = fontSize;
 
                 this._textSpacingWidth = 0;
 
-                if(glyphs.length > 0) {
-                    const firstSpacing = Math.max(-glyphs[0].getBoundingBox().x1,0) * (fontSize/fontUnitsScale);
-                    const lastSpacing = Math.max(0,glyphs[glyphs.length-1].getBoundingBox().x2) * (fontSize/fontUnitsScale);
+                if (glyphs.length > 0) {
+                    const firstSpacing =
+                        Math.max(-glyphs[0].getBoundingBox().x1, 0) *
+                        (fontSize / fontUnitsScale);
+                    const lastSpacing =
+                        Math.max(
+                            0,
+                            glyphs[glyphs.length - 1].getBoundingBox().x2
+                        ) *
+                        (fontSize / fontUnitsScale);
                     this._offsetX += firstSpacing;
 
-                    this._width = firstSpacing+lastSpacing;
-                
-                    for(let i = 0; i < glyphs.length; i++){
+                    this._width = firstSpacing + lastSpacing;
+
+                    for (let i = 0; i < glyphs.length; i++) {
                         let kerning = 0;
-                        if(i+1 < glyphs.length){
-                            kerning += this._fontInfo.font.getKerningValue(glyphs[i],glyphs[i+1]);
+                        if (i + 1 < glyphs.length) {
+                            kerning = this._fontInfo.font.getKerningValue(
+                                glyphs[i],
+                                glyphs[i + 1]
+                            );
                         }
-                        kerning = ((glyphs[i].advanceWidth + kerning) * (fontSize/fontUnitsScale)) + spacing;
+                        kerning =
+                            (glyphs[i].advanceWidth + kerning) *
+                                (fontSize / fontUnitsScale) +
+                            spacing;
                         this._textSpacingWidth += kerning;
                         this._width += kerning;
                     }
                 }
             }
 
-            let borderStyle = event.getStyle().getBorderStyle();
-
-            //pad for outline
-            let outline_x = 0;
-            let outline_y = 0;
-
-            if (
-                pass === sabre.RenderPasses.OUTLINE ||
-                pass === sabre.RenderPasses.BACKGROUND
-            ) {
-                let outline = this._calcOutline(time, style, overrides);
-                this._width += outline.x * 2;
-                this._height += outline.y * 2;
-                this._offsetX += outline.x;
-                this._offsetY += outline.y;
-                outline_x = outline.x;
-                outline_y = outline.y;
+            {
+                this._offsetX *= scale.x * this._pixelScaleRatio.xratio;
+                this._offsetY *= scale.y * this._pixelScaleRatio.yratio;
+                this._width *= scale.x * this._pixelScaleRatio.xratio;
+                this._textSpacingWidth *=
+                    scale.x * this._pixelScaleRatio.xratio;
+                this._height *= scale.y * this._pixelScaleRatio.yratio;
             }
+        }
+    },
 
-            let offsetXUnscaled = this._offsetX;
-            let offsetYUnscaled = this._offsetY;
+    "startEventRender": {
+        /**
+         * Starts the rendering of an event.
+         * @param {number} time the time relative to the start of the event.
+         * @param {SSASubtitleEvent} event the subtitle event to render
+         * @param {number} pass the pass we are on.
+         * @param {boolean} mask is this a mask for setable colors.
+         */
+        value: function (time, event, pass, mask) {
+            if (!this._initialized) this._init();
+
+            const style = event.getStyle();
+            const overrides = event.getOverrides();
+
+            this._offsetX = this._offsetY = 0;
+            this._eOffsetX = this._eOffsetY = 0;
+            this._glyphIndex = 0;
+
+            this._handleStyling(time, style, overrides, pass, mask);
+
+            this._glyphs = this._fontInfo.font.stringToGlyphs(event.getText());
+
+            this._spacing = this._calcSpacing(time, style, overrides);
+            this._scale = this._calcScale(time, style, overrides);
+
+            this._noDraw = false;
+
+            const borderStyle = style.getBorderStyle();
 
             if (pass === sabre.RenderPasses.BACKGROUND) {
                 if (
@@ -676,25 +658,132 @@ const text_renderer_prototype = global.Object.create(Object, {
                     let shadowX = overrides.getShadowX() ?? shadowComponent;
                     let shadowY = overrides.getShadowY() ?? shadowComponent;
 
-                    if (shadowX === 0 && shadowY === 0) noDraw = true;
+                    if (shadowX === 0 && shadowY === 0) {
+                        this._noDraw = true;
+                        return;
+                    }
 
-                    this._offsetX -= shadowX;
-                    this._offsetY -= shadowY;
+                    this._eOffsetX +=
+                        shadowX * this._scale.x * this._pixelScaleRatio.xratio;
+                    this._eOffsetY +=
+                        shadowY * this._scale.y * this._pixelScaleRatio.yratio;
                 } else if (borderStyle === sabre.BorderStyleModes.NONE) {
-                    noDraw = true;
+                    this._noDraw = true;
                 }
+            }
+        },
+        writable: false
+    },
+
+    "renderGlyph": {
+        /**
+         * Render a glyph for composition.
+         * @param {number} time the time relative to the start of the event.
+         * @param {SSASubtitleEvent} event the subtitle event to render
+         * @param {number} pass the pass we are on.
+         * @param {boolean} mask is this a mask for setable colors.
+         * @returns {boolean} should break out of the render loop.
+         */
+        value: function (time, event, pass, mask) {
+            let style = event.getStyle();
+            let overrides = event.getOverrides();
+            let lineOverrides = event.getLineOverrides();
+            let lineTransitionTargetOverrides =
+                event.getLineTransitionTargetOverrides();
+
+            const borderStyle = style.getBorderStyle();
+
+            //Reset the scaling from previous subtitles.
+            this._ctx.resetTransform();
+
+            this._offsetX = this._offsetY = 0;
+            if (
+                this._glyphs.length <= 0 ||
+                this._glyphIndex >= this._glyphs.length ||
+                this._noDraw
+            ) {
+                this._width = 0;
+                this._height = 0;
+                this._textSpacingWidth = 0;
+                return true;
+            }
+
+            const prevGlyph =
+                this._glyphIndex - 1 >= 0
+                    ? this._glyphs[this._glyphIndex - 1]
+                    : null;
+            const glyph = this._glyphs[this._glyphIndex];
+            const result = ++this._glyphIndex >= this._glyphs.length;
+            //calculate size of text without scaling.
+            {
+                const fontSize = this._fontInfo.size;
+                const fontUnitsScale = this._fontInfo.font.unitsPerEm || 1000;
+
+                this._height =
+                    fontSize * this._scale.y * this._pixelScaleRatio.yratio;
+
+                const bb = glyph.getBoundingBox();
+                const firstSpacing =
+                    Math.max(-bb.x1, 0) * (fontSize / fontUnitsScale);
+                const lastSpacing =
+                    Math.max(0, bb.x2) * (fontSize / fontUnitsScale);
+                this._offsetX += firstSpacing;
+                if (prevGlyph) {
+                    const kerning = this._fontInfo.font.getKerningValue(
+                        prevGlyph,
+                        glyph
+                    );
+                    this._eOffsetX +=
+                        ((kerning + prevGlyph.advanceWidth) *
+                            (fontSize / fontUnitsScale) +
+                            this._spacing) *
+                        this._scale.x *
+                        this._pixelScaleRatio.xratio;
+                }
+                this._textSpacingWidth =
+                    glyph.advanceWidth *
+                    this._scale.x *
+                    this._pixelScaleRatio.xratio;
+                this._width =
+                    (firstSpacing + lastSpacing) *
+                    this._scale.x *
+                    this._pixelScaleRatio.xratio;
+            }
+
+            //pad for outline
+            let outline_x = 0;
+            let outline_y = 0;
+
+            if (
+                pass === sabre.RenderPasses.OUTLINE ||
+                pass === sabre.RenderPasses.BACKGROUND
+            ) {
+                let outline = this._calcOutline(time, style, overrides);
+                this._width +=
+                    outline.x *
+                    2 *
+                    this._scale.x *
+                    this._pixelScaleRatio.xratio;
+                this._height +=
+                    outline.y *
+                    2 *
+                    this._scale.y *
+                    this._pixelScaleRatio.yratio;
+                this._offsetX += outline.x;
+                this._offsetY += outline.y;
+                outline_x = outline.x;
+                outline_y = outline.y;
+            }
+
+            let offsetXUnscaled = this._offsetX;
+            let offsetYUnscaled = this._offsetY;
+
+            {
+                this._offsetX *= this._scale.x * this._pixelScaleRatio.xratio;
+                this._offsetY *= this._scale.y * this._pixelScaleRatio.yratio;
             }
 
             {
-                this._offsetX *= scale.x * this._pixelScaleRatio.xratio;
-                this._offsetY *= scale.y * this._pixelScaleRatio.yratio;
-                this._width *= scale.x * this._pixelScaleRatio.xratio;
-                this._textSpacingWidth *=
-                    scale.x * this._pixelScaleRatio.xratio;
-                this._height *= scale.y * this._pixelScaleRatio.yratio;
-            }
-
-            if (!dryRun) {
                 {
                     let cwidth = Math.max(
                         Math.max(Math.ceil(this._width), 64),
@@ -723,15 +812,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                         }
                     }
                 }
-                this._handleStyling(
-                    time,
-                    style,
-                    overrides,
-                    lineOverrides,
-                    lineTransitionTargetOverrides,
-                    pass,
-                    mask
-                ); //To workaround a bug.
+                this._handleStyling(time, style, overrides, pass, mask); //To workaround a bug.
 
                 this._setScale(
                     time,
@@ -746,132 +827,109 @@ const text_renderer_prototype = global.Object.create(Object, {
                 //reset the composite operation
                 this._ctx.globalCompositeOperation = "source-over";
                 //draw the text
-                if (!noDraw) {
-                    if (pass === sabre.RenderPasses.BACKGROUND) {
-                        switch (borderStyle) {
-                            case sabre.BorderStyleModes.NONE:
-                                return;
-                            case sabre.BorderStyleModes.UNKNOWN:
-                            case sabre.BorderStyleModes.NORMAL:
-                            default:
-                                {
-                                    this._drawGlyphs(
-                                        glyphs,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled,
-                                        spacing,
-                                        false
-                                    );
-                                }
-                                break;
-                            case sabre.BorderStyleModes.SRT_STYLE:
-                            case sabre.BorderStyleModes.SRT_NO_OVERLAP:
-                                this._ctx.fillRect(
-                                    0,
-                                    0,
-                                    this._width,
-                                    this._height
-                                );
-                                break;
-                        }
-                    } else if (pass === sabre.RenderPasses.OUTLINE) {
-                        if (
-                            borderStyle === sabre.BorderStyleModes.NONE ||
-                            borderStyle === sabre.BorderStyleModes.SRT_STYLE ||
-                            borderStyle ===
-                                sabre.BorderStyleModes.SRT_NO_OVERLAP
-                        )
-                            return;
-                        let outline_x_bigger = outline_x > outline_y;
-                        let outline_gt_zero = outline_x > 0 && outline_y > 0;
-                        this._ctx.fillStyle = this._ctx.strokeStyle;
-                        // Smear outline
-                        if (outline_x_bigger) {
-                            if (outline_gt_zero) {
-                                for (
-                                    let i = -outline_x / outline_y;
-                                    i <= outline_x / outline_y;
-                                    i += outline_y / outline_x
-                                ) {
-                                    this._drawGlyphs(
-                                        glyphs,
-                                        offsetXUnscaled + i,
-                                        offsetYUnscaled,
-                                        spacing,
-                                        true
-                                    );
-                                }
-                                this._drawGlyphs(
-                                    glyphs,
+                if (pass === sabre.RenderPasses.BACKGROUND) {
+                    switch (borderStyle) {
+                        case sabre.BorderStyleModes.NONE:
+                            return result;
+                        case sabre.BorderStyleModes.UNKNOWN:
+                        case sabre.BorderStyleModes.NORMAL:
+                        default:
+                            {
+                                this._drawGlyph(
+                                    glyph,
                                     offsetXUnscaled,
                                     offsetYUnscaled,
-                                    spacing,
                                     false
                                 );
-                            } else {
-                                for (
-                                    let i = -outline_x;
-                                    i <= outline_x;
-                                    i++
-                                ) {
-                                    this._drawGlyphs(
-                                        glyphs,
-                                        offsetXUnscaled + i,
-                                        offsetYUnscaled,
-                                        spacing,
-                                        false
-                                    );
-                                }
                             }
-                        } else {
-                            if (outline_gt_zero) {
-                                for (
-                                    let i = -outline_y / outline_x;
-                                    i <= outline_y / outline_x;
-                                    i += outline_x / outline_y
-                                ) {
-                                    this._drawGlyphs(
-                                        glyphs,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled + i,
-                                        spacing,
-                                        true
-                                    );
-                                }
-                                this._drawGlyphs(
-                                    glyphs,
-                                    offsetXUnscaled,
+                            break;
+                        case sabre.BorderStyleModes.SRT_STYLE:
+                        case sabre.BorderStyleModes.SRT_NO_OVERLAP:
+                            this._ctx.fillRect(0, 0, this._width, this._height);
+                            break;
+                    }
+                } else if (pass === sabre.RenderPasses.OUTLINE) {
+                    if (
+                        borderStyle === sabre.BorderStyleModes.NONE ||
+                        borderStyle === sabre.BorderStyleModes.SRT_STYLE ||
+                        borderStyle === sabre.BorderStyleModes.SRT_NO_OVERLAP
+                    )
+                        return result;
+                    let outline_x_bigger = outline_x > outline_y;
+                    let outline_gt_zero = outline_x > 0 && outline_y > 0;
+                    this._ctx.fillStyle = this._ctx.strokeStyle;
+                    // Smear outline
+                    if (outline_x_bigger) {
+                        if (outline_gt_zero) {
+                            for (
+                                let i = -outline_x / outline_y;
+                                i <= outline_x / outline_y;
+                                i += outline_y / outline_x
+                            ) {
+                                this._drawGlyph(
+                                    glyph,
+                                    offsetXUnscaled + i,
                                     offsetYUnscaled,
-                                    spacing,
+                                    true
+                                );
+                            }
+                            this._drawGlyph(
+                                glyph,
+                                offsetXUnscaled,
+                                offsetYUnscaled,
+                                false
+                            );
+                        } else {
+                            for (let i = -outline_x; i <= outline_x; i++) {
+                                this._drawGlyph(
+                                    glyph,
+                                    offsetXUnscaled + i,
+                                    offsetYUnscaled,
                                     false
                                 );
-                            } else {
-                                for (
-                                    let i = -outline_y;
-                                    i <= outline_y;
-                                    i++
-                                ) {
-                                    this._drawGlyphs(
-                                        glyphs,
-                                        offsetXUnscaled,
-                                        offsetYUnscaled + i,
-                                        spacing,
-                                        false
-                                    );
-                                }
                             }
                         }
                     } else {
-                        this._drawGlyphs(
-                            glyphs,
-                            offsetXUnscaled,
-                            offsetYUnscaled,
-                            spacing,
-                            false
-                        );
+                        if (outline_gt_zero) {
+                            for (
+                                let i = -outline_y / outline_x;
+                                i <= outline_y / outline_x;
+                                i += outline_x / outline_y
+                            ) {
+                                this._drawGlyph(
+                                    glyph,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled + i,
+                                    true
+                                );
+                            }
+                            this._drawGlyph(
+                                glyph,
+                                offsetXUnscaled,
+                                offsetYUnscaled,
+                                false
+                            );
+                        } else {
+                            for (let i = -outline_y; i <= outline_y; i++) {
+                                this._drawGlyph(
+                                    glyph,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled + i,
+                                    false
+                                );
+                            }
+                        }
                     }
+                } else {
+                    this._drawGlyph(
+                        glyph,
+                        offsetXUnscaled,
+                        offsetYUnscaled,
+                        false
+                    );
                 }
             }
+            return result;
         },
         writable: false
     },
@@ -881,10 +939,10 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Sets the function used to request fonts from the font server.
          * @param {!function(string,number,boolean):!{font:Font,foundItalic:boolean,foundWeight:number}} callback the callback function to fetch a font.
          */
-        value: function(callback){
+        value: function (callback) {
             this._requestFont = callback;
         },
-        writable:false
+        writable: false
     },
 
     "setPixelScaleRatio": {
@@ -901,13 +959,27 @@ const text_renderer_prototype = global.Object.create(Object, {
 
     "getOffset": {
         /**
-         * Gets the offset of the resulting image.
-         * @return {Array<number>} offset of the resulting image
+         * Gets the internal offset of the resulting image.
+         * @return {Array<number>} internal offset of the resulting image
          */
         value: function () {
             return [
                 this._offsetX / this._pixelScaleRatio.xratio,
                 this._offsetY / this._pixelScaleRatio.yratio
+            ];
+        },
+        writable: false
+    },
+
+    "getOffsetExternal": {
+        /**
+         * Gets the offset of the resulting image relative to its positioning coordinates.
+         * @return {Array<number>} external offset of the resulting image
+         */
+        value: function () {
+            return [
+                this._eOffsetX / this._pixelScaleRatio.xratio,
+                this._eOffsetY / this._pixelScaleRatio.yratio
             ];
         },
         writable: false

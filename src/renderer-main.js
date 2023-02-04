@@ -90,6 +90,12 @@ const renderer_prototype = global.Object.create(Object, {
 
     //BEGIN WEBGL VARIABLES
 
+    _renderData: {
+        /** @type{Object<string,Float32Array>} */
+        value: null,
+        writable: true
+    },
+
     _gl: {
         /** @type{?WebGLRenderingContext} */
         value: null,
@@ -247,47 +253,56 @@ const renderer_prototype = global.Object.create(Object, {
     //BEGIN LOCAL FUNCTIONS
 
     _findFont: {
-        value: function(name,weight,italic){
+        value: function (name, weight, italic) {
             const fonts = this._fontServer.getFontsAndInfo(name);
             let result = null;
             let bestScore = 0;
-            for(let i = 0; i < fonts.length; i++){
+            for (let i = 0; i < fonts.length; i++) {
                 let foundItalic = (fonts[i].selection & 1) > 0;
                 let foundWeight = fonts[i].weight;
                 let score = 0;
-                if(foundItalic === italic){
+                if (foundItalic === italic) {
                     score += 10;
                 }
-                score += 8-(Math.abs(weight-foundWeight)/100);
-                if(score > bestScore){
+                score += 8 - Math.abs(weight - foundWeight) / 100;
+                if (score > bestScore) {
                     bestScore = score;
-                    result = {"font":fonts[i].font,"foundItalic":foundItalic,"foundWeight":foundWeight};
+                    result = {
+                        "font": fonts[i].font,
+                        "foundItalic": foundItalic,
+                        "foundWeight": foundWeight
+                    };
                     result["font"].ascender = fonts[i].ascent;
                     result["font"].descender = -fonts[i].descent;
-                    result["font"].unitsPerEm = fonts[i].ascent + fonts[i].descent;
+                    result["font"].unitsPerEm =
+                        fonts[i].ascent + fonts[i].descent;
                 }
             }
-            if(result === null){
+            if (result === null) {
                 const arial_fonts = this._fontServer.getFontsAndInfo("Arial");
-                for(let i = 0; i < arial_fonts.length; i++){
+                for (let i = 0; i < arial_fonts.length; i++) {
                     let foundItalic = (arial_fonts[i].selection & 1) > 0;
                     let foundWeight = arial_fonts[i].weight;
                     let score = 0;
-                    if(foundItalic === italic){
+                    if (foundItalic === italic) {
                         score += 10;
                     }
-                    score += 8-(Math.abs(weight-foundWeight)/100);
-                    if(score > bestScore){
+                    score += 8 - Math.abs(weight - foundWeight) / 100;
+                    if (score > bestScore) {
                         bestScore = score;
-                        result = {"font":arial_fonts[i].font,"foundItalic":foundItalic,"foundWeight":foundWeight};
+                        result = {
+                            "font": arial_fonts[i].font,
+                            "foundItalic": foundItalic,
+                            "foundWeight": foundWeight
+                        };
                         result["font"].ascender = arial_fonts[i].ascent;
                         result["font"].descender = -arial_fonts[i].descent;
-                        result["font"].unitsPerEm = arial_fonts[i].ascent + arial_fonts[i].descent;
+                        result["font"].unitsPerEm =
+                            arial_fonts[i].ascent + arial_fonts[i].descent;
                     }
                 }
             }
-            if(result === null)
-                throw "You forgot to include the font Arial.";
+            if (result === null) throw "You forgot to include the font Arial.";
             return result;
         },
         writable: false
@@ -307,6 +322,22 @@ const renderer_prototype = global.Object.create(Object, {
             let y = aY * Math.pow(t, 3) + bY * Math.pow(t, 2) + cY * t + p0y;
 
             return [x, y];
+        },
+        writable: false
+    },
+
+    _getFloat32Array: {
+        /**
+         * @private
+         * @param {string} name name of the float32array.
+         * @param {number} size size of the float32array.
+         * @return {Float32Array} the array.
+         */
+        value: function (name, size) {
+            if (!this._renderData[name]) {
+                return (this._renderData[name] = new Float32Array(size));
+            }
+            return this._renderData[name];
         },
         writable: false
     },
@@ -667,13 +698,7 @@ const renderer_prototype = global.Object.create(Object, {
             }
             let lineOverrides = event.getLineOverrides();
             if (!event.getOverrides().getDrawingMode()) {
-                this._textRenderer.renderEvent(
-                    time,
-                    event,
-                    sabre.RenderPasses.FILL,
-                    true,
-                    false
-                );
+                this._textRenderer.calcBounds(time, event);
                 let dim = this._textRenderer.getBounds();
                 if (
                     lineOverrides.getPosition() === null &&
@@ -1404,13 +1429,7 @@ const renderer_prototype = global.Object.create(Object, {
                             this._config.renderer["default_wrap_style"];
                     }
                     if (wrap_style === sabre.WrapStyleModes.NONE) continue;
-                    this._textRenderer.renderEvent(
-                        time,
-                        cur_event,
-                        sabre.RenderPasses.FILL,
-                        true,
-                        false
-                    );
+                    this._textRenderer.calcBounds(time, cur_event);
 
                     let marginLeft, marginRight;
                     {
@@ -1459,12 +1478,9 @@ const renderer_prototype = global.Object.create(Object, {
                                                     internal_text.slice(1)
                                                 );
                                             else events[j + offset].setText("");
-                                            this._textRenderer.renderEvent(
+                                            this._textRenderer.calcBounds(
                                                 time,
-                                                events[j + offset],
-                                                sabre.RenderPasses.FILL,
-                                                true,
-                                                false
+                                                events[j + offset]
                                             );
                                             event_widths[j + offset] =
                                                 this._textRenderer.getBounds()[0];
@@ -1482,13 +1498,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 if (internal_text !== " ")
                                     cur_event.setText(internal_text.slice(1));
                                 else cur_event.setText("");
-                                this._textRenderer.renderEvent(
-                                    time,
-                                    cur_event,
-                                    sabre.RenderPasses.FILL,
-                                    true,
-                                    false
-                                );
+                                this._textRenderer.calcBounds(time, cur_event);
                                 event_widths[i] =
                                     this._textRenderer.getBounds()[0];
                             }
@@ -1596,10 +1606,13 @@ const renderer_prototype = global.Object.create(Object, {
 
     _glSetup: {
         value: function () {
-            const default_tex_coords = new Float32Array([
-                0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1
-            ]);
-            const fullscreen_coordinates = new Float32Array([
+            const default_tex_coords = this._getFloat32Array("tex_coords", 12);
+            default_tex_coords.set([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1], 0);
+            const fullscreen_coordinates = this._getFloat32Array(
+                "coordinates",
+                18
+            );
+            fullscreen_coordinates.set([
                 -1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0
             ]);
             this._gl.viewport(
@@ -1836,44 +1849,70 @@ const renderer_prototype = global.Object.create(Object, {
                 1
             );
             this._positioningShader.compile(this._gl);
-            this._positioningShader.addOption(
-                "u_aspectscale",
-                new Float32Array([1, 1]),
-                "2f"
+            this._positioningShader.addOption("u_aspectscale", [1, 1], "2f");
+            const pre_rotation_matrix = this._getFloat32Array(
+                "pre_rotation_matrix",
+                16
+            );
+            pre_rotation_matrix.set(
+                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+                0
             );
             this._positioningShader.addOption(
                 "u_pre_rotation_matrix",
-                new Float32Array([
-                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
-                ]),
+                pre_rotation_matrix,
                 "Matrix4fv"
+            );
+            const rotation_matrix_x = this._getFloat32Array(
+                "rotation_matrix_x",
+                16
+            );
+            rotation_matrix_x.set(
+                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+                0
             );
             this._positioningShader.addOption(
                 "u_rotation_matrix_x",
-                new Float32Array([
-                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
-                ]),
+                rotation_matrix_x,
                 "Matrix4fv"
+            );
+            const rotation_matrix_y = this._getFloat32Array(
+                "rotation_matrix_y",
+                16
+            );
+            rotation_matrix_y.set(
+                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+                0
             );
             this._positioningShader.addOption(
                 "u_rotation_matrix_y",
-                new Float32Array([
-                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
-                ]),
+                rotation_matrix_y,
                 "Matrix4fv"
+            );
+            const rotation_matrix_z = this._getFloat32Array(
+                "rotation_matrix_z",
+                16
+            );
+            rotation_matrix_z.set(
+                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+                0
             );
             this._positioningShader.addOption(
                 "u_rotation_matrix_z",
-                new Float32Array([
-                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
-                ]),
+                rotation_matrix_z,
                 "Matrix4fv"
+            );
+            const post_rotation_matrix = this._getFloat32Array(
+                "post_rotation_matrix",
+                16
+            );
+            post_rotation_matrix.set(
+                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+                0
             );
             this._positioningShader.addOption(
                 "u_post_rotation_matrix",
-                new Float32Array([
-                    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
-                ]),
+                post_rotation_matrix,
                 "Matrix4fv"
             );
             this._positioningShader.addOption("u_texture", 0, "1i");
@@ -1956,11 +1995,7 @@ const renderer_prototype = global.Object.create(Object, {
                 1
             );
             this._clipShader.compile(this._gl);
-            this._clipShader.addOption(
-                "u_aspectscale",
-                new Float32Array([1, 1]),
-                "2f"
-            );
+            this._clipShader.addOption("u_aspectscale", [1, 1], "2f");
             this._clipShader.addOption("u_texture", 0, "1i");
         },
         writable: false
@@ -2063,10 +2098,11 @@ const renderer_prototype = global.Object.create(Object, {
             let preRotationMatrix;
             {
                 let offset = source.getOffset();
+                let offsetExternal = source.getOffsetExternal();
                 // prettier-ignore
                 preRotationMatrix = {
-                    m00: 1, m01: 0, m02: 0, m03: -offset[0],
-                    m10: 0, m11: 1, m12: 0, m13: offset[1],
+                    m00: 1, m01: 0, m02: 0, m03: -offset[0]+offsetExternal[0],
+                    m10: 0, m11: 1, m12: 0, m13: offset[1]-offsetExternal[1],
                     m20: 0, m21: 0, m22: 1, m23: 0,
                     m30: 0, m31: 0, m32: 0, m33: 1
                 };
@@ -2395,18 +2431,27 @@ const renderer_prototype = global.Object.create(Object, {
             };
 
             if (!inverse) {
+                const rectangular_clip_coords = this._getFloat32Array(
+                    "rectangular_clip_coords",
+                    12
+                );
                 // prettier-ignore
-                return new Float32Array([
+                rectangular_clip_coords.set([
                     upperLeft.m00,  upperLeft.m01, 
                     upperRight.m00, upperRight.m01,
                     lowerLeft.m00,  lowerLeft.m01, 
                     lowerLeft.m00,  lowerLeft.m01, 
                     upperRight.m00, upperRight.m01,
                     lowerRight.m00, lowerRight.m01,
-                ]);
+                ],0);
+                return rectangular_clip_coords;
             } else {
+                const rectangular_clip_coords_inverse = this._getFloat32Array(
+                    "rectangular_clip_coords_inverse",
+                    24
+                );
                 // prettier-ignore
-                return new Float32Array([
+                rectangular_clip_coords_inverse.set([
                     0,                                      0,                                    
                     this._config.renderer["resolution_x"],  0,                                    
                     this._config.renderer["resolution_x"],  this._config.renderer["resolution_y"],
@@ -2419,7 +2464,8 @@ const renderer_prototype = global.Object.create(Object, {
                     lowerLeft.m00,                          lowerLeft.m01, 
                     upperRight.m00,                         upperRight.m01,
                     lowerRight.m00,                         lowerRight.m01,
-                ]);
+                ],0);
+                return rectangular_clip_coords_inverse;
             }
         },
         writable: false
@@ -2684,16 +2730,16 @@ const renderer_prototype = global.Object.create(Object, {
                     m30: 1
                 };
             }
-
+            let coordinates = this._getFloat32Array("coordinates", 18);
             // prettier-ignore
-            let coordinates = new Float32Array([
+            coordinates.set([
                 upperLeft.m00,  upperLeft.m10,  upperLeft.m20,
                 upperRight.m00, upperRight.m10, upperRight.m20,
                 lowerLeft.m00,  lowerLeft.m10,  lowerLeft.m20,
                 lowerLeft.m00,  lowerLeft.m10,  lowerLeft.m20,
                 upperRight.m00, upperRight.m10, upperRight.m20,
                 lowerRight.m00, lowerRight.m10, lowerRight.m20
-            ]);
+            ],0);
 
             let tex_coords;
             {
@@ -2701,15 +2747,17 @@ const renderer_prototype = global.Object.create(Object, {
                 let extents = this._textureSubtitleBounds;
                 let width = dimensions[0] / extents[0];
                 let height = dimensions[1] / extents[1];
+
+                tex_coords = this._getFloat32Array("tex_coords", 12);
                 // prettier-ignore
-                tex_coords = new Float32Array([
+                tex_coords.set([
                     0,      1,
                     width,  1,
                     0,      1 - height,
                     0,      1 - height,
                     width,  1,
                     width,  1 - height
-                ]);
+                ],0);
             }
 
             let mask_coords;
@@ -2719,15 +2767,17 @@ const renderer_prototype = global.Object.create(Object, {
                 let extents = this._textureSubtitleMaskBounds;
                 let width = maskDimensions[0] / extents[0];
                 let height = maskDimensions[1] / extents[1];
+
+                mask_coords = this._getFloat32Array("mask_coords", 12);
                 // prettier-ignore
-                mask_coords = new Float32Array([
+                mask_coords.set([
                     0,      1,
                     width,  1,
                     0,      1 - height,
                     0,      1 - height,
                     width,  1,
                     width,  1 - height
-                ]);
+                ],0);
             }
             //Draw background or outline or text depending on pass to destination
             {
@@ -3003,13 +3053,23 @@ const renderer_prototype = global.Object.create(Object, {
                     );
                 }
 
+                let matrix = this._getFloat32Array("pre_rotation_matrix", 16);
+                matrix.set(
+                    this._matrixToArrayRepresentation4x4(
+                        positioningMatrices[0]
+                    ),
+                    0
+                );
                 this._positioningShader.updateOption(
                     "u_pre_rotation_matrix",
-                    new Float32Array(
-                        this._matrixToArrayRepresentation4x4(
-                            positioningMatrices[0]
-                        )
-                    )
+                    matrix
+                );
+                matrix = this._getFloat32Array("rotation_matrix_x", 16);
+                matrix.set(
+                    this._matrixToArrayRepresentation4x4(
+                        positioningMatrices[1]
+                    ),
+                    0
                 );
                 this._positioningShader.updateOption(
                     "u_rotation_matrix_x",
@@ -3019,34 +3079,43 @@ const renderer_prototype = global.Object.create(Object, {
                         )
                     )
                 );
+                matrix = this._getFloat32Array("rotation_matrix_y", 16);
+                matrix.set(
+                    this._matrixToArrayRepresentation4x4(
+                        positioningMatrices[2]
+                    ),
+                    0
+                );
                 this._positioningShader.updateOption(
                     "u_rotation_matrix_y",
-                    new Float32Array(
-                        this._matrixToArrayRepresentation4x4(
-                            positioningMatrices[2]
-                        )
-                    )
+                    matrix
+                );
+                matrix = this._getFloat32Array("rotation_matrix_z", 16);
+                matrix.set(
+                    this._matrixToArrayRepresentation4x4(
+                        positioningMatrices[3]
+                    ),
+                    0
                 );
                 this._positioningShader.updateOption(
                     "u_rotation_matrix_z",
-                    new Float32Array(
-                        this._matrixToArrayRepresentation4x4(
-                            positioningMatrices[3]
-                        )
-                    )
+                    matrix
+                );
+                matrix = this._getFloat32Array("post_rotation_matrix", 16);
+                matrix.set(
+                    this._matrixToArrayRepresentation4x4(
+                        positioningMatrices[4]
+                    ),
+                    0
                 );
                 this._positioningShader.updateOption(
                     "u_post_rotation_matrix",
-                    new Float32Array(
-                        this._matrixToArrayRepresentation4x4(
-                            positioningMatrices[4]
-                        )
-                    )
+                    matrix
                 );
-                this._positioningShader.updateOption(
-                    "u_aspectscale",
-                    new Float32Array([xScale, yScale])
-                );
+                this._positioningShader.updateOption("u_aspectscale", [
+                    xScale,
+                    yScale
+                ]);
 
                 this._positioningShader.updateOption("u_texture", 0);
                 this._positioningShader.bindShader(this._gl);
@@ -3338,10 +3407,10 @@ const renderer_prototype = global.Object.create(Object, {
                     this._gl.activeTexture(this._gl.TEXTURE0);
                     this._gl.bindTexture(this._gl.TEXTURE_2D, sourceTexture);
                     this._clipShader.updateOption("u_texture", 0);
-                    this._clipShader.updateOption(
-                        "u_aspectscale",
-                        new Float32Array([xScale, yScale])
-                    );
+                    this._clipShader.updateOption("u_aspectscale", [
+                        xScale,
+                        yScale
+                    ]);
                     this._clipShader.bindShader(this._gl);
                     let positionAttrib =
                         this._gaussEdgeBlurPass1Shader.getAttribute(
@@ -3397,6 +3466,7 @@ const renderer_prototype = global.Object.create(Object, {
             this._textRenderer = new sabre.Canvas2DTextRenderer();
             this._textMaskRenderer = new sabre.Canvas2DTextRenderer();
             this._shapeRenderer = new sabre.Canvas2DShapeRenderer();
+            this._renderData = {};
         },
         writable: false
     },
@@ -3410,9 +3480,9 @@ const renderer_prototype = global.Object.create(Object, {
         value: function (config) {
             this._fontServer = new sabre.FontServer(config);
             const _this = this;
-            const requestFont = function(name,weight,italic){
-                return _this._findFont(name,weight,italic);
-            }
+            const requestFont = function (name, weight, italic) {
+                return _this._findFont(name, weight, italic);
+            };
             this._textRenderer.setRequestFont(requestFont);
             this._textMaskRenderer.setRequestFont(requestFont);
             this._config = config;
@@ -3441,7 +3511,6 @@ const renderer_prototype = global.Object.create(Object, {
                 );
             }
 
-            
             this._compositingCanvas.addEventListener(
                 "webglcontextlost",
                 function (event) {
@@ -3587,33 +3656,42 @@ const renderer_prototype = global.Object.create(Object, {
                         j++
                     ) {
                         let currentEvent = events[i + j];
-                        if (
-                            currentEvent.getText() === "" ||
-                            currentEvent.getText().match(/^\s+$/) !== null
-                        )
-                            continue;
+                        if (currentEvent.getText().trim() === "") continue;
                         if (!currentEvent.getOverrides().getDrawingMode()) {
-                            this._textRenderer.renderEvent(
+                            let breakout;
+                            this._textRenderer.startEventRender(
                                 time,
                                 currentEvent,
                                 pass,
-                                false,
                                 false
                             );
-                            this._textMaskRenderer.renderEvent(
+                            this._textMaskRenderer.startEventRender(
                                 time,
                                 currentEvent,
                                 pass,
-                                false,
                                 true
                             );
-                            this._compositeSubtitle(
-                                time,
-                                currentEvent,
-                                pass,
-                                positions[i + j],
-                                false
-                            );
+                            do {
+                                breakout = this._textRenderer.renderGlyph(
+                                    time,
+                                    currentEvent,
+                                    pass,
+                                    false
+                                );
+                                this._textMaskRenderer.renderGlyph(
+                                    time,
+                                    currentEvent,
+                                    pass,
+                                    true
+                                );
+                                this._compositeSubtitle(
+                                    time,
+                                    currentEvent,
+                                    pass,
+                                    positions[i + j],
+                                    false
+                                );
+                            } while (!breakout);
                         } else {
                             this._shapeRenderer.renderEvent(
                                 time,
