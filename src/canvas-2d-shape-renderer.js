@@ -831,6 +831,17 @@ const shape_renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    "getOffsetExternal": {
+        /**
+         * Gets the offset of the resulting image.
+         * @return {Array<number>} offset of the resulting image
+         */
+        value: function () {
+            return [0, 0];
+        },
+        writable: false
+    },
+
     "getBounds": {
         /**
          * Gets the collision bounds of the resulting shape.
