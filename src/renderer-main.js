@@ -2087,13 +2087,13 @@ const renderer_prototype = global.Object.create(Object, {
             rotation[1] *= toRad;
             rotation[2] *= toRad;
 
-            let sinx = Math.sin(rotation[0]);
-            let siny = Math.sin(rotation[1]);
-            let sinz = Math.sin(rotation[2]);
+            const sinx = Math.sin(rotation[0]);
+            const siny = Math.sin(rotation[1]);
+            const sinz = Math.sin(rotation[2]);
 
-            let cosx = Math.cos(rotation[0]);
-            let cosy = Math.cos(rotation[1]);
-            let cosz = Math.cos(rotation[2]);
+            const cosx = Math.cos(rotation[0]);
+            const cosy = Math.cos(rotation[1]);
+            const cosz = Math.cos(rotation[2]);
 
             let preRotationMatrix;
             {
@@ -3073,11 +3073,7 @@ const renderer_prototype = global.Object.create(Object, {
                 );
                 this._positioningShader.updateOption(
                     "u_rotation_matrix_x",
-                    new Float32Array(
-                        this._matrixToArrayRepresentation4x4(
-                            positioningMatrices[1]
-                        )
-                    )
+                    matrix
                 );
                 matrix = this._getFloat32Array("rotation_matrix_y", 16);
                 matrix.set(
