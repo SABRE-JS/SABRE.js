@@ -59,7 +59,6 @@ const ShaderPrototype = Object.create(Object, {
             let cval = statetracker[context][uniformid];
             let i;
             let unchanged = true;
-            if (val === cval) return true;
             if (isArrayish(val) && isArrayish(cval)) {
                 if (val.length !== cval.length) return false;
                 else
@@ -69,6 +68,7 @@ const ShaderPrototype = Object.create(Object, {
 
                 return unchanged;
             }
+            if (val === cval) return true;
             return false;
         },
         writable: false
