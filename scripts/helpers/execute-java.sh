@@ -6,8 +6,8 @@ IKVM_DOWNLOAD_URL="http://www.frijters.net/ikvmbin-8.1.5717.0.zip"
 USED_JVM="java"
 JVM_SETTINGS="-server -XX:+TieredCompilation"
 
-BACKUP_PATH=$PATH
-export PATH=$PATH:$TOOL_BIN_DIR
+BACKUP_PATH="$PATH"
+export PATH="$PATH:$TOOL_BIN_DIR"
 
 if [ -x "$(command -v ikvm)" ]; then
     USED_JVM="ikvm"
@@ -40,5 +40,5 @@ fi
 eval "$USED_JVM $JVM_SETTINGS $@"
 RESULT_CODE=$?
 
-export PATH=$BACKUP_PATH
+export PATH="$BACKUP_PATH"
 exit $RESULT_CODE
