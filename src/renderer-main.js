@@ -23,17 +23,23 @@
 /**
  * @fileoverview webgl subtitle compositing code.
  */
+
 /**
  * @private
  * @typedef {!{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number,alignmentOffsetX:number,alignmentOffsetY:number}}
  */
 let CollisionInfo;
+
 /**
  * Is ImageBitmap Supported.
  * @type {boolean}
  * @private
  */
-const isImageBitmapSupported = typeof global.ImageBitmap !== "undefined";
+const isImageBitmapSupported =
+    typeof global.ImageBitmapRenderingContext !== "undefined" &&
+    typeof global.ImageBitmap !== "undefined" &&
+    typeof global.OffscreenCanvas !== "undefined";
+
 /**
  * Fixes JSON
  * @private
@@ -3732,7 +3738,7 @@ const renderer_prototype = global.Object.create(Object, {
     "getDisplayBitmap": {
         /**
          * Get an ImageBitmap containing the frame or null if ImageBitmap is unsupported.
-         * @return {ImageBitmap} the bitmap.
+         * @return {?ImageBitmap} the bitmap.
          */
         value: function () {
             if (!isImageBitmapSupported) return null;
@@ -3754,18 +3760,13 @@ const renderer_prototype = global.Object.create(Object, {
             let context;
             if (bitmap) {
                 context = canvas.getContext("bitmaprenderer");
-                let bitmap = this["getDisplayBitmap"]();
-                context.transferFromImageBitmap(bitmap);
+                context.transferFromImageBitmap(this["getDisplayBitmap"]());
             } else {
+                let width = canvas.width | 0;
+                let height = canvas.height | 0;
                 context = canvas.getContext("2d");
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.drawImage(
-                    this._compositingCanvas,
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                );
+                context.clearRect(0, 0, width, height);
+                context.drawImage(this._compositingCanvas, 0, 0, width, height);
             }
         },
         writable: false
