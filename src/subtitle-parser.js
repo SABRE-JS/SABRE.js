@@ -2873,23 +2873,29 @@ const parser_prototype = global.Object.create(global.Object, {
     _decodeEmbeddedFile: {
         /**
          * Decodes embedded files.
-         * @param {string} data 
+         * @param {string} data
          * @returns {ArrayBuffer}
          */
-        value: function(data){
+        value: function (data) {
             const bindata = [];
-            for(let i = 0; i < data.length; i+=4){
+            for (let i = 0; i < data.length; i += 4) {
                 let chardata = [];
-                for(let j = 0; j < 4; j++){
+                for (let j = 0; j < 4; j++) {
                     chardata.push(data.charCodeAt(i) - 33);
                 }
-                bindata.push(((chardata[0]&0x3F)<<2)|((chardata[1]&0x30)>>>4));
-                bindata.push(((chardata[1]&0x0F)<<4)|((chardata[2]&0x3C)>>>2));
-                bindata.push(((chardata[2]&0x03)<<6)|(chardata[3]&0x3F));
+                bindata.push(
+                    ((chardata[0] & 0x3f) << 2) | ((chardata[1] & 0x30) >>> 4)
+                );
+                bindata.push(
+                    ((chardata[1] & 0x0f) << 4) | ((chardata[2] & 0x3c) >>> 2)
+                );
+                bindata.push(
+                    ((chardata[2] & 0x03) << 6) | (chardata[3] & 0x3f)
+                );
             }
             const buffer = new ArrayBuffer(bindata.length);
             const view = new Uint8Array(buffer);
-            for(let i = 0; i < bindata.length; i++){
+            for (let i = 0; i < bindata.length; i++) {
                 view[i] = bindata[i];
             }
             return buffer;
@@ -2903,22 +2909,30 @@ const parser_prototype = global.Object.create(global.Object, {
          * @private
          * @param {string} line a line of the subtitle file.
          */
-        value: (function(){
+        value: (function () {
             let data = "";
             let fontNameData = null;
-            return function(line){
+            return function (line) {
                 const foundFontname = line.indexOf("fontname:") === 0;
-                const foundHeading = line.indexOf("[") === 0 && line.indexOf("]") > 0;
-                if(data.length > 0 && fontNameData !== null && (line === "" || line.length < 80 || foundFontname || foundHeading)){
-                    if(!foundFontname||!foundHeading)
-                        data += line;
-                    this._config["renderer"]["fontserver"].push(this._parseFont(this._decodeEmbeddedFile(data)));
+                const foundHeading =
+                    line.indexOf("[") === 0 && line.indexOf("]") > 0;
+                if (
+                    data.length > 0 &&
+                    fontNameData !== null &&
+                    (line === "" ||
+                        line.length < 80 ||
+                        foundFontname ||
+                        foundHeading)
+                ) {
+                    if (!foundFontname || !foundHeading) data += line;
+                    this._config["renderer"]["fontserver"].push(
+                        this._parseFont(this._decodeEmbeddedFile(data))
+                    );
                     data = "";
-                    if(foundHeading)
-                        return false;
+                    if (foundHeading) return false;
                     return true;
                 }
-                if(foundHeading){
+                if (foundHeading) {
                     return false;
                 }
                 data += line;
@@ -2936,14 +2950,11 @@ const parser_prototype = global.Object.create(global.Object, {
          * @return {Object} Info on the font.
          */
         value: function (internalName) {
-            let fontNameData =
-                /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff)$/.exec(
-                    internalName
-                );
+            let fontNameData = /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff)$/.exec(
+                internalName
+            );
             if (fontNameData === null) {
-                fontNameData = /^(.*)\.(ttf|otf|woff)$/.exec(
-                    internalName
-                );
+                fontNameData = /^(.*)\.(ttf|otf|woff)$/.exec(internalName);
                 if (fontNameData === null)
                     return {
                         fontName: internalName,
@@ -2978,9 +2989,8 @@ const parser_prototype = global.Object.create(global.Object, {
          * @private
          */
         value: function (line) {
-            if (this._heading === "Fonts"){
-                if(this._handleEmbeddedFont(line))
-                    return;
+            if (this._heading === "Fonts") {
+                if (this._handleEmbeddedFont(line)) return;
             }
             /*if (this._heading === "Graphics"){
                 if(this._handleEmbeddedGraphics(line))
@@ -3100,7 +3110,7 @@ const parser_prototype = global.Object.create(global.Object, {
 });
 
 /**
- * @param {function(ArrayBuffer):Font} parseFont 
+ * @param {function(ArrayBuffer):Font} parseFont
  */
 sabre["Parser"] = function (parseFont) {
     let parser = global.Object.create(parser_prototype);
@@ -3155,9 +3165,10 @@ external["SABRERenderer"] = function (parseFont) {
         /**
          * Fetches a rendered frame of subtitles as an ImageBitmap, returns null if ImageBitmap is unsupported.
          * @param {number} time the time at which to draw subtitles.
-         * @return {ImageBitmap}
+         * @return {?ImageBitmap}
          */
         "getFrame": function (time) {
+            if (!bitmapSupported) return null;
             renderer.frame(time);
             return renderer.getDisplayBitmap();
         },
