@@ -241,7 +241,9 @@ const parser_prototype = global.Object.create(global.Object, {
                         console.info(
                             "Sub Station Alpha Version: " + version[0]
                         );
-                        config["info"]["version"] = parseFloat(version[1]);
+                        config["info"]["version"] = global.parseFloat(
+                            version[1]
+                        );
                         if (config["info"]["version"] < 4) {
                             console.warn(
                                 "Warning: Support for SSA versions prior to SSA v4 is not garunteed."
@@ -295,9 +297,8 @@ const parser_prototype = global.Object.create(global.Object, {
                         );
                         return;
                     case "Timer":
-                        config["renderer"]["playback_speed"] = parseFloat(
-                            keypair[1]
-                        );
+                        config["renderer"]["playback_speed"] =
+                            global.parseFloat(keypair[1]);
                         return;
                     case "WrapStyle":
                         {
@@ -460,7 +461,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     time += global.parseInt(array[i], 10);
                     time *= 60;
                 } else {
-                    time += parseFloat(array[i]);
+                    time += global.parseFloat(array[i]);
                 }
             }
             return time;
@@ -1209,7 +1210,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     transitionTargetOverrides,
                     lineGlobalTransitionTargetOverrides
                 ) {
-                    let blur_value = parseFloat(parameters[0]);
+                    let blur_value = global.parseFloat(parameters[0]);
                     if (isNaN(blur_value)) return;
                     if (!isInTransition) {
                         overrides.setGaussianEdgeBlur(blur_value);
@@ -1248,7 +1249,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     transitionTargetOverrides,
                     lineGlobalTransitionTargetOverrides
                 ) {
-                    let outline_width = parseFloat(parameters[1]);
+                    let outline_width = global.parseFloat(parameters[1]);
                     let overrideContainer = !isInTransition
                         ? overrides
                         : transitionTargetOverrides;
@@ -1677,7 +1678,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     transitionTargetOverrides,
                     lineGlobalTransitionTargetOverrides
                 ) {
-                    let factor = parseFloat(parameters[1]);
+                    let factor = global.parseFloat(parameters[1]);
                     let overrideContainer = !isInTransition
                         ? overrides
                         : transitionTargetOverrides;
@@ -1786,7 +1787,7 @@ const parser_prototype = global.Object.create(global.Object, {
                 ) {
                     let rotation_axis = "z";
                     if (parameters[0] !== null) rotation_axis = parameters[0];
-                    let value = parseFloat(parameters[1]);
+                    let value = global.parseFloat(parameters[1]);
                     if (isNaN(value)) return;
                     if (!isInTransition) {
                         switch (rotation_axis) {
@@ -1857,12 +1858,14 @@ const parser_prototype = global.Object.create(global.Object, {
                 ) {
                     if (parameters[0] !== null) {
                         let add_to = parameters[0] === "+";
-                        let font_size_modifier = parseFloat(parameters[1]);
+                        let font_size_modifier = global.parseFloat(
+                            parameters[1]
+                        );
                         if (add_to)
                             overrides.increaseFontSizeMod(font_size_modifier);
                         else overrides.decreaseFontSizeMod(font_size_modifier);
                     } else {
-                        let font_size = parseFloat(parameters[1]);
+                        let font_size = global.parseFloat(parameters[1]);
                         if (!isInTransition) {
                             overrides.resetFontSizeMod();
                             overrides.setFontSize(font_size);
@@ -1901,7 +1904,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     lineGlobalTransitionTargetOverrides
                 ) {
                     let is_x = parameters[0] === "x";
-                    let value = parseFloat(parameters[1]);
+                    let value = global.parseFloat(parameters[1]);
                     if (isNaN(value)) return;
                     if (!isInTransition) {
                         if (is_x) overrides.setScaleX(value);
@@ -1940,7 +1943,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     transitionTargetOverrides,
                     lineGlobalTransitionTargetOverrides
                 ) {
-                    let value = parseFloat(parameters[0]);
+                    let value = global.parseFloat(parameters[0]);
                     if (isNaN(value)) return;
                     if (!isInTransition) {
                         overrides.setSpacing(value);
@@ -2073,7 +2076,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     lineGlobalTransitionTargetOverrides
                 ) {
                     let karaoke_tag = parameters[0];
-                    let param = parseFloat(parameters[1]);
+                    let param = global.parseFloat(parameters[1]);
                     if (isNaN(param)) return;
                     param = param / 100; //Convert from centiseconds (why?) to seconds.
                     let kstart = overrides.getKaraokeEnd();
@@ -2214,7 +2217,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     transitionTargetOverrides,
                     lineGlobalTransitionTargetOverrides
                 ) {
-                    let drawScale = parseFloat(parameters[0]);
+                    let drawScale = global.parseFloat(parameters[0]);
                     if (isNaN(drawScale)) return;
                     if (drawScale > 0) {
                         overrides.setDrawingMode(true);
@@ -2251,7 +2254,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     transitionTargetOverrides,
                     lineGlobalTransitionTargetOverrides
                 ) {
-                    let baselineOffset = parseFloat(parameters[0]);
+                    let baselineOffset = global.parseFloat(parameters[0]);
                     if (isNaN(baselineOffset)) return;
                     overrides.setBaselineOffset(baselineOffset);
                 }
@@ -2426,7 +2429,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     lineGlobalTransitionTargetOverrides
                 ) {
                     let setting = parameters[0];
-                    let value = parseFloat(parameters[1]);
+                    let value = global.parseFloat(parameters[1]);
                     if (isNaN(value)) return;
                     if (!isInTransition) {
                         switch (setting) {
@@ -2490,7 +2493,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     let transitionEnd = timeInfo.end - timeInfo.start;
                     let acceleration = 1;
 
-                    let temp = parseFloat(lparameters[0]);
+                    let temp = global.parseFloat(lparameters[0]);
                     let temp2;
                     if (global.isNaN(temp)) {
                         final_param = lparameters.join(",");
@@ -2499,11 +2502,11 @@ const parser_prototype = global.Object.create(global.Object, {
                         )
                             return;
                     } else {
-                        temp2 = parseFloat(lparameters[1]);
+                        temp2 = global.parseFloat(lparameters[1]);
                         if (!global.isNaN(temp2)) {
                             transitionStart = temp / 1000;
                             transitionEnd = temp2 / 1000;
-                            temp = parseFloat(lparameters[2]);
+                            temp = global.parseFloat(lparameters[2]);
                             if (!global.isNaN(temp)) {
                                 acceleration = temp;
                                 final_param = lparameters.slice(3).join(",");
@@ -3072,7 +3075,7 @@ const parser_prototype = global.Object.create(global.Object, {
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
          * @param {string} subsText the passed subtitle file contents.
-         * @param {Array<Font>} fonts fonts nessisary for this subtitle file.
+         * @param {Array<Font>} fonts fonts necessary for this subtitle file.
          * @param {function(RendererData):void} callback what we pass the results of the parsing to.
          * @return {void}
          */
@@ -3140,7 +3143,7 @@ external["SABRERenderer"] = function (parseFont) {
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
          * @param {string} subsText the subtitle file's contents.
-         * @param {Array<Font>} fonts preloaded fonts nessisary for this subtitle file (one of these MUST be Arial).
+         * @param {Array<Font>} fonts preloaded fonts necessary for this subtitle file (one of these MUST be Arial).
          * @return {void}
          */
         "loadSubtitles": function (subsText, fonts) {

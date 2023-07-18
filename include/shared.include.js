@@ -38,6 +38,10 @@ global.CanvasRenderingContext2D.prototype.msBackingStorePixelRatio = 1;
 global.CanvasRenderingContext2D.prototype.oBackingStorePixelRatio = 1;
 /** @type {number} */
 global.CanvasRenderingContext2D.prototype.backingStorePixelRatio = 1;
+/** @type {number|undefined} */
+global.HTMLVideoElement.prototype.mozFrameDelay = 0;
+/** @type {number|undefined} */
+global.HTMLVideoElement.prototype.mozPresentedFrames = 0;
 
 /**
  * toBlob but HD.

@@ -211,8 +211,8 @@ global.Math.trunc =
                 "webkitCancelVideoFrameCallback"
             ] ??
             global.HTMLVideoElement.prototype["mozCancelVideoFrameCallback"] ??
-            global.HTMLVideoElement.prototype["msRequestVideoFrameCallback"] ??
-            global.HTMLVideoElement.prototype["oRequestVideoFrameCallback"] ??
+            global.HTMLVideoElement.prototype["msCancelVideoFrameCallback"] ??
+            global.HTMLVideoElement.prototype["oCancelVideoFrameCallback"] ??
             function (id) {
                 if (callbacks[id] && callbacks[id].video === this) {
                     if (--callbacksCount === 0) {
