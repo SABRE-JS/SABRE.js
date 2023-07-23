@@ -4,3 +4,4 @@
 !.gitignore
 !fonts/*.ttf
 !fonts/*.otf
+!fonts/
