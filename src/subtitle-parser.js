@@ -1202,11 +1202,10 @@ const parser_prototype = global.Object.create(global.Object, {
         /**
          * Perform initialization of the library and all it's components.
          * @param {function(ArrayBuffer):Font} parseFont
-         * @param {function():Array<OverrideTag>} getOverrideTags
          */
-        value: function (parseFont, getOverrideTags) {
+        value: function (parseFont) {
             this._parseFont = parseFont;
-            this._overrideTags = getOverrideTags();
+            this._overrideTags = sabre.getOverrideTags();
         },
         writable: false
     },
@@ -1257,7 +1256,7 @@ const parser_prototype = global.Object.create(global.Object, {
  */
 sabre["Parser"] = function (parseFont) {
     let parser = global.Object.create(parser_prototype);
-    parser.init(parseFont, sabre.getOverrideTags);
+    parser.init(parseFont);
     return parser;
 };
 
