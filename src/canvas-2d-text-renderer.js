@@ -79,6 +79,24 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _strikethrough: {
+        /**
+         * Determines if we are doing strikethrough.
+         * @type {boolean}
+         */
+        value: false,
+        writable: true
+    },
+
+    _underline: {
+        /**
+         * Determines if we are doing underline.
+         * @type {boolean}
+         */
+        value: false,
+        writable: true
+    },
+
     _scale: {
         /**
          * The scale factors of the event being rendered.
@@ -90,7 +108,18 @@ const text_renderer_prototype = global.Object.create(Object, {
 
     _fontInfo: {
         /**
-         * @type {?{font:!Font,size:number,italic:boolean,foundItalic:boolean,weight:number,foundWeight:number}}
+         * @type {?{
+         *              font:!Font,
+         *              size:number,
+         *              italic:boolean,
+         *              foundItalic:boolean,
+         *              weight:number,
+         *              foundWeight:number,
+         *              strikethroughSize:number,
+         *              strikethroughPosition:number,
+         *              underlineThickness:number,
+         *              underlinePosition:number 
+         *       }}
          */
         value: null,
         writable: true
@@ -98,7 +127,16 @@ const text_renderer_prototype = global.Object.create(Object, {
 
     _requestFont: {
         /**
-         * @type {?function(string,number,boolean):!{font:Font,foundItalic:boolean,foundWeight:number}}
+         * @type {?function(string,number,boolean):!{
+         *              font:Font,
+         *              foundItalic:boolean,
+         *              foundWeight:number,
+         *              strikethroughSize:number,
+         *              strikethroughPosition:number,
+         *              underlineThickness:number,
+         *              underlinePosition:number
+         *          }
+         *       }
          */
         value: null,
         writable: true
@@ -325,7 +363,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             let fontName = overrides.getFontName() ?? style.getFontName();
             let fontWeight = overrides.getWeight() ?? style.getWeight();
             let fontItalicized = overrides.getItalic() ?? style.getItalic();
-            let { font, foundItalic, foundWeight } = this._requestFont(
+            let { font, foundItalic, foundWeight, strikethroughSize, strikethroughPosition, underlineThickness, underlinePosition } = this._requestFont(
                 fontName,
                 fontWeight,
                 fontItalicized
@@ -337,6 +375,10 @@ const text_renderer_prototype = global.Object.create(Object, {
             this._fontInfo.size = fontSize;
             this._fontInfo.weight = fontWeight;
             this._fontInfo.italic = fontItalicized;
+            this._fontInfo.strikethroughSize = strikethroughSize;
+            this._fontInfo.strikethroughPosition = strikethroughPosition;
+            this._fontInfo.underlineThickness = underlineThickness;
+            this._fontInfo.underlinePosition = underlinePosition;
         },
         writable: false
     },
@@ -504,7 +546,8 @@ const text_renderer_prototype = global.Object.create(Object, {
             this._ctx.textBaseline = "top";
             this._ctx.lineCap = "round";
             this._ctx.lineJoin = "round";
-            //TODO: Strikeout/Strikethrough
+            this._strikethrough = overrides.getStrikeout() ?? style.getStrikeout();
+            this._underline = overrides.getUnderline() ?? style.getUnderline();
             this._setOutline(time, style, overrides);
             this._setFont(time, style, overrides);
             this._setColors(time, style, overrides, pass, mask);
@@ -519,15 +562,18 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} offsetX the offset of the text in the x coordinate.
          * @param {number} offsetY the offset of the text in the y coordinate.
          * @param {boolean} stroke if true, stroke text, if false fill it.
+         * @param {boolean} strikethrough if true, strikethrough text, if false do nothing.
+         * @param {boolean} underline if true, underline text, if false do nothing.
          */
-        value: function (glyph, offsetX, offsetY, stroke) {
-            let letter_offset = 0;
+        value: function (glyph, offsetX, offsetY, stroke, strikethrough, underline) {
+            const glyphbb = glyph.getBoundingBox();
             const fontSize = this._fontInfo.size;
             const fontUnitsScale = this._fontInfo.font.unitsPerEm || 1000;
+            const fontSizeMulitplier = fontSize / fontUnitsScale;
             const yoffset =
-                this._fontInfo.font.ascender * (fontSize / fontUnitsScale);
+                this._fontInfo.font.ascender * fontSizeMulitplier;
             const path = glyph.getPath(
-                offsetX + letter_offset,
+                offsetX,
                 offsetY + yoffset,
                 fontSize
             );
@@ -538,6 +584,28 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._ctx.stroke();
             } else {
                 this._ctx.fill();
+            }
+            if (strikethrough) {
+                this._ctx.beginPath();
+                const size =  this._fontInfo.strikethroughSize * fontSizeMulitplier;
+                const position = this._fontInfo.strikethroughPosition * fontSizeMulitplier;
+                this._ctx.rect(offsetX + Math.min(glyphbb.x1, 0) * fontSizeMulitplier, offsetY + yoffset - position, glyph.advanceWidth * fontSizeMulitplier, size);
+                if (stroke) {
+                    this._ctx.stroke();
+                } else {
+                    this._ctx.fill();
+                }
+            }
+            if (underline) {
+                this._ctx.beginPath();
+                const size = this._fontInfo.underlineThickness * fontSizeMulitplier;
+                const position = this._fontInfo.underlinePosition * fontSizeMulitplier;
+                this._ctx.rect(offsetX + Math.min(glyphbb.x1, 0)  * fontSizeMulitplier, offsetY + yoffset - position, glyph.advanceWidth * fontSizeMulitplier, size);
+                if (stroke) {
+                    this._ctx.stroke();
+                } else {
+                    this._ctx.fill();
+                }
             }
         },
         writable: false
@@ -744,10 +812,14 @@ const text_renderer_prototype = global.Object.create(Object, {
                     glyph.advanceWidth *
                     this._scale.x *
                     this._pixelScaleRatio.xratio;
-                this._width =
-                    (firstSpacing + lastSpacing) *
-                    this._scale.x *
-                    this._pixelScaleRatio.xratio;
+                if (this._underline || this._strikethrough) {
+                    this._width = this._textSpacingWidth;
+                } else {
+                    this._width =
+                        (firstSpacing + lastSpacing) *
+                        this._scale.x *
+                        this._pixelScaleRatio.xratio;
+                }
             }
 
             //pad for outline
@@ -839,7 +911,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     glyph,
                                     offsetXUnscaled,
                                     offsetYUnscaled,
-                                    false
+                                    false,
+                                    this._strikethrough,
+                                    this._underline
                                 );
                             }
                             break;
@@ -870,14 +944,18 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     glyph,
                                     offsetXUnscaled + i,
                                     offsetYUnscaled,
-                                    true
+                                    true,
+                                    this._strikethrough,
+                                    this._underline
                                 );
                             }
                             this._drawGlyph(
                                 glyph,
                                 offsetXUnscaled,
                                 offsetYUnscaled,
-                                false
+                                false,
+                                this._strikethrough,
+                                this._underline
                             );
                         } else {
                             for (let i = -outline_x; i <= outline_x; i++) {
@@ -885,7 +963,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     glyph,
                                     offsetXUnscaled + i,
                                     offsetYUnscaled,
-                                    false
+                                    false,
+                                    this._strikethrough,
+                                    this._underline
                                 );
                             }
                         }
@@ -900,14 +980,18 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     glyph,
                                     offsetXUnscaled,
                                     offsetYUnscaled + i,
-                                    true
+                                    true,
+                                    this._strikethrough,
+                                    this._underline
                                 );
                             }
                             this._drawGlyph(
                                 glyph,
                                 offsetXUnscaled,
                                 offsetYUnscaled,
-                                false
+                                false,
+                                this._strikethrough,
+                                this._underline
                             );
                         } else {
                             for (let i = -outline_y; i <= outline_y; i++) {
@@ -915,7 +999,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     glyph,
                                     offsetXUnscaled,
                                     offsetYUnscaled + i,
-                                    false
+                                    false,
+                                    this._strikethrough,
+                                    this._underline
                                 );
                             }
                         }
@@ -925,7 +1011,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                         glyph,
                         offsetXUnscaled,
                         offsetYUnscaled,
-                        false
+                        false,
+                        this._strikethrough,
+                        this._underline
                     );
                 }
             }

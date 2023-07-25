@@ -276,7 +276,11 @@ const renderer_prototype = global.Object.create(Object, {
                     result = {
                         "font": fonts[i].font,
                         "foundItalic": foundItalic,
-                        "foundWeight": foundWeight
+                        "foundWeight": foundWeight,
+                        "strikethroughSize": fonts[i].strikethroughSize,
+                        "strikethroughPosition": fonts[i].strikethroughPosition,
+                        "underlineThickness": fonts[i].underlineThickness,
+                        "underlinePosition": fonts[i].underlinePosition
                     };
                     result["font"].ascender = fonts[i].ascent;
                     result["font"].descender = -fonts[i].descent;
@@ -299,7 +303,11 @@ const renderer_prototype = global.Object.create(Object, {
                         result = {
                             "font": arial_fonts[i].font,
                             "foundItalic": foundItalic,
-                            "foundWeight": foundWeight
+                            "foundWeight": foundWeight,
+                            "strikethroughSize": arial_fonts[i].strikethroughSize,
+                            "strikethroughPosition": arial_fonts[i].strikethroughPosition,
+                            "underlineThickness": arial_fonts[i].underlineThickness,
+                            "underlinePosition": arial_fonts[i].underlinePosition
                         };
                         result["font"].ascender = arial_fonts[i].ascent;
                         result["font"].descender = -arial_fonts[i].descent;

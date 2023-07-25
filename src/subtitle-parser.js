@@ -1228,6 +1228,8 @@ const parser_prototype = global.Object.create(global.Object, {
                 "parser": {},
                 "fontserver": fonts.slice(),
                 "renderer": {
+                    "resolution_x": 640,
+                    "resolution_y": 480,
                     "default_wrap_style": sabre.WrapStyleModes.SMART,
                     "default_collision_mode": sabre.CollisionModes.NORMAL
                 }

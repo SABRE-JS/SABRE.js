@@ -85,7 +85,17 @@ const font_server_prototype = Object.create(Object, {
         /**
          * @private
          * @param {string} name
-         * @returns {Array<{font:Font,ascent:number,descent:number,weight:number,selection:number}>} the resulting font and info.
+         * @returns {Array<{
+         *              font:Font,
+         *              ascent:number,
+         *              descent:number,
+         *              strikethroughSize:number,
+         *              strikethroughPosition:number,
+         *              underlineThickness:number,
+         *              underlinePosition:number,
+         *              weight:number,
+         *              selection:number
+         *          }>} the resulting font and info.
          */
         value: function (name) {
             name = name.toLowerCase().trim();
@@ -130,6 +140,10 @@ const font_server_prototype = Object.create(Object, {
                         "font": font,
                         "ascent": ascent,
                         "descent": descent,
+                        "strikethroughSize": font.tables.os2.yStrikeoutSize,
+                        "strikethroughPosition": font.tables.os2.yStrikeoutPosition,
+                        "underlineThickness": font.tables.post.underlineThickness,
+                        "underlinePosition": font.tables.post.underlinePosition,
                         "weight": font.tables.os2.usWeightClass,
                         "selection": font.tables.os2.fsSelection
                     });
