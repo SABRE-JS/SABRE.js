@@ -368,24 +368,24 @@ const shape_renderer_prototype = global.Object.create(Object, {
                     switch (cmdtype) {
                         case "m":
                         case "n":
-                            x = parseFloat(localparam[0]);
-                            y = parseFloat(localparam[1]);
+                            x = global.parseFloat(localparam[0]);
+                            y = global.parseFloat(localparam[1]);
                             break;
                         case "l":
                             expandBounds(max_coords, min_coords, x, y);
-                            x = parseFloat(localparam[0]);
-                            y = parseFloat(localparam[1]);
+                            x = global.parseFloat(localparam[0]);
+                            y = global.parseFloat(localparam[1]);
                             break;
                         case "b":
                             expandBounds(max_coords, min_coords, x, y);
-                            x = parseFloat(localparam[0]);
-                            y = parseFloat(localparam[1]);
+                            x = global.parseFloat(localparam[0]);
+                            y = global.parseFloat(localparam[1]);
                             expandBounds(max_coords, min_coords, x, y);
-                            x = parseFloat(localparam[2]);
-                            y = parseFloat(localparam[3]);
+                            x = global.parseFloat(localparam[2]);
+                            y = global.parseFloat(localparam[3]);
                             expandBounds(max_coords, min_coords, x, y);
-                            x = parseFloat(localparam[4]);
-                            y = parseFloat(localparam[5]);
+                            x = global.parseFloat(localparam[4]);
+                            y = global.parseFloat(localparam[5]);
                             break;
                         case "s":
                             {
@@ -395,8 +395,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                 let n = 1;
                                 for (let k = 0; k < localparam.length; k += 2) {
                                     spline_points[n++] = [
-                                        parseFloat(localparam[k]),
-                                        parseFloat(localparam[k + 1])
+                                        global.parseFloat(localparam[k]),
+                                        global.parseFloat(localparam[k + 1])
                                     ];
                                 }
                             }
@@ -404,8 +404,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
                         case "p":
                             spline_points = spline_points || [];
                             spline_points[spline_points.length] = [
-                                parseFloat(localparam[0]),
-                                parseFloat(localparam[1])
+                                global.parseFloat(localparam[0]),
+                                global.parseFloat(localparam[1])
                             ];
                             break;
                         case "c":
@@ -489,37 +489,37 @@ const shape_renderer_prototype = global.Object.create(Object, {
                             if (outline) this._ctx.stroke();
                             else this._ctx.fill();
                             this._ctx.beginPath();
-                            lastpos[0] = parseFloat(localparam[0]);
-                            lastpos[1] = parseFloat(localparam[1]);
+                            lastpos[0] = global.parseFloat(localparam[0]);
+                            lastpos[1] = global.parseFloat(localparam[1]);
                             this._ctx.moveTo(
                                 xoffset + lastpos[0],
                                 yoffset + lastpos[1]
                             );
                             break;
                         case "n":
-                            lastpos[0] = parseFloat(localparam[0]);
-                            lastpos[1] = parseFloat(localparam[1]);
+                            lastpos[0] = global.parseFloat(localparam[0]);
+                            lastpos[1] = global.parseFloat(localparam[1]);
                             this._ctx.moveTo(
                                 xoffset + lastpos[0],
                                 yoffset + lastpos[1]
                             );
                             break;
                         case "l":
-                            lastpos[0] = parseFloat(localparam[0]);
-                            lastpos[1] = parseFloat(localparam[1]);
+                            lastpos[0] = global.parseFloat(localparam[0]);
+                            lastpos[1] = global.parseFloat(localparam[1]);
                             this._ctx.lineTo(
                                 xoffset + lastpos[0],
                                 yoffset + lastpos[1]
                             );
                             break;
                         case "b":
-                            lastpos[0] = parseFloat(localparam[4]);
-                            lastpos[1] = parseFloat(localparam[5]);
+                            lastpos[0] = global.parseFloat(localparam[4]);
+                            lastpos[1] = global.parseFloat(localparam[5]);
                             this._ctx.bezierCurveTo(
-                                xoffset + parseFloat(localparam[0]),
-                                yoffset + parseFloat(localparam[1]),
-                                xoffset + parseFloat(localparam[2]),
-                                yoffset + parseFloat(localparam[3]),
+                                xoffset + global.parseFloat(localparam[0]),
+                                yoffset + global.parseFloat(localparam[1]),
+                                xoffset + global.parseFloat(localparam[2]),
+                                yoffset + global.parseFloat(localparam[3]),
                                 xoffset + lastpos[0],
                                 yoffset + lastpos[1]
                             );
@@ -531,8 +531,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                 let n = 1;
                                 for (let k = 0; k < localparam.length; k += 2) {
                                     spline_points[n++] = [
-                                        parseFloat(localparam[k]),
-                                        parseFloat(localparam[k + 1])
+                                        global.parseFloat(localparam[k]),
+                                        global.parseFloat(localparam[k + 1])
                                     ];
                                 }
                             }
@@ -540,8 +540,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
                         case "p":
                             spline_points = spline_points || [];
                             spline_points[spline_points.length] = [
-                                parseFloat(localparam[0]),
-                                parseFloat(localparam[1])
+                                global.parseFloat(localparam[0]),
+                                global.parseFloat(localparam[1])
                             ];
                             break;
                         case "c":

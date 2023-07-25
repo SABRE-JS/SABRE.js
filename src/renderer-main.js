@@ -304,10 +304,14 @@ const renderer_prototype = global.Object.create(Object, {
                             "font": arial_fonts[i].font,
                             "foundItalic": foundItalic,
                             "foundWeight": foundWeight,
-                            "strikethroughSize": arial_fonts[i].strikethroughSize,
-                            "strikethroughPosition": arial_fonts[i].strikethroughPosition,
-                            "underlineThickness": arial_fonts[i].underlineThickness,
-                            "underlinePosition": arial_fonts[i].underlinePosition
+                            "strikethroughSize":
+                                arial_fonts[i].strikethroughSize,
+                            "strikethroughPosition":
+                                arial_fonts[i].strikethroughPosition,
+                            "underlineThickness":
+                                arial_fonts[i].underlineThickness,
+                            "underlinePosition":
+                                arial_fonts[i].underlinePosition
                         };
                         result["font"].ascender = arial_fonts[i].ascent;
                         result["font"].descender = -arial_fonts[i].descent;
@@ -2297,8 +2301,8 @@ const renderer_prototype = global.Object.create(Object, {
                                 current_shape = [];
                             }
                         case "n":
-                            lastpos[0] = parseFloat(localparam[0]);
-                            lastpos[1] = parseFloat(localparam[1]);
+                            lastpos[0] = global.parseFloat(localparam[0]);
+                            lastpos[1] = global.parseFloat(localparam[1]);
                             break;
                         case "l":
                             if (current_shape.length === 0) {
@@ -2307,8 +2311,8 @@ const renderer_prototype = global.Object.create(Object, {
                                     height - scale * lastpos[1]
                                 );
                             }
-                            lastpos[0] = parseFloat(localparam[0]);
-                            lastpos[1] = parseFloat(localparam[1]);
+                            lastpos[0] = global.parseFloat(localparam[0]);
+                            lastpos[1] = global.parseFloat(localparam[1]);
                             current_shape.push(
                                 scale * lastpos[0],
                                 height - scale * lastpos[1]
@@ -2323,17 +2327,17 @@ const renderer_prototype = global.Object.create(Object, {
                             }
                             {
                                 let old_lastpos = [lastpos[0], lastpos[1]];
-                                lastpos[0] = parseFloat(localparam[4]);
-                                lastpos[1] = parseFloat(localparam[5]);
+                                lastpos[0] = global.parseFloat(localparam[4]);
+                                lastpos[1] = global.parseFloat(localparam[5]);
                                 for (let t = 0; t < 1; t += 0.001 / scale) {
                                     let result = this._bezierCurve(
                                         t,
                                         old_lastpos[0],
                                         old_lastpos[1],
-                                        parseFloat(localparam[0]),
-                                        parseFloat(localparam[1]),
-                                        parseFloat(localparam[2]),
-                                        parseFloat(localparam[3]),
+                                        global.parseFloat(localparam[0]),
+                                        global.parseFloat(localparam[1]),
+                                        global.parseFloat(localparam[2]),
+                                        global.parseFloat(localparam[3]),
                                         lastpos[0],
                                         lastpos[1]
                                     );
@@ -2357,8 +2361,8 @@ const renderer_prototype = global.Object.create(Object, {
                                 let n = 1;
                                 for (let k = 0; k < localparam.length; k += 2) {
                                     spline_points[n++] = [
-                                        parseFloat(localparam[k]),
-                                        parseFloat(localparam[k + 1])
+                                        global.parseFloat(localparam[k]),
+                                        global.parseFloat(localparam[k + 1])
                                     ];
                                 }
                             }
@@ -2366,8 +2370,8 @@ const renderer_prototype = global.Object.create(Object, {
                         case "p":
                             spline_points = spline_points || [];
                             spline_points[spline_points.length] = [
-                                parseFloat(localparam[0]),
-                                parseFloat(localparam[1])
+                                global.parseFloat(localparam[0]),
+                                global.parseFloat(localparam[1])
                             ];
                             break;
                         case "c":
