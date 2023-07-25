@@ -5,6 +5,20 @@
  |
  |-
  */
+
+/**
+ * Cleanup a raw color string.
+ * @param {string} raw the raw string.
+ * @return {string} the cleaned string.
+ * @private
+ */
+sabre["cleanRawColor"] = function (raw) {
+    return raw.replace(
+        /^[&H]*(?:0x)?((?:[0-9a-fA-F][0-9a-fA-F])+)[&H]*/,
+        "$1"
+    );
+};
+    
 sabre["SSAColor"] = function (r, g, b, a) {
     let obj = {
         r: 0,

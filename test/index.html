@@ -6,8 +6,8 @@
 		<meta name="description" content="Sabre.js Debug Page">
         <meta name="author" content="Patrick 'ILOVEPIE' Rhodes Martin">
         <script src="https://spectorcdn.babylonjs.com/spector.bundle.js"></script>
-        <script src="/include.js"></script>
-        <script async src="/sabre.js"></script>
+        <script src="/opentype.min.js"></script>
+        <script async src="/sabre.min.js"></script>
 	</head>
 	<body>
 		<div style="width:100%; display: flex; align-items: center; justify-content: center;">
@@ -27,27 +27,27 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,0
-Style: Alt,Times New Roman,40,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,8,10,10,10,0
+Style: Default,Rosario,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,0
+Style: Alt,Noto Serif,40,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,8,10,10,10,0
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 Comment: 0,0:00:00.00,0:00:05.00,Default,,0000,0000,0000,,This line is a comment and should not display on rendered output. This file is intended to be rendered on a 640x480 video, preferably a single solid colour, or maybe a checkerboard pattern.
 Dialogue: 0,0:00:00.00,0:00:05.00,Default,,0000,0000,0000,,This is a test of the ASS format and some basic features in it.
-Dialogue: 0,0:00:05.00,0:00:07.00,Default,,0000,0000,0000,,This and the previous line should both show at the bottom of the video in 20 pixel high white Arial with a 2 pixel black outline and 2 pixel offset shadow. This line is long so it should automatically be broken into several lines that are approximately even length, with upper lines being longer.
+Dialogue: 0,0:00:05.00,0:00:07.00,Default,,0000,0000,0000,,This and the previous line should both show at the bottom of the video in 20 pixel high white Rosario with a 2 pixel black outline and 2 pixel offset shadow. This line is long so it should automatically be broken into several lines that are approximately even length, with upper lines being longer.
 Dialogue: 0,0:00:07.00,0:00:09.00,Default,,0000,0000,0000,,Now going to test conflict resolution. {By the way, this is a common abuse, "inline-comments" in override tag groups. They should not be rendered and not generate errors, just be ignored.}
 Dialogue: 0,0:00:07.50,0:00:09.00,Default,,0000,0000,0000,,This line should be above the previous.
 Dialogue: 0,0:00:09.00,0:00:11.00,Default,,0000,0000,0000,,{\an1}This line should be lower-left aligned using the \an1 override.
 Dialogue: 0,0:00:11.00,0:00:13.00,Default,,0000,0000,0000,,{\an9}Upper right
-Dialogue: 0,0:00:12.00,0:00:14.00,Alt,,0000,0000,0000,,This one should be below the "Upper right" line and be centered on screen. It should also be in 40 pixel high Times New Roman.
-Dialogue: 0,0:00:14.00,0:00:16.00,Alt,,0000,0000,0000,,{\fs10}This should also be a toptitle in Times New Roman, but much smaller. Using an override tag to change size.
+Dialogue: 0,0:00:12.00,0:00:14.00,Alt,,0000,0000,0000,,This one should be below the "Upper right" line and be centered on screen. It should also be in 40 pixel high Noto Serif.
+Dialogue: 0,0:00:14.00,0:00:16.00,Alt,,0000,0000,0000,,{\fs10}This should also be a toptitle in Noto Serif, but much smaller. Using an override tag to change size.
 Dialogue: 0,0:00:16.00,0:00:18.00,Alt,,0000,0000,0000,,{\a5}Top-left using the legacy \a5 tag
 Dialogue: 0,0:00:18.00,0:00:20.00,Default,,0000,0000,0000,,{\an5}This line is centered on screen.\NAt the bottom of the screen should be two lines in different layers, they are rendered on top of each other because conflict resolution only considers lines in the same layer.
 Dialogue: 0,0:00:18.00,0:00:20.00,Default,,0000,0000,0000,,This is in layer 0
 Dialogue: 1,0:00:18.00,0:00:20.00,Default,,0000,0000,0000,,And this line is in layer 1
 Dialogue: 0,0:00:20.00,0:00:22.00,Default,,0000,0000,0000,,Another line in layer 0
 Dialogue: 1,0:00:20.00,0:00:22.00,Default,,0050,0000,0020,,And this line is in layer 1, but has changed its margins so it isn't exactly centered, and it's raised above the other line.
-Dialogue: 0,0:00:22.00,0:00:24.00,Default,,0000,0000,0000,,Switching {\fnTimes New Roman}font inline, {\r}and resetting styles
+Dialogue: 0,0:00:22.00,0:00:24.00,Default,,0000,0000,0000,,Switching {\fnNoto Serif}font inline, {\r}and resetting styles
 Dialogue: 0,0:00:24.00,0:00:26.00,Default,,0000,0000,0000,,Also {\rAlt}switching to a different style {\r}inline
 Dialogue: 0,0:00:26.00,0:00:28.00,Default,,0000,0000,0000,,{\an5\pos(258,131)}Positioning... this line should be in an odd place
 Dialogue: 0,0:00:26.00,0:00:28.00,Default,,0000,0000,0000,,{\an5\pos(222,338)\frz29.559}So should this one, and be rotated
@@ -101,43 +101,29 @@ Dialogue: 0,0:01:02.00,0:01:04.00,Default,,0000,0000,0000,,{\an5\t()\clip(69,215
                 startTime = 0;
             }
 
-            function loadFont(name) {
-                // check if font is already loaded
-                if (document.fonts.check("12px '" + name + "'")) return;
-
-                // if the name has an extension, load from local fonts
-                if (name.indexOf(".") !== -1) {
-                    const newFont = new FontFace(name, `url(./fonts/${name})`);
-                    newFont.load().then((font) => document.fonts.add(font));
-                    return;
-                }
-
-                // otherwise, load from google fonts and add stylesheet to document
-                let link = document.createElement("link");
-                link.setAttribute("rel", "stylesheet");
-                link.setAttribute("media", "print");
-                link.setAttribute("type", "text/css");
-                link.setAttribute("onload", "this.media='all';");
-                link.setAttribute(
-                    "href",
-                    `https://fonts.googleapis.com/css?family=${name}:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i`
-                );
-                document.head.appendChild(link);
-                //Force the font to load.
-                let force_load = document.createElement("span");
-                force_load.setAttribute(
-                    "style",
-                    `font-family: '${name}';position:absolute;top:-999999px;left:0px;`
-                );
-                force_load.appendChild(document.createTextNode("Force Load"));
-                document.body.appendChild(force_load);
+            function parseFont(data){
+                return opentype.parse(data);
             }
+
             window.onload = function(){
-                renderer = new sabre.SABRERenderer(loadFont);
-                renderer.loadSubtitles(subs.innerText);
-                renderer.setViewport(640,480);
-                playbutton.onclick = play;
-                stopbutton.onclick = stop;
+                renderer = new sabre.SABRERenderer(parseFont);
+                let counter = 2;
+                const fonts = [];
+                const callback = (err,font) => {
+                    if (err) {
+                        console.warn('Font could not be loaded: ' + err);
+                    } else {
+                        fonts.push(font);
+                    }
+                    if(--counter === 0){
+                        renderer.loadSubtitles(subs.innerText,fonts);
+                        renderer.setViewport(640,480);
+                        playbutton.onclick = play;
+                        stopbutton.onclick = stop;
+                    }
+                }
+                opentype.load('fonts/NotoSerif-Regular.ttf',callback);
+                opentype.load('fonts/Rosario-Regular.otf',callback);
             };
         </script>
     </body>

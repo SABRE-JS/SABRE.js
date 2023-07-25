@@ -1,4 +1,9 @@
 /**
+ * @type {function(string):string} 
+ */
+sabre.cleanRawColor = function(raw){return "";};
+
+/**
  * @typedef {!{
  *              toJSON:function():string,
  *              getRGBA:function():Array<number>,
