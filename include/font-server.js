@@ -1,5 +1,15 @@
 /**
- * @typedef {!{getFontsAndInfo:function(string):Array<{font:Font,ascent:number,descent:number,weight:number,selection:number}>}}
+ * @typedef {!{getFontsAndInfo:function(string):Array<{
+ *              font:Font,
+ *              ascent:number,
+ *              descent:number,
+ *              strikethroughSize:number,
+ *              strikethroughPosition:number,
+ *              underlineThickness:number,
+ *              underlinePosition:number,
+ *              weight:number,
+ *              selection:number
+ *          }>}}
  */
 var FontServer;
 /**

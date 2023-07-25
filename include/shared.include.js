@@ -71,6 +71,6 @@ var Path;
 var Glyph;
 
 /**
- * @typedef {{unitsPerEm:number,ascender:number,descender:number,tables:{os2:{usWeightClass:number,fsSelection:number,usWinAscent:number,usWinDescent:number,sTypoAscent:number,sTypoDescent:number},name:{unicode:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}},macintosh:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}},windows:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}}}},stringToGlyphs:function(string):Array<Glyph>,getKerningValue:function(Glyph,Glyph):number}}
+ * @typedef {{unitsPerEm:number,ascender:number,descender:number,tables:{post:{underlineThickness:number,underlinePosition:number},os2:{yStrikeoutSize:number,yStrikeoutPosition:number,usWeightClass:number,fsSelection:number,usWinAscent:number,usWinDescent:number,sTypoAscent:number,sTypoDescent:number},name:{unicode:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}},macintosh:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}},windows:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string}}}},stringToGlyphs:function(string):Array<Glyph>,getKerningValue:function(Glyph,Glyph):number}}
  */
 var Font;
