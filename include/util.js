@@ -48,6 +48,16 @@ sabre.cloneEventWithoutText = function (event) {
 };
 
 /**
+ * Hashes an object or array.
+ * @private
+ * @param {(!Object|!Array<*>)} obj Object or Array to hash.
+ * @return {number} The Hash of the events.
+ */
+sabre.hashObject = function (obj) {
+    return 0;
+};
+
+/**
  * Round number n to p places.
  * @param {number} n Number to round.
  * @param {number} p Number of places.

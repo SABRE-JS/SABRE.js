@@ -395,6 +395,39 @@ if (typeof global.CanvasRenderingContext2D !== "undefined") {
 }
 
 /**
+ * Fixes JSON that is being hashed.
+ * @private
+ * @param {string} key the key of the field of the object.
+ * @param {*} value the value of the field of the object.
+ * @return {*}
+ */
+const jsonFix = function (key, value) {
+    if (value === null) return "null";
+    else if (typeof value === "number" && global.isNaN(value)) return "NaN";
+    return value;
+};
+
+/**
+ * Hashes an object or array.
+ * @private
+ * @param {(!Object|!Array<*>)} obj Object or Array to hash.
+ * @return {number} The Hash of the events.
+ */
+sabre["hashObject"] = function (obj) {
+    let str_rep = JSON.stringify(obj, jsonFix);
+    let hash = 0,
+        i,
+        chr;
+    if (str_rep.length === 0) return hash;
+    for (i = 0; i < str_rep.length; i++) {
+        chr = str_rep.charCodeAt(i);
+        hash = (hash << 5) - hash + chr;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+};
+
+/**
  * Compare two strings for equality ignoring case.
  * @param {string} a String 1 in comparison.
  * @param {string} b string 2 in comparison.

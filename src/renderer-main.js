@@ -40,18 +40,6 @@ const isImageBitmapSupported =
     typeof global.ImageBitmap !== "undefined" &&
     typeof global.OffscreenCanvas !== "undefined";
 
-/**
- * Fixes JSON
- * @private
- * @param {string} key the key of the field of the object.
- * @param {*} value the value of the field of the object.
- * @return {*}
- */
-const jsonFix = function (key, value) {
-    if (value === null) return "null";
-    else if (typeof value === "number" && global.isNaN(value)) return "NaN";
-    return value;
-};
 const renderer_prototype = global.Object.create(Object, {
     //BEGIN MODULE VARIABLES
 
@@ -458,29 +446,6 @@ const renderer_prototype = global.Object.create(Object, {
                     return true;
             }
             return false;
-        },
-        writable: false
-    },
-
-    _hashEvents: {
-        /**
-         * Hashes a list of subtitle events.
-         * @private
-         * @param {Array<SSASubtitleEvent>} events list of subtitle events to hash.
-         * @return {number} The Hash of the events.
-         */
-        value: function (events) {
-            let str_rep = JSON.stringify(events, jsonFix);
-            let hash = 0,
-                i,
-                chr;
-            if (str_rep.length === 0) return hash;
-            for (i = 0; i < str_rep.length; i++) {
-                chr = str_rep.charCodeAt(i);
-                hash = (hash << 5) - hash + chr;
-                hash |= 0; // Convert to 32bit integer
-            }
-            return hash;
         },
         writable: false
     },
@@ -3646,7 +3611,7 @@ const renderer_prototype = global.Object.create(Object, {
             });
 
             if (!this._listOfEventsContainsAnimation(events)) {
-                let currentHash = this._hashEvents(events);
+                let currentHash = sabre.hashObject(events);
                 if (currentHash === this._lastHash && !this._lastAnimating)
                     return;
                 this._lastAnimating = false;
