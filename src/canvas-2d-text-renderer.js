@@ -110,6 +110,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         /**
          * @type {?{
          *              font:!Font,
+         *              name:string,
          *              size:number,
          *              italic:boolean,
          *              foundItalic:boolean,
@@ -369,6 +370,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                 fontItalicized
             );
             this._fontInfo = {};
+            this._fontInfo.name = fontName;
             this._fontInfo.font = font;
             this._fontInfo.foundItalic = foundItalic;
             this._fontInfo.foundWeight = foundWeight;
@@ -416,11 +418,8 @@ const text_renderer_prototype = global.Object.create(Object, {
                             sabre.KaraokeModes.COLOR_SWEEP &&
                         time < overrides.getKaraokeEnd()
                     ) {
-                        let progress =
-                            Math.max(time - overrides.getKaraokeStart(), 0) /
-                            (overrides.getKaraokeEnd() -
-                                overrides.getKaraokeStart());
-                        let gradient = this._ctx.createLinearGradient(
+                        const progress = this._calcKaraokeWipeProgress(time, style, overrides);
+                        const gradient = this._ctx.createLinearGradient(
                             0,
                             0,
                             this._width,
@@ -471,11 +470,8 @@ const text_renderer_prototype = global.Object.create(Object, {
                             sabre.KaraokeModes.COLOR_SWEEP &&
                         time < overrides.getKaraokeEnd()
                     ) {
-                        let progress =
-                            Math.max(time - overrides.getKaraokeStart(), 0) /
-                            (overrides.getKaraokeEnd() -
-                                overrides.getKaraokeStart());
-                        let gradient = this._ctx.createLinearGradient(
+                        const progress = this._calcKaraokeWipeProgress(time, style, overrides);
+                        const gradient = this._ctx.createLinearGradient(
                             0,
                             0,
                             this._width,
@@ -530,6 +526,95 @@ const text_renderer_prototype = global.Object.create(Object, {
             return spacing;
         },
         writable: false
+    },
+
+    _calcShadow: {
+        /**
+         * Calculates the shadow offset.
+         * @param {number} time
+         * @param {SSAStyleDefinition} style
+         * @param {SSAStyleOverride} overrides
+         * @returns {{x:number, y:number}} Shadow x and y offsets.
+         */
+        value: function (time, style, overrides){
+            const shadowComponent =
+            Math.sign(style.getShadow()) *
+            Math.sqrt(Math.pow(style.getShadow(), 2) / 2);
+
+            return {x: overrides.getShadowX() ?? shadowComponent, y: overrides.getShadowY() ?? shadowComponent};
+        },
+        writeable: false
+    },
+
+    _calcKaraokeWipeProgress: {
+        /**
+         * Calculates the karaoke wipe progress.
+         * @param {number} time
+         * @param {SSAStyleDefinition} style
+         * @param {SSAStyleOverride} overrides
+         * @returns {number} Ratio of completion of the wipe in the range 0 to 1.
+         */
+        value: function (time, style, overrides){
+            return Math.max(time - overrides.getKaraokeStart(), 0) / (overrides.getKaraokeEnd() - overrides.getKaraokeStart());
+        },
+        writeable: false
+    },
+
+    _getStateHash: {
+        /**
+         * Returns a hash of the current event's state for indexing cached glyphs.
+         * @param {number} time the time relative to the start of the event.
+         * @param {SSASubtitleEvent} event the subtitle event to render
+         * @param {number} pass the pass we are on.
+         * @param {boolean} mask is this a mask for setable colors.
+         * @returns {number} Hash of the state.
+         */
+        value: function (time, event, pass, mask) {
+            const style = event.getStyle();
+            const overrides = event.getOverrides();
+
+            const karaokeMode = overrides.getKaraokeMode();
+            let karaokeProgress = 0;
+            if (karaokeMode !== sabre.KaraokeModes.OFF) {
+                switch(karaokeMode) {
+                    case sabre.KaraokeModes.COLOR_SWAP:
+                        if (pass === sabre.RenderPasses.FILL && time >= overrides.getKaraokeStart()) {
+                            karaokeProgress = 1;
+                        }
+                        break;
+                    case sabre.KaraokeModes.COLOR_SWEEP:
+                        if (pass === sabre.RenderPasses.FILL) {
+                            karaokeProgress = this._calcKaraokeWipeProgress(time, style, overrides);
+                        }                        
+                        break;
+                    case sabre.KaraokeModes.OUTLINE_TOGGLE:
+                        if (pass === sabre.RenderPasses.OUTLINE && time >= overrides.getKaraokeStart()) {
+                            karaokeProgress = 1;
+                        }
+                        break;
+                }
+            }
+            const state = {
+                isMask: mask,
+                renderPass: pass,
+                outline: this._calcOutline(time, style, overrides),
+                strikethrough: overrides.getStrikeout() ?? style.getStrikeout(),
+                underline: overrides.getUnderline() ?? style.getUnderline(),
+                borderStyle: style.getBorderStyle(),
+                karaokeMode: overrides.getKaraokeMode(),
+                karaokeProgress: karaokeProgress,
+                //spacing: this._calcSpacing(time, style, overrides), //TODO: See if this is needed.
+                scale: this._calcScale(time, style, overrides),
+                shadow: this._calcShadow(time, style, overrides),
+                pixelScaleRatio: this._pixelScaleRatio,
+                fontName: this._fontInfo.name,
+                fontSize: this._fontInfo.size,
+                fontWeight: this._fontInfo.weight,
+                fontItalic: this._fontInfo.italic
+            };
+            return sabre.hashObject(state);
+        },
+        writeable: false
     },
 
     _handleStyling: {
@@ -691,6 +776,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSASubtitleEvent} event the subtitle event to render
          * @param {number} pass the pass we are on.
          * @param {boolean} mask is this a mask for setable colors.
+         * @returns {number} event style state hash. 
          */
         value: function (time, event, pass, mask) {
             if (!this._initialized) this._init();
@@ -719,26 +805,22 @@ const text_renderer_prototype = global.Object.create(Object, {
                     borderStyle !== sabre.BorderStyleModes.SRT_STYLE &&
                     borderStyle !== sabre.BorderStyleModes.SRT_NO_OVERLAP
                 ) {
-                    let shadowComponent =
-                        Math.sign(style.getShadow()) *
-                        Math.sqrt(Math.pow(style.getShadow(), 2) / 2);
-
-                    let shadowX = overrides.getShadowX() ?? shadowComponent;
-                    let shadowY = overrides.getShadowY() ?? shadowComponent;
-
-                    if (shadowX === 0 && shadowY === 0) {
+                    const shadow = this._calcShadow(time, style, overrides);
+                   
+                    if (shadow.x === 0 && shadow.y === 0) {
                         this._noDraw = true;
-                        return;
+                        return this._getStateHash(time, event, pass, mask);
                     }
 
                     this._eOffsetX +=
-                        shadowX * this._scale.x * this._pixelScaleRatio.xratio;
+                        shadow.x * this._scale.x * this._pixelScaleRatio.xratio;
                     this._eOffsetY +=
-                        shadowY * this._scale.y * this._pixelScaleRatio.yratio;
+                        shadow.y * this._scale.y * this._pixelScaleRatio.yratio;
                 } else if (borderStyle === sabre.BorderStyleModes.NONE) {
                     this._noDraw = true;
                 }
             }
+            return this._getStateHash(time, event, pass, mask);
         },
         writable: false
     },

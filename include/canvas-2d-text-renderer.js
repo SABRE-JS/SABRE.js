@@ -1,7 +1,7 @@
 /**
  * @typedef {!{
  *              calcBounds:function(number,SSASubtitleEvent):void,
- *              startEventRender:function(number,SSASubtitleEvent,number,boolean):void,
+ *              startEventRender:function(number,SSASubtitleEvent,number,boolean):number,
  *              renderGlyph:function(number,SSASubtitleEvent,number,boolean):boolean,
  *              setRequestFont:function(!function(string):!{font:Font,foundItalic:boolean,foundWeight:number}):void,
  *              setPixelScaleRatio:function(number,number):void,
