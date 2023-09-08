@@ -1,4 +1,3 @@
-
 varying vec2 v_texcoord;
 varying vec2 v_maskcoord;
 

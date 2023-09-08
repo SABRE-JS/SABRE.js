@@ -543,7 +543,7 @@ const text_renderer_prototype = global.Object.create(Object, {
 
             return {x: overrides.getShadowX() ?? shadowComponent, y: overrides.getShadowY() ?? shadowComponent};
         },
-        writeable: false
+        writable: false
     },
 
     _calcKaraokeWipeProgress: {
@@ -557,7 +557,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         value: function (time, style, overrides){
             return Math.max(time - overrides.getKaraokeStart(), 0) / (overrides.getKaraokeEnd() - overrides.getKaraokeStart());
         },
-        writeable: false
+        writable: false
     },
 
     _getStateHash: {
@@ -614,7 +614,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             };
             return sabre.hashObject(state);
         },
-        writeable: false
+        writable: false
     },
 
     _handleStyling: {
@@ -825,16 +825,45 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    "nextGlyph": {
+        /**
+         * Return info on the next glyph for rendering.
+         * @returns {{prevGlyph:?Glyph, glyph:?Glyph, breakOut:boolean}} Information on the glyph to render.
+         */
+        value: function () {
+            if (
+                this._glyphs.length <= 0 ||
+                this._glyphIndex > this._glyphs.length ||
+                this._noDraw
+            ) {
+                this._width = 0;
+                this._height = 0;
+                this._textSpacingWidth = 0;
+                return {prevGlyph:null, glyph:null, breakOut:true};
+            }
+
+            const prevGlyph =
+                this._glyphIndex - 1 >= 0
+                    ? this._glyphs[this._glyphIndex - 1]
+                    : null;
+            return {prevGlyph:prevGlyph, glyph:this._glyphs[this._glyphIndex], breakOut:++this._glyphIndex > this._glyphs.length};
+        },
+        writable: false
+    },
+
     "renderGlyph": {
         /**
          * Render a glyph for composition.
          * @param {number} time the time relative to the start of the event.
-         * @param {SSASubtitleEvent} event the subtitle event to render
+         * @param {SSASubtitleEvent} event the subtitle event to render.
+         * @param {{prevGlyph:?Glyph, glyph:?Glyph, breakOut:boolean}} glyphInfo Glyph information.
          * @param {number} pass the pass we are on.
          * @param {boolean} mask is this a mask for setable colors.
-         * @returns {boolean} should break out of the render loop.
+         * @returns {boolean} Is glyph cachable.
          */
-        value: function (time, event, pass, mask) {
+        value: function (time, event, glyphInfo, pass, mask) {
+            if (glyphInfo.breakOut && !glyphInfo.glyph)
+                return false;
             let style = event.getStyle();
             let overrides = event.getOverrides();
             let lineOverrides = event.getLineOverrides();
@@ -847,23 +876,8 @@ const text_renderer_prototype = global.Object.create(Object, {
             this._ctx.resetTransform();
 
             this._offsetX = this._offsetY = 0;
-            if (
-                this._glyphs.length <= 0 ||
-                this._glyphIndex >= this._glyphs.length ||
-                this._noDraw
-            ) {
-                this._width = 0;
-                this._height = 0;
-                this._textSpacingWidth = 0;
-                return true;
-            }
-
-            const prevGlyph =
-                this._glyphIndex - 1 >= 0
-                    ? this._glyphs[this._glyphIndex - 1]
-                    : null;
-            const glyph = this._glyphs[this._glyphIndex];
-            const result = ++this._glyphIndex >= this._glyphs.length;
+            const prevGlyph = glyphInfo.prevGlyph;
+            const glyph = /** @type {Glyph} */ (glyphInfo.glyph);
             //calculate size of text without scaling.
             {
                 const fontSize = this._fontInfo.size;
@@ -984,7 +998,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                 if (pass === sabre.RenderPasses.BACKGROUND) {
                     switch (borderStyle) {
                         case sabre.BorderStyleModes.NONE:
-                            return result;
+                            return false;
                         case sabre.BorderStyleModes.UNKNOWN:
                         case sabre.BorderStyleModes.NORMAL:
                         default:
@@ -1010,7 +1024,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                         borderStyle === sabre.BorderStyleModes.SRT_STYLE ||
                         borderStyle === sabre.BorderStyleModes.SRT_NO_OVERLAP
                     )
-                        return result;
+                        return false;
                     let outline_x_bigger = outline_x > outline_y;
                     let outline_gt_zero = outline_x > 0 && outline_y > 0;
                     this._ctx.fillStyle = this._ctx.strokeStyle;
@@ -1099,7 +1113,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                     );
                 }
             }
-            return result;
+            return true;
         },
         writable: false
     },

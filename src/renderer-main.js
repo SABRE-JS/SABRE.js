@@ -31,6 +31,18 @@
 let CollisionInfo;
 
 /**
+ * @private 
+ * @typedef {!{x:number,y:number,x2:number,y2:number}}
+ */
+let AvailableSpace;
+
+/**
+ * @private
+ * @typedef {{x:number,y:number,width:number,height:number,extents:Array<number>,offset:Array<number>,offsetExternal:Array<number>,dimensions:Array<number>,textureDimensions:Array<number>}}
+ */
+let GlyphCacheInfo;
+
+/**
  * Is ImageBitmap Supported.
  * @type {boolean}
  * @private
@@ -39,6 +51,13 @@ const isImageBitmapSupported =
     typeof global.ImageBitmapRenderingContext !== "undefined" &&
     typeof global.ImageBitmap !== "undefined" &&
     typeof global.OffscreenCanvas !== "undefined";
+
+/**
+ * Size of the subtitle cache.
+ * @type {!{x:number,y:number}}
+ * @private
+ */
+const cacheSize = Object.freeze({x:4096,y:2048});
 
 const renderer_prototype = global.Object.create(Object, {
     //BEGIN MODULE VARIABLES
@@ -76,8 +95,20 @@ const renderer_prototype = global.Object.create(Object, {
     //END MODULE VARIABLES
     //BEGIN LOCAL VARIABLES
 
+    _glyphCache: {
+        /** @type {?Object<number,Object<number,GlyphCacheInfo>>} */
+        value: null,
+        writable: true
+    },
+
+    _cacheAvailability: {
+        /** @type {?Array<AvailableSpace>} */
+        value: null,
+        writable: true
+    },
+
     _compositingCanvas: {
-        /** @type{?(HTMLCanvasElement|OffscreenCanvas)} */
+        /** @type {?(HTMLCanvasElement|OffscreenCanvas)} */
         value: null,
         writable: true
     },
@@ -85,119 +116,136 @@ const renderer_prototype = global.Object.create(Object, {
     //BEGIN WEBGL VARIABLES
 
     _renderData: {
-        /** @type{Object<string,Float32Array>} */
+        /** @type {Object<string,Float32Array>} */
         value: null,
         writable: true
     },
 
     _gl: {
-        /** @type{?WebGLRenderingContext} */
+        /** @type {?WebGLRenderingContext} */
         value: null,
         writable: true
     },
 
     _textureCoordinatesBuffer: {
-        /** @type{?WebGLBuffer} */
+        /** @type {?WebGLBuffer} */
         value: null,
         writable: true
     },
 
     _maskCoordinatesBuffer: {
-        /** @type{?WebGLBuffer} */
+        /** @type {?WebGLBuffer} */
         value: null,
         writable: true
     },
 
     _subtitlePositioningBuffer: {
-        /** @type{?WebGLBuffer} */
+        /** @type {?WebGLBuffer} */
         value: null,
         writable: true
     },
 
     _fullscreenPositioningBuffer: {
-        /** @type{?WebGLBuffer} */
+        /** @type {?WebGLBuffer} */
         value: null,
         writable: true
     },
 
     _clipBuffer: {
-        /** @type{?WebGLBuffer} */
+        /** @type {?WebGLBuffer} */
         value: null,
         writable: true
     },
 
     _textureSubtitle: {
-        /** @type{?WebGLTexture} */
+        /** @type {?WebGLTexture} */
         value: null,
         writable: true
     },
 
     _textureSubtitleBounds: {
-        /** @type{?Array<number>} */
+        /** @type {?Array<number>} */
         value: null,
         writable: true
     },
 
     _textureSubtitleMaskBounds: {
-        /** @type{?Array<number>} */
+        /** @type {?Array<number>} */
         value: null,
         writable: true
     },
 
     _fbTextureA: {
-        /** @type{?WebGLTexture} */
+        /** @type {?WebGLTexture} */
         value: null,
         writable: true
     },
 
     _fbTextureB: {
-        /** @type{?WebGLTexture} */
+        /** @type {?WebGLTexture} */
+        value: null,
+        writable: true
+    },
+
+    _fbTextureCache: {
+        /** @type {?WebGLTexture} */
         value: null,
         writable: true
     },
 
     _frameBufferA: {
-        /** @type{?WebGLFramebuffer} */
+        /** @type {?WebGLFramebuffer} */
         value: null,
         writable: true
     },
 
     _frameBufferB: {
-        /** @type{?WebGLFramebuffer} */
+        /** @type {?WebGLFramebuffer} */
+        value: null,
+        writable: true
+    },
+
+    _frameBufferCache: {
+        /** @type {?WebGLFramebuffer} */
         value: null,
         writable: true
     },
 
     _positioningShader: {
-        /** @type{?Shader} */
+        /** @type {?Shader} */
         value: null,
         writable: true
     },
 
     _convEdgeBlurShader: {
-        /** @type{?Shader} */
+        /** @type {?Shader} */
         value: null,
         writable: true
     },
 
     _gaussEdgeBlurPass1Shader: {
-        /** @type{?Shader} */
+        /** @type {?Shader} */
         value: null,
         writable: true
     },
 
     _gaussEdgeBlurPass2Shader: {
-        /** @type{?Shader} */
+        /** @type {?Shader} */
         value: null,
         writable: true
     },
 
     _clipShader: {
-        /** @type{?Shader} */
+        /** @type {?Shader} */
         value: null,
         writable: true
     },
 
+    _cacheShader: {
+        /** @type {?Shader} */
+        value: null,
+        writable: true
+    },
     //END WEBGL VARIABLES
 
     _contextLost: {
@@ -1589,6 +1637,7 @@ const renderer_prototype = global.Object.create(Object, {
 
     _glSetup: {
         value: function () {
+            this._clearCache();
             const default_tex_coords = this._getFloat32Array("tex_coords", 12);
             default_tex_coords.set([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1], 0);
             const fullscreen_coordinates = this._getFloat32Array(
@@ -1793,6 +1842,40 @@ const renderer_prototype = global.Object.create(Object, {
                 null
             );
 
+            this._fbTextureCache = this._gl.createTexture();
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureCache);
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_S,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_WRAP_T,
+                this._gl.CLAMP_TO_EDGE
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MIN_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.texParameteri(
+                this._gl.TEXTURE_2D,
+                this._gl.TEXTURE_MAG_FILTER,
+                this._gl.LINEAR
+            );
+            this._gl.texImage2D(
+                this._gl.TEXTURE_2D,
+                0,
+                this._gl.RGBA,
+                cacheSize.x,
+                cacheSize.y,
+                0,
+                this._gl.RGBA,
+                this._gl.UNSIGNED_BYTE,
+                null
+            );
+
             this._frameBufferA = this._gl.createFramebuffer();
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferA);
             this._gl.viewport(
@@ -1822,6 +1905,22 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.COLOR_ATTACHMENT0,
                 this._gl.TEXTURE_2D,
                 this._fbTextureB,
+                0
+            );
+
+            this._frameBufferCache = this._gl.createFramebuffer();
+            this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferCache);
+            this._gl.viewport(
+                0,
+                0,
+                this._config.renderer["resolution_x"],
+                this._config.renderer["resolution_y"]
+            );
+            this._gl.framebufferTexture2D(
+                this._gl.FRAMEBUFFER,
+                this._gl.COLOR_ATTACHMENT0,
+                this._gl.TEXTURE_2D,
+                this._fbTextureCache,
                 0
             );
 
@@ -1980,6 +2079,15 @@ const renderer_prototype = global.Object.create(Object, {
             this._clipShader.compile(this._gl);
             this._clipShader.addOption("u_aspectscale", [1, 1], "2f");
             this._clipShader.addOption("u_texture", 0, "1i");
+            
+            this._cacheShader = new sabre.Shader();
+            this._cacheShader.load(
+                sabre.getScriptPath() + "shaders/cache.vertex.glsl",
+                sabre.getScriptPath() + "shaders/cache.fragment.glsl",
+                1
+            );
+            this._cacheShader.compile(this._gl);
+            this._cacheShader.addOption("u_texture", 0, "1i");
         },
         writable: false
     },
@@ -2056,9 +2164,10 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source the source.
          * @param {CollisionInfo} position the collision and positiong info of the event.
          * @param {SSASubtitleEvent} event the event we're working on.
+         * @param {?GlyphCacheInfo} cachedGlyphInfo the info for the cached glyph.
          * @return {Object} the resulting matrix.
          */
-        value: function (time, source, position, event) {
+        value: function (time, source, position, event, cachedGlyphInfo) {
             const toRad = Math.PI / 180;
 
             let rotation = this._calcRotation(
@@ -2080,8 +2189,15 @@ const renderer_prototype = global.Object.create(Object, {
 
             let preRotationMatrix;
             {
-                let offset = source.getOffset();
-                let offsetExternal = source.getOffsetExternal();
+                let offset;
+                let offsetExternal;
+                if (cachedGlyphInfo === null) {
+                    offset = source.getOffset();
+                    offsetExternal = source.getOffsetExternal();
+                } else {
+                    offset = cachedGlyphInfo.offset;
+                    offsetExternal = cachedGlyphInfo.offsetExternal;
+                }
                 // prettier-ignore
                 preRotationMatrix = {
                     m00: 1, m01: 0, m02: 0, m03: -offset[0]+offsetExternal[0],
@@ -2492,10 +2608,184 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _allocateCacheSpace: {
+        /**
+         * Allocates some space in the cache for a glyph or shape.
+         * @param {number} requiredWidth Width required for the texture.
+         * @param {number} requiredHeight Height required for the texture.
+         * @returns {?Array<number>} Results of allocation attempt.
+         */
+        value: function (requiredWidth, requiredHeight) {
+            requiredWidth = requiredWidth / cacheSize.x;
+            requiredHeight = requiredHeight / cacheSize.y;
+            for(let i = 0; i < this._cacheAvailability.length; i++) {
+                const area = this._cacheAvailability[i];
+                const areaWidth = area.x2 - area.x;
+                const areaHeight = area.y2 - area.y;
+                if(areaWidth >= requiredWidth && areaHeight >= requiredHeight) {
+                    const params = [i,1];
+                    if(areaWidth > requiredWidth){
+                        params.push({x:area.x+requiredWidth,y:area.y,x2:area.x2,y2:area.y+requiredHeight});
+                    }
+                    if(areaHeight > requiredHeight){
+                        params.push({x:area.x,y:area.y+requiredHeight,x2:area.x2,y2:area.y2});
+                    }
+                    this._cacheAvailability.splice.apply(this._cacheAvailability,params);
+                    return [area.x,area.y,requiredWidth,requiredHeight];
+                }
+            }
+            return null;
+        },
+        writable: false
+    },
+
+    _clearCache: {
+        /**
+         * Clears the cache.
+         */
+        value: function () {
+            this._cacheAvailability = [{x:0,y:0,x2:1,y2:1}];
+            this._glyphCache = {};
+        },
+        writable: false
+    },
+
+    _checkGlyphCache: {
+        /**
+         * Checks if a glyph is cached in VRAM.
+         * @param {number} stateHash Hash of the text renderer state.
+         * @param {number} glyphIndex Uniquely identifies the glyph.
+         * @returns {boolean} Is glyph cached.
+         */
+        value: function (stateHash, glyphIndex) {
+            const glyphDictionary = this._glyphCache[stateHash];
+            if (glyphDictionary) {
+                return !!glyphDictionary[glyphIndex];
+            }
+            return false;
+        },
+        writable: false
+    },
+
+    _fetchInfoFromGlyphCache: {
+        /**
+         * Fetches glyph positioning info from cache.
+         * @param {number} stateHash Hash of the text renderer state.
+         * @param {number} glyphIndex Uniquely identifies the glyph.
+         * @returns {?GlyphCacheInfo} The positioning info of the cached glyph.
+         */
+        value: function (stateHash, glyphIndex) {
+            const glyphDictionary = this._glyphCache[stateHash];
+            if (glyphDictionary) {
+                return glyphDictionary[glyphIndex];
+            }
+            return null;
+        },
+        writable: false
+    },
+
+    _cacheGlyph: {
+        /**
+         * Puts a glyph in VRAM cache.
+         * @param {number} stateHash Hash of the text renderer state.
+         * @param {number} glyphIndex Uniquely identifies the glyph.
+         * @param {Canvas2DTextRenderer} source The source for the texture.
+         */
+        value: function (stateHash, glyphIndex, source) {
+            let positionAttrib = this._cacheShader.getAttribute(
+                this._gl,
+                "a_position"
+            );
+            let textureAttrib = this._cacheShader.getAttribute(
+                this._gl,
+                "a_texcoord"
+            );
+            //TODO: Test and revise function.
+            this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferCache);
+            this._cacheShader.bindShader(this._gl);
+            this._gl.activeTexture(this._gl.TEXTURE0);
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
+            const cacheInfo = /** @type {GlyphCacheInfo} */ ({});
+            cacheInfo.extents = source.getExtents();
+            cacheInfo.offset = source.getOffset();
+            cacheInfo.offsetExternal = source.getOffsetExternal();
+            cacheInfo.dimensions = source.getDimensions();
+            cacheInfo.textureDimensions = source.getTextureDimensions();
+            let allocationInfo = this._allocateCacheSpace(cacheInfo.textureDimensions[0],cacheInfo.textureDimensions[1]);
+            if(allocationInfo === null){
+                this._gl.clear(this._gl.COLOR_BUFFER_BIT|this._gl.DEPTH_BUFFER_BIT);
+                this._clearCache();
+                allocationInfo = this._allocateCacheSpace(cacheInfo.textureDimensions[0],cacheInfo.textureDimensions[1]);
+            }
+            [cacheInfo.x,cacheInfo.y,cacheInfo.width,cacheInfo.height] = allocationInfo;
+            this._loadSubtitleToVram(source, this._textureSubtitleBounds);
+            this._gl.bindBuffer(
+                this._gl.ARRAY_BUFFER,
+                this._subtitlePositioningBuffer
+            );
+            this._gl.enableVertexAttribArray(positionAttrib);
+            this._gl.vertexAttribPointer(
+                positionAttrib,
+                3,
+                this._gl.FLOAT,
+                false,
+                0,
+                0
+            );
+            const coordinates = this._getFloat32Array("coordinates", 18);
+            // prettier-ignore
+            coordinates.set([cacheInfo.x,cacheInfo.y,0,
+                             cacheInfo.x+cacheInfo.width,cacheInfo.y,0,
+                             cacheInfo.x+cacheInfo.width,cacheInfo.y+cacheInfo.height,0,
+                             cacheInfo.x,cacheInfo.y+cacheInfo.height,0,
+                             cacheInfo.x,cacheInfo.y,0,
+                             cacheInfo.x+cacheInfo.width,cacheInfo.y+cacheInfo.height,0]);
+            this._gl.bufferData(this._gl.ARRAY_BUFFER, coordinates, this._gl.DYNAMIC_DRAW);
+
+            let width = cacheInfo.textureDimensions[0] / cacheInfo.extents[0];
+            let height = cacheInfo.textureDimensions[1] / cacheInfo.extents[1];
+
+            let tex_coords = this._getFloat32Array("tex_coords", 12);
+            // prettier-ignore
+            tex_coords.set([
+                0,      1,
+                width,  1,
+                0,      1 - height,
+                0,      1 - height,
+                width,  1,
+                width,  1 - height
+            ],0);
+            
+            this._gl.bindBuffer(
+                this._gl.ARRAY_BUFFER,
+                this._textureCoordinatesBuffer
+            );
+            this._gl.enableVertexAttribArray(textureAttrib);
+            this._gl.vertexAttribPointer(
+                textureAttrib,
+                2,
+                this._gl.FLOAT,
+                false,
+                0,
+                0
+            );
+            this._gl.bufferData(
+                this._gl.ARRAY_BUFFER,
+                tex_coords,
+                this._gl.DYNAMIC_DRAW
+            );
+            this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+            //this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+            this._glyphCache[stateHash] = this._glyphCache[stateHash] ?? {};
+            this._glyphCache[stateHash][glyphIndex] = cacheInfo;
+        },
+        writable: false
+    },
+
     _loadSubtitleToVram: {
         /**
          * Loads a subtitle into graphics card's VRAM.
-         * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source the source.
+         * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source The source.
          */
         value: function (source, bounds) {
             let extents = source.getExtents();
@@ -2533,8 +2823,12 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} pass the current render pass we are on.
          * @param {CollisionInfo} position the positioning info of the subtitle.
          * @param {boolean} isShape is the subtitle we are compositing a shape?
+         * @param {?number} texHash State hash for the texture.
+         * @param {?number} texIndex Index for the texture.
+         * @param {?number} texMaskHash State hash for the texture mask.
+         * @param {?number} texMaskIndex Index for the texture mask.
          */
-        value: function (time, currentEvent, pass, position, isShape) {
+        value: function (time, currentEvent, pass, position, isShape, texHash, texIndex, texMaskHash, texMaskIndex) {
             let blurInfo = this._getBlurInfoForCompositing(
                 time,
                 currentEvent,
@@ -2645,24 +2939,34 @@ const renderer_prototype = global.Object.create(Object, {
                     this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
                 );
             }
-
+            //TODO: Render from cache.
+            let cachedGlyphInfo = null;
+            let cachedMaskGlyphInfo = null;
             this._gl.activeTexture(this._gl.TEXTURE0);
-            this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
-
-            this._loadSubtitleToVram(source, this._textureSubtitleBounds);
-
+            if (texHash === null) {
+                this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
+                this._loadSubtitleToVram(source, this._textureSubtitleBounds); 
+            } else {
+                this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureCache);
+                cachedGlyphInfo = this._fetchInfoFromGlyphCache(texHash,texIndex);
+            }
             if (!isShape) {
                 this._gl.activeTexture(this._gl.TEXTURE1);
-                this._gl.bindTexture(
-                    this._gl.TEXTURE_2D,
-                    this._textureSubtitleMask
-                );
-
-                this._loadSubtitleToVram(
-                    this._textMaskRenderer,
-                    this._textureSubtitleMaskBounds
-                );
-
+                if (texMaskHash === null) {
+                    this._gl.bindTexture(
+                        this._gl.TEXTURE_2D,
+                        this._textureSubtitleMask
+                    );
+    
+                    this._loadSubtitleToVram(
+                        this._textMaskRenderer,
+                        this._textureSubtitleMaskBounds
+                    );
+                } else {
+                    this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureCache);
+                    cachedMaskGlyphInfo = this._fetchInfoFromGlyphCache(texMaskHash,texMaskIndex);
+                }
+                
                 this._positioningShader.updateOption("u_hasmask", 1);
             } else {
                 this._positioningShader.updateOption("u_hasmask", 0);
@@ -2675,7 +2979,8 @@ const renderer_prototype = global.Object.create(Object, {
                 time,
                 source,
                 position,
-                currentEvent
+                currentEvent,
+                cachedGlyphInfo
             );
 
             let upperLeft;
@@ -2683,7 +2988,7 @@ const renderer_prototype = global.Object.create(Object, {
             let upperRight;
             let lowerRight;
             {
-                let dimensions = source.getDimensions();
+                let dimensions = (cachedGlyphInfo ? cachedGlyphInfo.dimensions : source.getDimensions());
 
                 upperLeft = {
                     m00: 0,
@@ -2725,7 +3030,7 @@ const renderer_prototype = global.Object.create(Object, {
             ],0);
 
             let tex_coords;
-            {
+            if (texHash === null) {
                 let dimensions = source.getTextureDimensions();
                 let extents = this._textureSubtitleBounds;
                 let width = dimensions[0] / extents[0];
@@ -2741,26 +3046,50 @@ const renderer_prototype = global.Object.create(Object, {
                     width,  1,
                     width,  1 - height
                 ],0);
+            } else {
+                tex_coords = this._getFloat32Array("tex_coords", 12);
+                // prettier-ignore
+                tex_coords.set([
+                    cachedGlyphInfo.x,                          1 - cachedGlyphInfo.y,
+                    cachedGlyphInfo.x + cachedGlyphInfo.width,  1 - cachedGlyphInfo.y,
+                    cachedGlyphInfo.x,                          1 - cachedGlyphInfo.y - cachedGlyphInfo.height,
+                    cachedGlyphInfo.x,                          1 - cachedGlyphInfo.y - cachedGlyphInfo.height,
+                    cachedGlyphInfo.x + cachedGlyphInfo.width,  1 - cachedGlyphInfo.y,
+                    cachedGlyphInfo.x + cachedGlyphInfo.width,  1 - cachedGlyphInfo.y - cachedGlyphInfo.height
+                ],0); 
             }
 
             let mask_coords;
             if (!isShape) {
-                let maskDimensions =
-                    this._textMaskRenderer.getTextureDimensions();
-                let extents = this._textureSubtitleMaskBounds;
-                let width = maskDimensions[0] / extents[0];
-                let height = maskDimensions[1] / extents[1];
+                if (texMaskHash === null) {
+                    let maskDimensions =
+                        this._textMaskRenderer.getTextureDimensions();
+                    let extents = this._textureSubtitleMaskBounds;
+                    let width = maskDimensions[0] / extents[0];
+                    let height = maskDimensions[1] / extents[1];
 
-                mask_coords = this._getFloat32Array("mask_coords", 12);
-                // prettier-ignore
-                mask_coords.set([
-                    0,      1,
-                    width,  1,
-                    0,      1 - height,
-                    0,      1 - height,
-                    width,  1,
-                    width,  1 - height
-                ],0);
+                    mask_coords = this._getFloat32Array("mask_coords", 12);
+                    // prettier-ignore
+                    mask_coords.set([
+                        0,      1,
+                        width,  1,
+                        0,      1 - height,
+                        0,      1 - height,
+                        width,  1,
+                        width,  1 - height
+                    ],0);
+                } else {
+                    mask_coords = this._getFloat32Array("mask_coords", 12);
+                    // prettier-ignore
+                    mask_coords.set([
+                        cachedMaskGlyphInfo.x,                              1 - cachedMaskGlyphInfo.y,
+                        cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  1 - cachedMaskGlyphInfo.y,
+                        cachedMaskGlyphInfo.x,                              1 - cachedMaskGlyphInfo.y - cachedMaskGlyphInfo.height,
+                        cachedMaskGlyphInfo.x,                              1 - cachedMaskGlyphInfo.y - cachedMaskGlyphInfo.height,
+                        cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  1 - cachedMaskGlyphInfo.y,
+                        cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  1 - cachedMaskGlyphInfo.y - cachedMaskGlyphInfo.height
+                    ],0);  
+                }
             }
             //Draw background or outline or text depending on pass to destination
             {
@@ -3445,6 +3774,8 @@ const renderer_prototype = global.Object.create(Object, {
             this._textRenderer = new sabre.Canvas2DTextRenderer();
             this._textMaskRenderer = new sabre.Canvas2DTextRenderer();
             this._shapeRenderer = new sabre.Canvas2DShapeRenderer();
+            this._glyphCache = {};
+            this._cacheAvailability = [{x:0,y:0,x2:1,y2:1}];
             this._renderData = {};
         },
         writable: false
@@ -3637,40 +3968,61 @@ const renderer_prototype = global.Object.create(Object, {
                         let currentEvent = events[i + j];
                         if (currentEvent.getText().trim() === "") continue;
                         if (!currentEvent.getOverrides().getDrawingMode()) {
-                            let breakout;
-                            this._textRenderer.startEventRender(
+                            const textHash = this._textRenderer.startEventRender(
                                 time,
                                 currentEvent,
                                 pass,
                                 false
                             );
-                            this._textMaskRenderer.startEventRender(
+                            const textMaskHash = this._textMaskRenderer.startEventRender(
                                 time,
                                 currentEvent,
                                 pass,
                                 true
                             );
-                            do {
-                                breakout = this._textRenderer.renderGlyph(
-                                    time,
-                                    currentEvent,
-                                    pass,
-                                    false
-                                );
-                                this._textMaskRenderer.renderGlyph(
-                                    time,
-                                    currentEvent,
-                                    pass,
-                                    true
-                                );
+                            for(;;) { //Infinite loop equivelent to while(true) but faster.
+                                const textGlyphInfo = this._textRenderer.nextGlyph();
+                                if (textGlyphInfo.breakOut)
+                                    break;
+                                if (textGlyphInfo.glyph && this._checkGlyphCache(textHash, textGlyphInfo.glyph.index)) {
+                                    //TODO: Calculate external offset of text.
+                                } else {
+                                    const textCacheGlyph = this._textRenderer.renderGlyph(
+                                        time,
+                                        currentEvent,
+                                        textGlyphInfo,
+                                        pass,
+                                        false
+                                    );
+                                    if (textCacheGlyph)
+                                        this._cacheGlyph(textHash, textGlyphInfo.glyph.index, this._textRenderer);
+                                }
+                                const maskGlyphInfo = this._textMaskRenderer.nextGlyph();
+                                if (maskGlyphInfo.glyph && this._checkGlyphCache(textMaskHash, maskGlyphInfo.glyph.index)) {
+                                    //TODO: Calculate external offset of mask.
+                                } else {
+                                    const maskCacheGlyph = this._textMaskRenderer.renderGlyph(
+                                        time,
+                                        currentEvent,
+                                        maskGlyphInfo,
+                                        pass,
+                                        true
+                                    );
+                                    if (maskCacheGlyph)
+                                        this._cacheGlyph(textMaskHash, maskGlyphInfo.glyph.index, this._textMaskRenderer);
+                                }
                                 this._compositeSubtitle(
                                     time,
                                     currentEvent,
                                     pass,
                                     positions[i + j],
-                                    false
+                                    false,
+                                    textHash,
+                                    textGlyphInfo.glyph.index,
+                                    textMaskHash,
+                                    maskGlyphInfo.glyph.index
                                 );
-                            } while (!breakout);
+                            }
                         } else {
                             this._shapeRenderer.renderEvent(
                                 time,
@@ -3683,7 +4035,11 @@ const renderer_prototype = global.Object.create(Object, {
                                 currentEvent,
                                 pass,
                                 positions[i + j],
-                                true
+                                true,
+                                null,
+                                null,
+                                null,
+                                null
                             );
                         }
                     }

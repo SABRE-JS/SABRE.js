@@ -243,7 +243,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
             lineTransitionTargetOverrides,
             pass
         ) {
-            //TODO: Figgure out a good way to do dimension specific line widths.
+            //TODO: Figure out a good way to do dimension specific line widths.
             let outline = this._calcOutline(time, style, overrides);
             this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
         },
