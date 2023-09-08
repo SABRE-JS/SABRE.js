@@ -2,7 +2,8 @@
  * @typedef {!{
  *              calcBounds:function(number,SSASubtitleEvent):void,
  *              startEventRender:function(number,SSASubtitleEvent,number,boolean):number,
- *              renderGlyph:function(number,SSASubtitleEvent,number,boolean):boolean,
+ *              nextGlyph:function():{prevGlyph:?Glyph,glyph:?Glyph,breakOut:boolean},
+ *              renderGlyph:function(number,SSASubtitleEvent,{prevGlyph:?Glyph,glyph:?Glyph,breakOut:boolean},number,boolean):boolean,
  *              setRequestFont:function(!function(string):!{font:Font,foundItalic:boolean,foundWeight:number}):void,
  *              setPixelScaleRatio:function(number,number):void,
  *              getOffset:function():Array<number>,

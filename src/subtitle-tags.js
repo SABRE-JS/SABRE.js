@@ -1922,7 +1922,6 @@ sabre["getOverrideTags"] = function(){
                         }
                     }
 
-                    //TODO: Implement transition tag parsing.
                     final_param = _parseTransitionTags(
                         timeInfo,
                         getStyleByName,
