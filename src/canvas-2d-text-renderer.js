@@ -594,6 +594,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                         break;
                 }
             }
+            const scale = this._calcScale(time, style, overrides);
+            scale.x *= this._pixelScaleRatio.xratio;
+            scale.y *= this._pixelScaleRatio.yratio;
             const state = {
                 isMask: mask,
                 renderPass: pass,
@@ -604,7 +607,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                 karaokeMode: overrides.getKaraokeMode(),
                 karaokeProgress: karaokeProgress,
                 //spacing: this._calcSpacing(time, style, overrides), //TODO: See if this is needed.
-                scale: this._calcScale(time, style, overrides),
+                scale: scale,
                 shadow: this._calcShadow(time, style, overrides),
                 pixelScaleRatio: this._pixelScaleRatio,
                 fontName: this._fontInfo.name,
@@ -839,16 +842,46 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._width = 0;
                 this._height = 0;
                 this._textSpacingWidth = 0;
-                return {prevGlyph:null, glyph:null, breakOut:true};
+                return {"prevGlyph":null, "glyph":null, "breakOut":true};
             }
 
             const prevGlyph =
                 this._glyphIndex - 1 >= 0
                     ? this._glyphs[this._glyphIndex - 1]
                     : null;
-            return {prevGlyph:prevGlyph, glyph:this._glyphs[this._glyphIndex], breakOut:++this._glyphIndex > this._glyphs.length};
+            return {"prevGlyph":prevGlyph, "glyph":this._glyphs[this._glyphIndex], "breakOut":++this._glyphIndex > this._glyphs.length};
         },
         writable: false
+    },
+
+    "positionCachedGlyph": {
+        /**
+         * Position a cached glyph.
+         * @param {{prevGlyph:?Glyph, glyph:?Glyph, breakOut:boolean}} glyphInfo Glyph information.
+         */
+        value: function (glyphInfo) {
+            if (glyphInfo.breakOut && (glyphInfo.glyph === null || typeof(glyphInfo.glyph) === "undefined"))
+                return;
+            const prevGlyph = glyphInfo["prevGlyph"];
+            const glyph = /** @type {Glyph} */ (glyphInfo["glyph"]);
+            {
+                const fontSize = this._fontInfo.size;
+                const fontUnitsScale = this._fontInfo.font.unitsPerEm || 1000;
+                if (prevGlyph !== null) {
+                    const kerning = this._fontInfo.font.getKerningValue(
+                        prevGlyph,
+                        glyph
+                    );
+                    this._eOffsetX +=
+                        ((kerning + prevGlyph.advanceWidth) *
+                            (fontSize / fontUnitsScale) +
+                            this._spacing) *
+                        this._scale.x *
+                        this._pixelScaleRatio.xratio;
+                }
+            }
+        },
+        writable: true
     },
 
     "renderGlyph": {
@@ -862,7 +895,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @returns {boolean} Is glyph cachable.
          */
         value: function (time, event, glyphInfo, pass, mask) {
-            if (glyphInfo.breakOut && !glyphInfo.glyph)
+            if (glyphInfo.breakOut && (glyphInfo.glyph === null || typeof(glyphInfo.glyph) === "undefined"))
                 return false;
             let style = event.getStyle();
             let overrides = event.getOverrides();
@@ -876,8 +909,8 @@ const text_renderer_prototype = global.Object.create(Object, {
             this._ctx.resetTransform();
 
             this._offsetX = this._offsetY = 0;
-            const prevGlyph = glyphInfo.prevGlyph;
-            const glyph = /** @type {Glyph} */ (glyphInfo.glyph);
+            const prevGlyph = glyphInfo["prevGlyph"];
+            const glyph = /** @type {Glyph} */ (glyphInfo["glyph"]);
             //calculate size of text without scaling.
             {
                 const fontSize = this._fontInfo.size;
@@ -892,7 +925,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                 const lastSpacing =
                     Math.max(0, bb.x2) * (fontSize / fontUnitsScale);
                 this._offsetX += firstSpacing;
-                if (prevGlyph) {
+                if (prevGlyph !== null) {
                     const kerning = this._fontInfo.font.getKerningValue(
                         prevGlyph,
                         glyph
