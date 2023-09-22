@@ -294,6 +294,20 @@ const renderer_prototype = global.Object.create(Object, {
     //END LOCAL VARIABLES
     //BEGIN LOCAL FUNCTIONS
 
+    _getCacheWidth: {
+        value: function () {
+            return Math.max(this._compositingCanvas.width*2,cacheSize.x);
+        },
+        writable: false
+    },
+
+    _getCacheHeight: {
+        value: function () {
+            return Math.max(this._compositingCanvas.height*2,cacheSize.y);
+        },
+        writable: false
+    },
+
     _findFont: {
         value: function (name, weight, italic) {
             const fonts = this._fontServer.getFontsAndInfo(name);
@@ -1650,8 +1664,8 @@ const renderer_prototype = global.Object.create(Object, {
             this._gl.viewport(
                 0,
                 0,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"]
+                this._compositingCanvas.width,
+                this._compositingCanvas.height
             );
 
             this._gl.clearColor(0, 0, 0, 0);
@@ -1800,8 +1814,8 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.TEXTURE_2D,
                 0,
                 this._gl.RGBA,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"],
+                this._compositingCanvas.width,
+                this._compositingCanvas.height,
                 0,
                 this._gl.RGBA,
                 this._gl.UNSIGNED_BYTE,
@@ -1834,8 +1848,8 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.TEXTURE_2D,
                 0,
                 this._gl.RGBA,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"],
+                this._compositingCanvas.width,
+                this._compositingCanvas.height,
                 0,
                 this._gl.RGBA,
                 this._gl.UNSIGNED_BYTE,
@@ -1868,8 +1882,8 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.TEXTURE_2D,
                 0,
                 this._gl.RGBA,
-                cacheSize.x,
-                cacheSize.y,
+                this._getCacheWidth(),
+                this._getCacheHeight(),
                 0,
                 this._gl.RGBA,
                 this._gl.UNSIGNED_BYTE,
@@ -1881,8 +1895,8 @@ const renderer_prototype = global.Object.create(Object, {
             this._gl.viewport(
                 0,
                 0,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"]
+                this._compositingCanvas.width,
+                this._compositingCanvas.height
             );
             this._gl.framebufferTexture2D(
                 this._gl.FRAMEBUFFER,
@@ -1897,8 +1911,8 @@ const renderer_prototype = global.Object.create(Object, {
             this._gl.viewport(
                 0,
                 0,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"]
+                this._compositingCanvas.width,
+                this._compositingCanvas.height
             );
             this._gl.framebufferTexture2D(
                 this._gl.FRAMEBUFFER,
@@ -1913,8 +1927,8 @@ const renderer_prototype = global.Object.create(Object, {
             this._gl.viewport(
                 0,
                 0,
-                this._config.renderer["resolution_x"],
-                this._config.renderer["resolution_y"]
+                this._compositingCanvas.width,
+                this._compositingCanvas.height
             );
             this._gl.framebufferTexture2D(
                 this._gl.FRAMEBUFFER,
@@ -2031,12 +2045,12 @@ const renderer_prototype = global.Object.create(Object, {
             this._convEdgeBlurShader.addOption("u_texture", 0, "1i");
             this._convEdgeBlurShader.addOption(
                 "u_resolution_x",
-                this._config.renderer["resolution_x"],
+                this._compositingCanvas.width,
                 "1f"
             );
             this._convEdgeBlurShader.addOption(
                 "u_resolution_y",
-                this._config.renderer["resolution_y"],
+                this._compositingCanvas.height,
                 "1f"
             );
 
@@ -2049,7 +2063,7 @@ const renderer_prototype = global.Object.create(Object, {
             this._gaussEdgeBlurPass1Shader.compile(this._gl);
             this._gaussEdgeBlurPass1Shader.addOption(
                 "u_resolution_x",
-                this._config.renderer["resolution_x"],
+                this._compositingCanvas.width,
                 "1f"
             );
             this._gaussEdgeBlurPass1Shader.addOption("u_texture", 0, "1i");
@@ -2064,7 +2078,7 @@ const renderer_prototype = global.Object.create(Object, {
             this._gaussEdgeBlurPass2Shader.compile(this._gl);
             this._gaussEdgeBlurPass2Shader.addOption(
                 "u_resolution_y",
-                this._config.renderer["resolution_y"],
+                this._compositingCanvas.height,
                 "1f"
             );
             this._gaussEdgeBlurPass2Shader.addOption("u_texture", 0, "1i");
@@ -2613,11 +2627,13 @@ const renderer_prototype = global.Object.create(Object, {
          * Allocates some space in the cache for a glyph or shape.
          * @param {number} requiredWidth Width required for the texture.
          * @param {number} requiredHeight Height required for the texture.
+         * @param {boolean} extraSpace Check for extra space.
          * @returns {?Array<number>} Results of allocation attempt.
          */
-        value: function (requiredWidth, requiredHeight) {
-            requiredWidth = requiredWidth / cacheSize.x;
-            requiredHeight = requiredHeight / cacheSize.y;
+        value: function (requiredWidth, requiredHeight, extraSpace) {
+            requiredWidth = requiredWidth / this._getCacheWidth();
+            requiredHeight = requiredHeight / this._getCacheHeight();
+            let result = null;
             for(let i = 0; i < this._cacheAvailability.length; i++) {
                 const area = this._cacheAvailability[i];
                 const areaWidth = area.x2 - area.x;
@@ -2625,16 +2641,35 @@ const renderer_prototype = global.Object.create(Object, {
                 if(areaWidth >= requiredWidth && areaHeight >= requiredHeight) {
                     const params = [i,1];
                     if(areaWidth > requiredWidth){
-                        params.push({x:area.x+requiredWidth,y:area.y,x2:area.x2,y2:area.y+requiredHeight});
+                        params.push({x:area.x+requiredWidth,y:area.y,x2:area.x2,y2:area.y2});
                     }
                     if(areaHeight > requiredHeight){
                         params.push({x:area.x,y:area.y+requiredHeight,x2:area.x2,y2:area.y2});
                     }
+                    if(params[2] && params[3]){
+                        let maxx = params[3].x2
+                        let maxy = params[2].y2
+                        let minx = params[3].x2 = params[2].x;
+                        let miny = params[2].y2 = params[3].y;
+                        params.push({x:minx,y:miny,x2:maxx,y2:maxy});
+                    }
                     this._cacheAvailability.splice.apply(this._cacheAvailability,params);
-                    return [area.x,area.y,requiredWidth,requiredHeight];
+                    result = [area.x,area.y,requiredWidth,requiredHeight];
+                    break;
                 }
             }
-            return null;
+            if(extraSpace){
+                for(let i = 0; i < this._cacheAvailability.length; i++) {
+                    const area = this._cacheAvailability[i];
+                    const areaWidth = area.x2 - area.x;
+                    const areaHeight = area.y2 - area.y;
+                    if(areaWidth >= requiredWidth && areaHeight >= requiredHeight) {
+                        return result;
+                    }
+                }
+                return null;
+            }
+            return result;
         },
         writable: false
     },
@@ -2690,8 +2725,9 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} stateHash Hash of the text renderer state.
          * @param {number} glyphIndex Uniquely identifies the glyph.
          * @param {Canvas2DTextRenderer} source The source for the texture.
+         * @param {boolean} extraSpace Check for extra space.
          */
-        value: function (stateHash, glyphIndex, source) {
+        value: function (stateHash, glyphIndex, source, extraSpace) {
             let positionAttrib = this._cacheShader.getAttribute(
                 this._gl,
                 "a_position"
@@ -2702,20 +2738,25 @@ const renderer_prototype = global.Object.create(Object, {
             );
             //TODO: Test and revise function.
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferCache);
+            this._gl.viewport(
+                0,
+                0,
+                this._getCacheWidth(),
+                this._getCacheHeight()
+            );
             this._cacheShader.bindShader(this._gl);
             this._gl.activeTexture(this._gl.TEXTURE0);
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
             const cacheInfo = /** @type {GlyphCacheInfo} */ ({});
-            cacheInfo.extents = source.getExtents();
             cacheInfo.offset = source.getOffset();
             cacheInfo.offsetExternal = source.getOffsetExternal();
             cacheInfo.dimensions = source.getDimensions();
             cacheInfo.textureDimensions = source.getTextureDimensions();
-            let allocationInfo = this._allocateCacheSpace(cacheInfo.textureDimensions[0],cacheInfo.textureDimensions[1]);
+            let allocationInfo = this._allocateCacheSpace(cacheInfo.textureDimensions[0],cacheInfo.textureDimensions[1],extraSpace);
             if(allocationInfo === null){
                 this._gl.clear(this._gl.COLOR_BUFFER_BIT|this._gl.DEPTH_BUFFER_BIT);
                 this._clearCache();
-                allocationInfo = this._allocateCacheSpace(cacheInfo.textureDimensions[0],cacheInfo.textureDimensions[1]);
+                allocationInfo = this._allocateCacheSpace(cacheInfo.textureDimensions[0],cacheInfo.textureDimensions[1],extraSpace);
             }
             [cacheInfo.x,cacheInfo.y,cacheInfo.width,cacheInfo.height] = allocationInfo;
             this._loadSubtitleToVram(source, this._textureSubtitleBounds);
@@ -2733,17 +2774,24 @@ const renderer_prototype = global.Object.create(Object, {
                 0
             );
             const coordinates = this._getFloat32Array("coordinates", 18);
+
+            let adjustedX = (cacheInfo.x * 2) - 1;
+            let adjustedY = (cacheInfo.y * 2) - 1;
+
+            let adjustedXW = ((cacheInfo.x+cacheInfo.width) * 2) -1;
+            let adjustedYH = ((cacheInfo.y+cacheInfo.height) * 2) -1;
             // prettier-ignore
-            coordinates.set([cacheInfo.x,cacheInfo.y,0,
-                             cacheInfo.x+cacheInfo.width,cacheInfo.y,0,
-                             cacheInfo.x+cacheInfo.width,cacheInfo.y+cacheInfo.height,0,
-                             cacheInfo.x,cacheInfo.y+cacheInfo.height,0,
-                             cacheInfo.x,cacheInfo.y,0,
-                             cacheInfo.x+cacheInfo.width,cacheInfo.y+cacheInfo.height,0]);
+            coordinates.set([adjustedX,adjustedYH,0,
+                             adjustedXW,adjustedYH,0,
+                             adjustedX,adjustedY,0,
+                             adjustedX,adjustedY,0,
+                             adjustedXW,adjustedYH,0,
+                             adjustedXW,adjustedY,0]);
             this._gl.bufferData(this._gl.ARRAY_BUFFER, coordinates, this._gl.DYNAMIC_DRAW);
 
-            let width = cacheInfo.textureDimensions[0] / cacheInfo.extents[0];
-            let height = cacheInfo.textureDimensions[1] / cacheInfo.extents[1];
+            const bounds = this._textureSubtitleBounds;
+            let width = cacheInfo.textureDimensions[0] / bounds[0];
+            let height = cacheInfo.textureDimensions[1] / bounds[1];
 
             let tex_coords = this._getFloat32Array("tex_coords", 12);
             // prettier-ignore
@@ -2775,7 +2823,13 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.DYNAMIC_DRAW
             );
             this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
-            //this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+            this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+            this._gl.viewport(
+                0,
+                0,
+                this._compositingCanvas.width,
+                this._compositingCanvas.height
+            );
             this._glyphCache[stateHash] = this._glyphCache[stateHash] ?? {};
             this._glyphCache[stateHash][glyphIndex] = cacheInfo;
         },
@@ -2789,7 +2843,7 @@ const renderer_prototype = global.Object.create(Object, {
          */
         value: function (source, bounds) {
             let extents = source.getExtents();
-            if (extents[0] <= bounds[0] && extents[1] <= bounds[1]) {
+            if (extents[0] < bounds[0] && extents[1] < bounds[1]) {
                 this._gl.texSubImage2D(
                     this._gl.TEXTURE_2D,
                     0,
@@ -3050,12 +3104,12 @@ const renderer_prototype = global.Object.create(Object, {
                 tex_coords = this._getFloat32Array("tex_coords", 12);
                 // prettier-ignore
                 tex_coords.set([
-                    cachedGlyphInfo.x,                          1 - cachedGlyphInfo.y,
-                    cachedGlyphInfo.x + cachedGlyphInfo.width,  1 - cachedGlyphInfo.y,
-                    cachedGlyphInfo.x,                          1 - cachedGlyphInfo.y - cachedGlyphInfo.height,
-                    cachedGlyphInfo.x,                          1 - cachedGlyphInfo.y - cachedGlyphInfo.height,
-                    cachedGlyphInfo.x + cachedGlyphInfo.width,  1 - cachedGlyphInfo.y,
-                    cachedGlyphInfo.x + cachedGlyphInfo.width,  1 - cachedGlyphInfo.y - cachedGlyphInfo.height
+                    cachedGlyphInfo.x,                          cachedGlyphInfo.y + cachedGlyphInfo.height,
+                    cachedGlyphInfo.x + cachedGlyphInfo.width,  cachedGlyphInfo.y + cachedGlyphInfo.height,
+                    cachedGlyphInfo.x,                          cachedGlyphInfo.y,
+                    cachedGlyphInfo.x,                          cachedGlyphInfo.y,
+                    cachedGlyphInfo.x + cachedGlyphInfo.width,  cachedGlyphInfo.y + cachedGlyphInfo.height,
+                    cachedGlyphInfo.x + cachedGlyphInfo.width,  cachedGlyphInfo.y
                 ],0); 
             }
 
@@ -3082,12 +3136,12 @@ const renderer_prototype = global.Object.create(Object, {
                     mask_coords = this._getFloat32Array("mask_coords", 12);
                     // prettier-ignore
                     mask_coords.set([
-                        cachedMaskGlyphInfo.x,                              1 - cachedMaskGlyphInfo.y,
-                        cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  1 - cachedMaskGlyphInfo.y,
-                        cachedMaskGlyphInfo.x,                              1 - cachedMaskGlyphInfo.y - cachedMaskGlyphInfo.height,
-                        cachedMaskGlyphInfo.x,                              1 - cachedMaskGlyphInfo.y - cachedMaskGlyphInfo.height,
-                        cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  1 - cachedMaskGlyphInfo.y,
-                        cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  1 - cachedMaskGlyphInfo.y - cachedMaskGlyphInfo.height
+                        cachedMaskGlyphInfo.x,                              cachedMaskGlyphInfo.y + cachedMaskGlyphInfo.height,
+                        cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  cachedMaskGlyphInfo.y + cachedMaskGlyphInfo.height,
+                        cachedMaskGlyphInfo.x,                              cachedMaskGlyphInfo.y,
+                        cachedMaskGlyphInfo.x,                              cachedMaskGlyphInfo.y,
+                        cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  cachedMaskGlyphInfo.y + cachedMaskGlyphInfo.height,
+                        cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  cachedMaskGlyphInfo.y
                     ],0);  
                 }
             }
@@ -3499,11 +3553,11 @@ const renderer_prototype = global.Object.create(Object, {
                     if (blurInfo.blur > 0) {
                         this._convEdgeBlurShader.updateOption(
                             "u_resolution_x",
-                            this._config.renderer["resolution_x"]
+                            this._compositingCanvas.width
                         );
                         this._convEdgeBlurShader.updateOption(
                             "u_resolution_y",
-                            this._config.renderer["resolution_y"]
+                            this._compositingCanvas.height
                         );
                         this._convEdgeBlurShader.updateOption("u_texture", 0);
                         this._convEdgeBlurShader.bindShader(this._gl);
@@ -3604,7 +3658,7 @@ const renderer_prototype = global.Object.create(Object, {
                         //Apply gaussian filter 1
                         this._gaussEdgeBlurPass1Shader.updateOption(
                             "u_resolution_x",
-                            this._config.renderer["resolution_x"]
+                            this._compositingCanvas.width
                         );
                         this._gaussEdgeBlurPass1Shader.updateOption(
                             "u_sigma",
@@ -3667,7 +3721,7 @@ const renderer_prototype = global.Object.create(Object, {
                         //Apply gaussian filter 2
                         this._gaussEdgeBlurPass2Shader.updateOption(
                             "u_resolution_y",
-                            this._config.renderer["resolution_y"]
+                            this._compositingCanvas.height
                         );
                         this._gaussEdgeBlurPass2Shader.updateOption(
                             "u_sigma",
@@ -3803,11 +3857,13 @@ const renderer_prototype = global.Object.create(Object, {
             );
             const options = Object.freeze({
                 "alpha": true,
-                "desynchronized": true,
+                //"desynchronized": true,
                 "antialias": true,
                 "powerPreference": "high-performance",
                 "premultipliedAlpha": false
             });
+
+            let isCanvasOffscreen = false;
             if (typeof global.OffscreenCanvas === "undefined") {
                 this._compositingCanvas =
                     global.document.createElement("canvas");
@@ -3818,6 +3874,25 @@ const renderer_prototype = global.Object.create(Object, {
                 this._compositingCanvas = new global.OffscreenCanvas(
                     config.renderer["resolution_x"],
                     config.renderer["resolution_y"]
+                );
+                isCanvasOffscreen = true
+            }
+
+            this._gl = this._compositingCanvas.getContext("webgl", options);
+            //To work around safari bug in safari 16:
+            if(!this._gl&&isCanvasOffscreen){
+                this._compositingCanvas =
+                    global.document.createElement("canvas");
+                this._compositingCanvas.width = config.renderer["resolution_x"];
+                this._compositingCanvas.height =
+                    config.renderer["resolution_y"];
+                this._gl = this._compositingCanvas.getContext("webgl", options);
+            }
+
+            if (!this._gl) {
+                this._gl = this._compositingCanvas.getContext(
+                    "experimental-webgl",
+                    options
                 );
             }
 
@@ -3845,14 +3920,6 @@ const renderer_prototype = global.Object.create(Object, {
                 },
                 false
             );
-
-            this._gl = this._compositingCanvas.getContext("webgl", options);
-            if (!this._gl) {
-                this._gl = this._compositingCanvas.getContext(
-                    "experimental-webgl",
-                    options
-                );
-            }
             this._glSetup();
         },
         writable: false
@@ -3873,10 +3940,19 @@ const renderer_prototype = global.Object.create(Object, {
             this._textRenderer.setPixelScaleRatio(scale_x, scale_y);
             this._textMaskRenderer.setPixelScaleRatio(scale_x, scale_y);
             this._shapeRenderer.setPixelScaleRatio(scale_x, scale_y);
+            this._clearCache();
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferA);
             this._gl.viewport(0, 0, width, height);
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferB);
             this._gl.viewport(0, 0, width, height);
+            this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferCache);
+            this._gl.viewport(
+                0,
+                0,
+                this._getCacheWidth(),
+                this._getCacheHeight()
+            );
+            this._gl.clear(this._gl.COLOR_BUFFER_BIT|this._gl.DEPTH_BUFFER_BIT);
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
             this._gl.viewport(0, 0, width, height);
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
@@ -3898,6 +3974,18 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.RGBA,
                 width,
                 height,
+                0,
+                this._gl.RGBA,
+                this._gl.UNSIGNED_BYTE,
+                null
+            );
+            this._gl.bindTexture(this._gl.TEXTURE_2D,this._fbTextureCache);
+            this._gl.texImage2D(
+                this._gl.TEXTURE_2D,
+                0,
+                this._gl.RGBA,
+                this._getCacheWidth(),
+                this._getCacheHeight(),
                 0,
                 this._gl.RGBA,
                 this._gl.UNSIGNED_BYTE,
@@ -3984,32 +4072,38 @@ const renderer_prototype = global.Object.create(Object, {
                                 const textGlyphInfo = this._textRenderer.nextGlyph();
                                 if (textGlyphInfo.breakOut)
                                     break;
-                                if (textGlyphInfo.glyph && this._checkGlyphCache(textHash, textGlyphInfo.glyph.index)) {
-                                    //TODO: Calculate external offset of text.
-                                } else {
-                                    const textCacheGlyph = this._textRenderer.renderGlyph(
-                                        time,
-                                        currentEvent,
-                                        textGlyphInfo,
-                                        pass,
-                                        false
-                                    );
-                                    if (textCacheGlyph)
-                                        this._cacheGlyph(textHash, textGlyphInfo.glyph.index, this._textRenderer);
+                                if(textGlyphInfo.glyph){
+                                    if (this._checkGlyphCache(textHash, textGlyphInfo.glyph.index)) {
+                                        this._textRenderer.positionCachedGlyph(textGlyphInfo)
+                                        this._fetchInfoFromGlyphCache(textHash, textGlyphInfo.glyph.index).offsetExternal = this._textRenderer.getOffsetExternal();
+                                    } else {
+                                        const textCacheGlyph = this._textRenderer.renderGlyph(
+                                            time,
+                                            currentEvent,
+                                            textGlyphInfo,
+                                            pass,
+                                            false
+                                        );
+                                        if (textCacheGlyph)
+                                            this._cacheGlyph(textHash, textGlyphInfo.glyph.index, this._textRenderer, true);
+                                    }
                                 }
                                 const maskGlyphInfo = this._textMaskRenderer.nextGlyph();
-                                if (maskGlyphInfo.glyph && this._checkGlyphCache(textMaskHash, maskGlyphInfo.glyph.index)) {
-                                    //TODO: Calculate external offset of mask.
-                                } else {
-                                    const maskCacheGlyph = this._textMaskRenderer.renderGlyph(
-                                        time,
-                                        currentEvent,
-                                        maskGlyphInfo,
-                                        pass,
-                                        true
-                                    );
-                                    if (maskCacheGlyph)
-                                        this._cacheGlyph(textMaskHash, maskGlyphInfo.glyph.index, this._textMaskRenderer);
+                                if (maskGlyphInfo.glyph){
+                                    if(this._checkGlyphCache(textMaskHash, maskGlyphInfo.glyph.index)) {
+                                        this._textMaskRenderer.positionCachedGlyph(textGlyphInfo)
+                                        this._fetchInfoFromGlyphCache(textHash, textGlyphInfo.glyph.index).offsetExternal = this._textMaskRenderer.getOffsetExternal();
+                                    } else {
+                                        const maskCacheGlyph = this._textMaskRenderer.renderGlyph(
+                                            time,
+                                            currentEvent,
+                                            maskGlyphInfo,
+                                            pass,
+                                            true
+                                        );
+                                        if (maskCacheGlyph)
+                                            this._cacheGlyph(textMaskHash, maskGlyphInfo.glyph.index, this._textMaskRenderer, false);
+                                    }
                                 }
                                 this._compositeSubtitle(
                                     time,
