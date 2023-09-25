@@ -44,4 +44,4 @@ buildfix:
 	@find ./scripts/ -name *.sh -print | xargs chmod +x
 
 genreadme:
-	@jsdoc2md -d 4 --template README.hbs --files src/*.js > README.md
+	@sh ./scripts/commands/generate-readme.sh

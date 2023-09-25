@@ -85,7 +85,7 @@ to render a frame of subtitles.
 <dd><p>Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.</p>
 </dd>
 <dt><a href="#setViewport">setViewport(width, height)</a> ⇒ <code>void</code></dt>
-<dd><p>Updates the resolution at which the subtitles are rendered (if the player is resized, for example).</p>
+<dd><p>Updates the resolution (in CSS pixels) at which the subtitles are rendered (if the player is resized, for example).</p>
 </dd>
 <dt><a href="#checkReadyToRender">checkReadyToRender()</a> ⇒ <code>boolean</code></dt>
 <dd><p>Checks if the renderer is ready to render a frame.</p>
@@ -109,19 +109,19 @@ Begins the process of parsing the passed subtitles in SSA/ASS format into subtit
 | Param | Type | Description |
 | --- | --- | --- |
 | subsText | <code>string</code> | the subtitle file's contents. |
-| fonts | <code>Array.&lt;Font&gt;</code> | preloaded fonts nessisary for this subtitle file (one of these MUST be Arial). |
+| fonts | <code>Array.&lt;Font&gt;</code> | preloaded fonts necessary for this subtitle file (one of these MUST be Arial). |
 
 <a name="setViewport"></a>
 
 #### setViewport(width, height) ⇒ <code>void</code>
-Updates the resolution at which the subtitles are rendered (if the player is resized, for example).
+Updates the resolution (in CSS pixels) at which the subtitles are rendered (if the player is resized, for example).
 
 **Kind**: global function  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| width | <code>number</code> | the desired width of the resolution. |
-| height | <code>number</code> | the desired height of the resolution. |
+| width | <code>number</code> | the desired width of the resolution (in CSS pixels). |
+| height | <code>number</code> | the desired height of the resolution (in CSS pixels). |
 
 <a name="checkReadyToRender"></a>
 
