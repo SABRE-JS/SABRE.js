@@ -52,13 +52,6 @@ const isImageBitmapSupported =
     typeof global.ImageBitmap !== "undefined" &&
     typeof global.OffscreenCanvas !== "undefined";
 
-/**
- * Size of the subtitle cache.
- * @type {!{x:number,y:number}}
- * @private
- */
-const cacheSize = Object.freeze({x:4096,y:2048});
-
 const renderer_prototype = global.Object.create(Object, {
     //BEGIN MODULE VARIABLES
 
@@ -308,14 +301,16 @@ const renderer_prototype = global.Object.create(Object, {
 
     _getCacheWidth: {
         value: function () {
-            return Math.max(this._compositingCanvas.width*2,cacheSize.x);
+            const pixelRatio = sabre.getPixelRatio();
+            return Math.max(this._compositingCanvas.width*2,global.screen.width*pixelRatio);
         },
         writable: false
     },
 
     _getCacheHeight: {
         value: function () {
-            return Math.max(this._compositingCanvas.height*2,cacheSize.y);
+            const pixelRatio = sabre.getPixelRatio();
+            return Math.max(this._compositingCanvas.height*2,global.screen.height*pixelRatio);
         },
         writable: false
     },
