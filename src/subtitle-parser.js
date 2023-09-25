@@ -1291,9 +1291,9 @@ external["SABRERenderer"] = function (parseFont) {
             parser["load"](subsText, fonts, (config) => renderer.load(config));
         },
         /**
-         * Updates the resolution at which the subtitles are rendered (if the player is resized, for example).
-         * @param {number} width the desired width of the resolution.
-         * @param {number} height the desired height of the resolution.
+         * Updates the resolution (in CSS pixels) at which the subtitles are rendered (if the player is resized, for example).
+         * @param {number} width the desired width of the resolution (in CSS pixels).
+         * @param {number} height the desired height of the resolution (in CSS pixels).
          * @return {void}
          */
         "setViewport": function (width, height) {

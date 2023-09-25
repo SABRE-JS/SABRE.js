@@ -95,6 +95,18 @@ const renderer_prototype = global.Object.create(Object, {
     //END MODULE VARIABLES
     //BEGIN LOCAL VARIABLES
 
+    _lastPixelRatio: {
+        /** @type {number} */
+        value: NaN,
+        writable: true
+    },
+
+    _lastDim: {
+        /** @type {?Array<number>} */
+        value: null,
+        writable: true
+    },
+
     _glyphCache: {
         /** @type {?Object<number,Object<number,GlyphCacheInfo>>} */
         value: null,
@@ -3824,6 +3836,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {void}
          */
         value: function () {
+            this._lastDim = [NaN,NaN];
             this._scheduler = new sabre.SubtitleScheduler();
             this._textRenderer = new sabre.Canvas2DTextRenderer();
             this._textMaskRenderer = new sabre.Canvas2DTextRenderer();
@@ -3933,6 +3946,12 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {void}
          */
         value: function (width, height) {
+            const pixelRatio = sabre.getPixelRatio();
+            this._lastPixelRatio = pixelRatio;
+            this._lastDim[0] = width;
+            this._lastDim[1] = height;
+            width *= pixelRatio;
+            height *= pixelRatio;
             this._compositingCanvas.width = width;
             this._compositingCanvas.height = height;
             let scale_x = width / this._config.renderer["resolution_x"];
@@ -4015,6 +4034,11 @@ const renderer_prototype = global.Object.create(Object, {
         value: function (time) {
             if (this._contextLost) return;
             if (time === this._lastTime) return;
+            {
+                const pixelRatio = sabre.getPixelRatio();
+                if (pixelRatio !== this._lastPixelRatio)
+                    this["updateViewport"](this._lastDim[0],this._lastDim[1]);
+            }
             this._lastTime = time;
             let events = this._scheduler.getVisibleAtTime(time);
             events = events.sort(function (

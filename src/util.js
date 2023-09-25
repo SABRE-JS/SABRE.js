@@ -453,7 +453,9 @@ sabre["roundTo"] = function (n, p) {
     return value;
 };
 
-sabre["pixelRatio"] = global.devicePixelRatio || 1;
+sabre["getPixelRatio"] = function() {
+    return global.devicePixelRatio ?? 1;
+};
 /**
  * Get Backing pixel ratio for a canvas context.
  * @param {CanvasRenderingContext2D} context the target context.
