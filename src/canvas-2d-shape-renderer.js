@@ -120,7 +120,13 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 this._canvas = new global.OffscreenCanvas(64, 64);
             }
             this._height = this._width = 1;
-            this._ctx = this._canvas.getContext("2d", options);
+            this._ctx = /** @type {CanvasRenderingContext2D} */(this._canvas.getContext("2d", options));
+            if(!this._pixelScaleRatio.preFactoredBacking){
+                const backingRatio = sabre.getBackingRatio(this._ctx);
+                this._pixelScaleRatio.xratio /= backingRatio;
+                this._pixelScaleRatio.yratio /= backingRatio;
+                this._pixelScaleRatio.preFactoredBacking = true;
+            }
             this._initialized = true;
         },
         writable: false
@@ -812,8 +818,12 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {number} yratio the ratio in the y coordinate.
          */
         value: function (xratio, yratio) {
-            const backingRatio = sabre.getBackingRatio(this._ctx);
-            this._pixelScaleRatio = { xratio: xratio/backingRatio, yratio: yratio/backingRatio };
+            if(this._ctx){
+                const backingRatio = sabre.getBackingRatio(this._ctx);
+                this._pixelScaleRatio = { xratio: xratio/backingRatio, yratio: yratio/backingRatio, preFactoredBacking: true };
+            }else{
+                this._pixelScaleRatio = { xratio: xratio, yratio: yratio, preFactoredBacking: false };
+            }
         },
         writable: false
     },
