@@ -78,6 +78,14 @@ sabre.stringEqualsCaseInsensitive = function (a, b) {
 };
 
 /**
+ * Get Device pixel ratio.
+ * @return {number} Device Pixel Ratio.
+ */
+sabre.getPixelRatio = function(){
+    return 1;
+};
+
+/**
  * Get Backing pixel ratio for a canvas context.
  * @param {CanvasRenderingContext2D} context the target context.
  * @return {number} Backing Pixel Ratio.
