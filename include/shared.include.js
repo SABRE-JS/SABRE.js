@@ -27,21 +27,24 @@ var sabre = {};
 sabre.$ = null;
 
 //These are definitions for APIs the closure compiler doesn't know by default.
+/** @type {function():void} */
 global.CanvasRenderingContext2D.prototype.resetTransform = function () {};
-/** @type {number} */
+/** @type {number|undefined} */
 global.CanvasRenderingContext2D.prototype.webkitBackingStorePixelRatio = 1;
-/** @type {number} */
+/** @type {number|undefined} */
 global.CanvasRenderingContext2D.prototype.mozBackingStorePixelRatio = 1;
-/** @type {number} */
+/** @type {number|undefined} */
 global.CanvasRenderingContext2D.prototype.msBackingStorePixelRatio = 1;
-/** @type {number} */
+/** @type {number|undefined} */
 global.CanvasRenderingContext2D.prototype.oBackingStorePixelRatio = 1;
-/** @type {number} */
+/** @type {number|undefined} */
 global.CanvasRenderingContext2D.prototype.backingStorePixelRatio = 1;
 /** @type {number|undefined} */
 global.HTMLVideoElement.prototype.mozFrameDelay = 0;
 /** @type {number|undefined} */
 global.HTMLVideoElement.prototype.mozPresentedFrames = 0;
+/** @type {number|undefined} */
+global.devicePixelRatio = 1;
 
 /**
  * toBlob but HD.

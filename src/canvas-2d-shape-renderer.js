@@ -812,7 +812,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {number} yratio the ratio in the y coordinate.
          */
         value: function (xratio, yratio) {
-            this._pixelScaleRatio = { xratio: xratio, yratio: yratio };
+            const backingRatio = sabre.getBackingRatio(this._ctx);
+            this._pixelScaleRatio = { xratio: xratio/backingRatio, yratio: yratio/backingRatio };
         },
         writable: false
     },
