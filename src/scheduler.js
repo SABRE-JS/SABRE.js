@@ -38,7 +38,7 @@ const scheduler_prototype = global.Object.create(Object, {
          * @param {SSASubtitleEvent} b The second event to be compared.
          * @return {number}
          */
-        value: function (/** SSASubtitleEvent */ a, /** SSASubtitleEvent */ b) {
+        value: function _sortEvents (/** SSASubtitleEvent */ a, /** SSASubtitleEvent */ b) {
             if (a.getStart() === b.getStart()) return a.getEnd() - b.getEnd();
             return a.getStart() - b.getStart();
         },
@@ -51,7 +51,7 @@ const scheduler_prototype = global.Object.create(Object, {
          * @param {number} len length of fixed-length array.
          * @return {!Array<?TreeNode>}
          */
-        value: function (len) {
+        value: function _constructArray (len) {
             let arr = new Array(len);
             arr.fill(null);
             return Object.seal(arr);
@@ -64,7 +64,7 @@ const scheduler_prototype = global.Object.create(Object, {
          * Generate the event tree.
          * @param {!Array<SSASubtitleEvent>} eventsList list of events to put in the tree.
          */
-        value: function (eventsList) {
+        value: function _createEventsTree (eventsList) {
             eventsList = eventsList.slice();
             eventsList.sort(this._eventListComparator);
             let originalLen = eventsList.length;
@@ -99,7 +99,7 @@ const scheduler_prototype = global.Object.create(Object, {
          * @param {number} time the specified time.
          * @return {!Array<SSASubtitleEvent>} subtitle events onscreen.
          */
-        value: function (time) {
+        value: function _makeVisible (time) {
             let array = [];
             if (
                 time >= this._eventTree[1].start &&
@@ -143,7 +143,7 @@ const scheduler_prototype = global.Object.create(Object, {
          * Clear the event tree and regenerate.
          * @param {!Array<SSASubtitleEvent>} eventsList list of all subtitle events to schedule.
          */
-        value: function (eventsList) {
+        value: function _clearEvent (eventsList) {
             this._eventTree = null;
             this._createEventsTree(eventsList);
         },

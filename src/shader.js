@@ -54,7 +54,7 @@ const ShaderPrototype = Object.create(Object, {
     },
 
     _isUnchanged: {
-        value: function (property, uniformid, context) {
+        value: function _isUnchanged (property, uniformid, context) {
             let val = property.val;
             let cval = statetracker[context][uniformid];
             let i;
@@ -75,7 +75,7 @@ const ShaderPrototype = Object.create(Object, {
     },
 
     "load": {
-        value: function (vertexUrl, fragmentUrl, expire) {
+        value: function _loadShader (vertexUrl, fragmentUrl, expire) {
             this._keys = {};
             this._textures = {};
             this._attributes = {};
@@ -177,7 +177,7 @@ const ShaderPrototype = Object.create(Object, {
     },
 
     "updateOption": {
-        value: function (key, value) {
+        value: function _updateShader (key, value) {
             if (this._keys[key]) {
                 this._keys[key].val = value;
                 return true;
@@ -194,7 +194,7 @@ const ShaderPrototype = Object.create(Object, {
     },
 
     "addOption": {
-        value: function (key, value, type) {
+        value: function _addShader (key, value, type) {
             if (
                 typeof this._keys[key] === "undefined" ||
                 this._keys[key] === null
@@ -240,7 +240,7 @@ const ShaderPrototype = Object.create(Object, {
 	}*/
 
     "bindShader": {
-        value: function (gl) {
+        value: function _bindShader (gl) {
             gl.useProgram(this._shader);
             let props = Object.keys(this._keys);
             let key = null;
@@ -367,14 +367,14 @@ const ShaderPrototype = Object.create(Object, {
     },
 
     "getShader": {
-        value: function () {
+        value: function _getShader () {
             return this._shader;
         },
         writable: false
     },
 
     "getAttribute": {
-        value: function (gl, name) {
+        value: function _getAttribute (gl, name) {
             if (typeof this._attributes[name] === "undefined") {
                 let attrib = gl.getAttribLocation(this._shader, name);
                 this._attributes[name] = attrib;
@@ -386,7 +386,7 @@ const ShaderPrototype = Object.create(Object, {
     },
 
     "compile": {
-        value: function (gl, defines, err, version) {
+        value: function _compile (gl, defines, err, version) {
             statetracker[gl] = statetracker[gl] ?? {};
             this._uniformLocations = {};
             if (typeof err === "undefined" || err === null) {
@@ -441,7 +441,7 @@ const ShaderPrototype = Object.create(Object, {
     },
 
     _compile: {
-        value: function (gl, source, defines, type, version) {
+        value: function _compileShader (gl, source, defines, type, version) {
             let shaderHeader = "";
             if (version && version !== "100") {
                 shaderHeader += "#version " + version + " es\n";
