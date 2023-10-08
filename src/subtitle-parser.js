@@ -171,7 +171,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {string} separator the separator to split on.
          * @private
          */
-        value: function (string, separator) {
+        value: function _splitOnce (string, separator) {
             let j = string.indexOf(separator);
             if (j === -1) return [string.trim()];
             return [string.slice(0, j), string.slice(j + 1).trim()];
@@ -438,7 +438,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {string} timestring the string containing the time.
          * @return {number} time in seconds.
          */
-        value: function (timestring) {
+        value: function _parseTime (timestring) {
             let array = timestring.split(":");
             let time = 0;
             for (let i = 0; i < array.length; i++) {
@@ -462,7 +462,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {number} colornum
          * @private
          */
-        value: function (style, color, colornum) {
+        value: function _parseColor (style, color, colornum) {
             let tmp = global.parseInt(sabre.cleanRawColor(color), 16);
             if (global.isNaN(tmp)) throw "Invalid color in style.";
             let r = (tmp & 0xff) / 255;
@@ -498,7 +498,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {Array<string>} values Values of style line.
          * @param {Object} config Renderer config object.
          */
-        value: function (values, config) {
+        value: function _parseOldStyle (values, config) {
             let style = new sabre.SSAStyleDefinition();
             let tmp, tmp2, tmp3, tmp4;
             for (
@@ -626,7 +626,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {Array<string>} values Values of style line.
          * @param {Object} config Renderer config object.
          */
-        value: function (values, config) {
+        value: function _parseStyle (values, config) {
             let style = new sabre.SSAStyleDefinition();
             let tmp;
             for (
@@ -766,7 +766,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {Array<SSASubtitleEvent>} events
          * @return {Array<SSASubtitleEvent>}
          */
-        value: function (events) {
+        value: function _parseDialogueText (events) {
             let event;
             let match;
             for (let i = 0; i < events.length; i++) {
@@ -839,7 +839,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {string} tags
          * @param {boolean} isAdvancedSubstation
          */
-        value: function (
+        value: function _parseOverrides (
             timeInfo,
             getStyleByName,
             setStyle,
@@ -932,7 +932,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {string} values
          * @param {Object} config
          */
-        value: function (values, config) {
+        value: function _parseDialogue (values, config) {
             //Create a new event for the line.
             let event = new sabre.SSASubtitleEvent();
             event.setId(this._lineCounter++);
@@ -1017,7 +1017,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {string} data
          * @returns {ArrayBuffer}
          */
-        value: function (data) {
+        value: function _decodeEmbeddedFile (data) {
             const bindata = [];
             for (let i = 0; i < data.length; i += 4) {
                 let chardata = [];
@@ -1090,7 +1090,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {string} internalName filename for encoded font.
          * @return {Object} Info on the font.
          */
-        value: function (internalName) {
+        value: function _parseEmbeddedFontName (internalName) {
             let fontNameData = /^(.*)_(B?)(I?)([0-9]+)\.(ttf|otf|woff)$/.exec(
                 internalName
             );
@@ -1129,7 +1129,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {string} line
          * @private
          */
-        value: function (line) {
+        value: function _parse (line) {
             if (this._heading === "Fonts") {
                 if (this._handleEmbeddedFont(line)) return;
             }
@@ -1203,7 +1203,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * Perform initialization of the library and all it's components.
          * @param {function(ArrayBuffer):Font} parseFont
          */
-        value: function (parseFont) {
+        value: function init (parseFont) {
             this._parseFont = parseFont;
             this._overrideTags = sabre.getOverrideTags();
         },
@@ -1218,7 +1218,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @param {function(RendererData):void} callback what we pass the results of the parsing to.
          * @return {void}
          */
-        value: function (subsText, fonts, callback) {
+        value: function load (subsText, fonts, callback) {
             //Create new default style.
             let defaultStyle = new sabre.SSAStyleDefinition();
             defaultStyle.setName("Default");
@@ -1256,7 +1256,7 @@ const parser_prototype = global.Object.create(global.Object, {
 /**
  * @param {function(ArrayBuffer):Font} parseFont
  */
-sabre["Parser"] = function (parseFont) {
+sabre["Parser"] = function Parser (parseFont) {
     let parser = global.Object.create(parser_prototype);
     parser.init(parseFont);
     return parser;
@@ -1277,7 +1277,7 @@ const bitmapSupported =
  * @param {function(ArrayBuffer):Font} parseFont a function that returns an opentype.js Font object when passed an ArrayBuffer.
  */
 
-external["SABRERenderer"] = function (parseFont) {
+external["SABRERenderer"] = function SABRERenderer (parseFont) {
     let parser = new sabre["Parser"](parseFont);
     let renderer = new sabre.Renderer();
     return Object.freeze({

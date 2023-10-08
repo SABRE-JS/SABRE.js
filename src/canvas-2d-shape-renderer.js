@@ -108,7 +108,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
         /**
          * Initializes the rendering canvas.
          */
-        value: function () {
+        value: function _init () {
             const options = Object.freeze({
                 "alpha": true,
                 "desynchronized": true
@@ -139,7 +139,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcScale (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let scaleX = overrides.getScaleX() ?? style.getScaleX();
             let scaleY = overrides.getScaleY() ?? style.getScaleY();
@@ -176,7 +176,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          */
-        value: function (
+        value: function _setScale (
             time,
             style,
             overrides,
@@ -204,7 +204,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcOutline (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
             let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
@@ -241,7 +241,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          */
-        value: function (
+        value: function _setOutline (
             time,
             style,
             overrides,
@@ -266,7 +266,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          */
-        value: function (
+        value: function _setColors (
             time,
             style,
             overrides,
@@ -298,7 +298,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {SSALineTransitionTargetOverride} lineTransitionTargetOverrides
          * @param {number} pass
          */
-        value: function (
+        value: function _handleStyling (
             time,
             style,
             overrides,
@@ -327,7 +327,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
     },
 
     _calcSize: {
-        value: function (cmds) {
+        value: function _calcSize (cmds) {
             //prep runtime stuff
             const parseFloat = global.parseFloat;
             const BSpline = sabre.BSpline;
@@ -455,7 +455,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
     },
 
     _drawShape: {
-        value: function (cmds, xoffset, yoffset, outline) {
+        value: function _drawShape (cmds, xoffset, yoffset, outline) {
             //prep runtime stuff
             const parseFloat = global.parseFloat;
             const BSpline = sabre.BSpline;
@@ -596,7 +596,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {number} pass the pass we are on.
          * @param {boolean} dryRun is this a dry run for positioning.
          */
-        value: function (time, event, pass, dryRun) {
+        value: function renderEvent (time, event, pass, dryRun) {
             if (!this._initialized) this._init();
 
             let cmds = event.getText();
@@ -817,7 +817,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * @param {number} xratio the ratio in the x coordinate.
          * @param {number} yratio the ratio in the y coordinate.
          */
-        value: function (xratio, yratio) {
+        value: function setPixelScaleRatio (xratio, yratio) {
             if(this._ctx){
                 const backingRatio = sabre.getBackingRatio(this._ctx);
                 this._pixelScaleRatio = { xratio: xratio/backingRatio, yratio: yratio/backingRatio, preFactoredBacking: true };
@@ -833,7 +833,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * Gets the offset of the resulting image.
          * @return {Array<number>} offset of the resulting image
          */
-        value: function () {
+        value: function getOffset () {
             return [
                 this._offsetX / this._pixelScaleRatio.xratio,
                 this._offsetY / this._pixelScaleRatio.yratio
@@ -847,7 +847,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * Gets the offset of the resulting image.
          * @return {Array<number>} offset of the resulting image
          */
-        value: function () {
+        value: function getOffsetExternal () {
             return [0, 0];
         },
         writable: false
@@ -858,7 +858,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * Gets the collision bounds of the resulting shape.
          * @return {Array<number>} bounds of the resulting shape.
          */
-        value: function () {
+        value: function getBounds () {
             return [
                 this._width / this._pixelScaleRatio.xratio,
                 this._height / this._pixelScaleRatio.yratio
@@ -872,7 +872,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * Gets the dimensions of the resulting image.
          * @return {Array<number>} dimensions of the resulting image
          */
-        value: function () {
+        value: function getDimensions () {
             return [
                 this._width / this._pixelScaleRatio.xratio,
                 this._height / this._pixelScaleRatio.yratio
@@ -886,7 +886,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * Gets the dimensions of the resulting image.
          * @return {Array<number>} dimensions of the resulting image
          */
-        value: function () {
+        value: function getTextureDimensions () {
             return [this._width, this._height];
         },
         writable: false
@@ -897,7 +897,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
          * Gets the dimensions of the canvas.
          * @return {Array<number>} dimensions of the canvas
          */
-        value: function () {
+        value: function getExtents () {
             return [
                 Math.max(
                     Math.max(Math.ceil(this._width), 64),
@@ -913,13 +913,13 @@ const shape_renderer_prototype = global.Object.create(Object, {
     },
 
     "getImage": {
-        value: function () {
+        value: function getImage () {
             return this._canvas;
         },
         writable: true
     }
 });
 
-sabre["Canvas2DShapeRenderer"] = function () {
+sabre["Canvas2DShapeRenderer"] = function Canvas2DShapeRenderer () {
     return Object.create(shape_renderer_prototype);
 };

@@ -12,14 +12,14 @@
  * @return {string} the cleaned string.
  * @private
  */
-sabre["cleanRawColor"] = function (raw) {
+sabre["cleanRawColor"] = function cleanRawColor (raw) {
     return raw.replace(
         /^[&H]*(?:0x)?((?:[0-9a-fA-F][0-9a-fA-F])+)[&H]*/,
         "$1"
     );
 };
     
-sabre["SSAColor"] = function (r, g, b, a) {
+sabre["SSAColor"] = function SSAColor (r, g, b, a) {
     let obj = {
         r: 0,
         g: 0,
@@ -52,56 +52,56 @@ sabre["SSAColor"] = function (r, g, b, a) {
 
     return Object.create(Object, {
         "toJSON": {
-            value: function () {
+            value: function toJSON () {
                 return [obj.r, obj.g, obj.b, obj.a];
             },
             writable: false
         },
 
         "getRGBA": {
-            value: function () {
+            value: function getRGBA () {
                 return [obj.r, obj.g, obj.b, obj.a];
             },
             writable: false
         },
 
         "getRGB": {
-            value: function () {
+            value: function getRGB () {
                 return [obj.r, obj.g, obj.b];
             },
             writable: false
         },
 
         "getR": {
-            value: function () {
+            value: function getR () {
                 return obj.r;
             },
             writable: false
         },
 
         "getG": {
-            value: function () {
+            value: function getG () {
                 return obj.g;
             },
             writable: false
         },
 
         "getB": {
-            value: function () {
+            value: function getB () {
                 return obj.b;
             },
             writable: false
         },
 
         "getA": {
-            value: function () {
+            value: function getA () {
                 return obj.a;
             },
             writable: false
         },
 
         "getYUVA": {
-            value: function () {
+            value: function getYUVA () {
                 //https://en.wikipedia.org/wiki/YUV#Conversion_to/from_RGB
                 throw "METHOD_STUBBED: SSAColor.getYUVA";
             },
@@ -109,7 +109,7 @@ sabre["SSAColor"] = function (r, g, b, a) {
         },
 
         "getYUV": {
-            value: function () {
+            value: function getYUV () {
                 //https://en.wikipedia.org/wiki/YUV#Conversion_to/from_RGB
                 throw "METHOD_STUBBED: SSAColor.getYUV";
             },
@@ -117,7 +117,7 @@ sabre["SSAColor"] = function (r, g, b, a) {
         },
 
         "getYCbCrA": {
-            value: function () {
+            value: function getYCbCrA () {
                 //https://en.wikipedia.org/wiki/YCbCr
                 throw "METHOD_STUBBED: SSAColor.getYCbCrA";
             },
@@ -125,7 +125,7 @@ sabre["SSAColor"] = function (r, g, b, a) {
         },
 
         "getYCbCr": {
-            value: function () {
+            value: function getYCbCr () {
                 //https://en.wikipedia.org/wiki/YCbCr
                 throw "METHOD_STUBBED: SSAColor.getYCbCr";
             },
@@ -134,7 +134,7 @@ sabre["SSAColor"] = function (r, g, b, a) {
     });
 };
 
-sabre["SSAOverrideColor"] = function (r, g, b, a) {
+sabre["SSAOverrideColor"] = function SSAOverrideColor (r, g, b, a) {
     let obj = {
         r: null,
         g: null,
@@ -160,14 +160,14 @@ sabre["SSAOverrideColor"] = function (r, g, b, a) {
 
     return Object.create(Object, {
         "toJSON": {
-            value: function () {
+            value: function toJSON () {
                 return [obj.r, obj.g, obj.b, obj.a];
             },
             writable: false
         },
 
         "clone": {
-            value: function () {
+            value: function clone () {
                 return new sabre["SSAOverrideColor"](
                     obj.r,
                     obj.g,
@@ -179,7 +179,7 @@ sabre["SSAOverrideColor"] = function (r, g, b, a) {
         },
 
         "applyOverride": {
-            value: function (color) {
+            value: function applyOverride (color) {
                 let r = color["getR"]();
                 let g = color["getG"]();
                 let b = color["getB"]();
@@ -194,14 +194,14 @@ sabre["SSAOverrideColor"] = function (r, g, b, a) {
         },
 
         "getR": {
-            value: function () {
+            value: function getR () {
                 return obj.r;
             },
             writable: false
         },
 
         "setR": {
-            value: function (r) {
+            value: function setR (r) {
                 if (typeof r === "number") obj.r = r;
                 else obj.r = null;
                 return obj.r;
@@ -210,14 +210,14 @@ sabre["SSAOverrideColor"] = function (r, g, b, a) {
         },
 
         "getG": {
-            value: function () {
+            value: function getG () {
                 return obj.g;
             },
             writable: false
         },
 
         "setG": {
-            value: function (g) {
+            value: function setG (g) {
                 if (typeof g === "number") obj.g = g;
                 else obj.g = null;
                 return obj.g;
@@ -226,14 +226,14 @@ sabre["SSAOverrideColor"] = function (r, g, b, a) {
         },
 
         "getB": {
-            value: function () {
+            value: function getB () {
                 return obj.b;
             },
             writable: false
         },
 
         "setB": {
-            value: function (b) {
+            value: function setB (b) {
                 if (typeof b === "number") obj.b = b;
                 else obj.b = null;
                 return obj.b;
@@ -242,14 +242,14 @@ sabre["SSAOverrideColor"] = function (r, g, b, a) {
         },
 
         "getA": {
-            value: function () {
+            value: function getA () {
                 return obj.a;
             },
             writable: false
         },
 
         "setA": {
-            value: function (a) {
+            value: function setA (a) {
                 if (typeof a === "number") obj.a = a;
                 else obj.a = null;
                 return obj.a;
