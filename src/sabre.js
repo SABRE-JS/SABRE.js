@@ -69,7 +69,7 @@ if (typeof require !== "function") {
      * @param {string} scriptName The name/path of the script.
      * @param {function(boolean)=} callback Callback on success or failure.
      */
-    sabre["import"] = function import (scriptName, callback) {
+    sabre["import"] = function (scriptName, callback) {
         if (!DEBUG) {
             scriptName += ".min.js";
         } else {
@@ -115,7 +115,7 @@ if (typeof require !== "function") {
      * @param {string} scriptName The name/path of the script.
      * @param {function(boolean)=} callback Callback on success or failure.
      */
-    sabre["include"] = function include (scriptName, callback) {
+    sabre["include"] = function (scriptName, callback) {
         if (!DEBUG) {
             scriptName += ".min.js";
         } else {
