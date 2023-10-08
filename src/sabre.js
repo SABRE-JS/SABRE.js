@@ -69,7 +69,7 @@ if (typeof require !== "function") {
      * @param {string} scriptName The name/path of the script.
      * @param {function(boolean)=} callback Callback on success or failure.
      */
-    sabre["import"] = function (scriptName, callback) {
+    sabre["import"] = function import (scriptName, callback) {
         if (!DEBUG) {
             scriptName += ".min.js";
         } else {
@@ -115,7 +115,7 @@ if (typeof require !== "function") {
      * @param {string} scriptName The name/path of the script.
      * @param {function(boolean)=} callback Callback on success or failure.
      */
-    sabre["include"] = function (scriptName, callback) {
+    sabre["include"] = function include (scriptName, callback) {
         if (!DEBUG) {
             scriptName += ".min.js";
         } else {
@@ -160,7 +160,7 @@ if (typeof require !== "function") {
      * returns the root directory for included ecmascript files.
      * @return {string} the path.
      */
-    sabre["getScriptPath"] = function () {
+    sabre["getScriptPath"] = function getScriptPath () {
         return scriptpath;
     };
 
@@ -175,7 +175,7 @@ if (typeof require !== "function") {
      * returns the root directory for included ecmascript files.
      * @return {string} the path.
      */
-    sabre["getScriptPath"] = function () {
+    sabre["getScriptPath"] = function getScriptPath () {
         return scriptpath;
     };
     module.exports = external;

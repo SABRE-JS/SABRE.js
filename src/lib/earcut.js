@@ -809,7 +809,7 @@ function signedArea(data, start, end, dim) {
 }
 
 // turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
-earcut["flatten"] = function (data) {
+earcut["flatten"] = function flatten (data) {
     var dim = data[0][0].length,
         result = { vertices: [], holes: [], dimensions: dim },
         holeIndex = 0;

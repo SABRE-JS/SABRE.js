@@ -188,7 +188,7 @@ BSpline.prototype.getInterpol = function (seq, t) {
     return result;
 };
 
-BSpline.prototype["calcAt"] = function (t) {
+BSpline.prototype["calcAt"] = function calcAt (t) {
     t = t * ((this.degree + 1) * 2 + this.points.length); //t must be in [0,1]
     if (this.dimension === 2) {
         return [

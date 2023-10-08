@@ -1,6 +1,6 @@
 //@include [color]
 
-sabre["SSAStyleDefinition"] = function () {
+sabre["SSAStyleDefinition"] = function SSAStyleDefinition () {
     let obj = {
         name: "Default",
         fontName: "Arial",
@@ -25,7 +25,7 @@ sabre["SSAStyleDefinition"] = function () {
     };
     return Object.create(Object, {
         "toJSON": {
-            value: function () {
+            value: function toJSON () {
                 return {
                     n: obj.name,
                     fn: obj.fontName,
@@ -55,161 +55,161 @@ sabre["SSAStyleDefinition"] = function () {
         },
 
         "setName": {
-            value: function (/** string */ name) {
+            value: function setName (/** string */ name) {
                 obj.name = name;
             },
             writable: false
         },
 
         "getName": {
-            value: function () {
+            value: function getName () {
                 return obj.name;
             },
             writable: false
         },
 
         "setFontName": {
-            value: function (/** string */ name) {
+            value: function setFontName (/** string */ name) {
                 obj.fontName = name;
             },
             writable: false
         },
 
         "getFontName": {
-            value: function () {
+            value: function getFontName () {
                 return obj.fontName;
             },
             writable: false
         },
 
         "setFontSize": {
-            value: function (/** number */ size) {
+            value: function setFontSize (/** number */ size) {
                 obj.fontSize = size;
             },
             writable: false
         },
 
         "getFontSize": {
-            value: function () {
+            value: function getFontSize () {
                 return obj.fontSize;
             },
             writable: false
         },
 
         "setPrimaryColor": {
-            value: function (/** SSAColor */ color) {
+            value: function setPrimaryColor (/** SSAColor */ color) {
                 obj.primaryColor = color;
             },
             writable: false
         },
 
         "getPrimaryColor": {
-            value: function () {
+            value: function getPrimaryColor () {
                 return obj.primaryColor;
             },
             writable: false
         },
 
         "setSecondaryColor": {
-            value: function (/** SSAColor */ color) {
+            value: function setSecondaryColor (/** SSAColor */ color) {
                 obj.secondaryColor = color;
             },
             writable: false
         },
 
         "getSecondaryColor": {
-            value: function () {
+            value: function getSecondaryColor () {
                 return obj.secondaryColor;
             },
             writable: false
         },
 
         "setTertiaryColor": {
-            value: function (/** SSAColor */ color) {
+            value: function setTertiaryColor (/** SSAColor */ color) {
                 obj.tertiaryColor = color;
             },
             writable: false
         },
 
         "getTertiaryColor": {
-            value: function () {
+            value: function getTertiaryColor () {
                 return obj.tertiaryColor;
             },
             writable: false
         },
 
         "setQuaternaryColor": {
-            value: function (/** SSAColor */ color) {
+            value: function setQuaternaryColor (/** SSAColor */ color) {
                 obj.quaternaryColor = color;
             },
             writable: false
         },
 
         "getQuaternaryColor": {
-            value: function () {
+            value: function getQuaternaryColor () {
                 return obj.quaternaryColor;
             },
             writable: false
         },
 
         "setWeight": {
-            value: function (/** number */ weight) {
+            value: function setWeight (/** number */ weight) {
                 obj.weight = weight;
             },
             writable: false
         },
 
         "getWeight": {
-            value: function () {
+            value: function getWeight () {
                 return obj.weight;
             },
             writable: false
         },
 
         "setItalic": {
-            value: function (/** boolean */ italic) {
+            value: function setItalic (/** boolean */ italic) {
                 obj.italic = italic;
             },
             writable: false
         },
 
         "getItalic": {
-            value: function () {
+            value: function getItalic () {
                 return obj.italic;
             },
             writable: false
         },
 
         "setUnderline": {
-            value: function (/** boolean */ underline) {
+            value: function setUnderline (/** boolean */ underline) {
                 obj.underline = underline;
             },
             writable: false
         },
 
         "getUnderline": {
-            value: function () {
+            value: function getUnderline () {
                 return obj.underline;
             },
             writable: false
         },
 
         "setStrikeout": {
-            value: function (/** boolean */ strikeout) {
+            value: function setStrikeout (/** boolean */ strikeout) {
                 obj.strikeout = strikeout;
             },
             writable: false
         },
 
         "getStrikeout": {
-            value: function () {
+            value: function getStrikeout () {
                 return obj.strikeout;
             },
             writable: false
         },
 
         "setScale": {
-            value: function (/** number */ scale) {
+            value: function setScale (/** number */ scale) {
                 obj.scaleX = scale;
                 obj.scaleY = scale;
             },
@@ -217,77 +217,77 @@ sabre["SSAStyleDefinition"] = function () {
         },
 
         "setScaleX": {
-            value: function (/** number */ scale) {
+            value: function setScaleX (/** number */ scale) {
                 obj.scaleX = scale;
             },
             writable: false
         },
 
         "setScaleY": {
-            value: function (/** number */ scale) {
+            value: function setScaleY (/** number */ scale) {
                 obj.scaleY = scale;
             },
             writable: false
         },
 
         "getScaleX": {
-            value: function () {
+            value: function getScaleX () {
                 return obj.scaleX;
             },
             writable: false
         },
 
         "getScaleY": {
-            value: function () {
+            value: function getScaleY () {
                 return obj.scaleY;
             },
             writable: false
         },
 
         "setSpacing": {
-            value: function (/** number */ spacing) {
+            value: function setSpacing (/** number */ spacing) {
                 obj.spacing = spacing;
             },
             writable: false
         },
 
         "getSpacing": {
-            value: function () {
+            value: function getSpacing () {
                 return obj.spacing;
             },
             writable: false
         },
 
         "setAngle": {
-            value: function (/** number */ angle) {
+            value: function setAngle (/** number */ angle) {
                 obj.angle = angle;
             },
             writable: false
         },
 
         "getAngle": {
-            value: function () {
+            value: function getAngle () {
                 return obj.angle;
             },
             writable: false
         },
 
         "setBorderStyle": {
-            value: function (/** number */ style) {
+            value: function setBorderStyle (/** number */ style) {
                 obj.borderStyle = style;
             },
             writable: false
         },
 
         "getBorderStyle": {
-            value: function () {
+            value: function getBorderStyle () {
                 return obj.borderStyle;
             },
             writable: false
         },
 
         "setOutline": {
-            value: function (/** number */ outline) {
+            value: function setOutline (/** number */ outline) {
                 obj.outlineX = outline;
                 obj.outlineY = outline;
             },
@@ -295,63 +295,63 @@ sabre["SSAStyleDefinition"] = function () {
         },
 
         "setOutlineX": {
-            value: function (/** number */ outline) {
+            value: function setOutlineX (/** number */ outline) {
                 obj.outlineX = outline;
             },
             writable: false
         },
 
         "setOutlineY": {
-            value: function (/** number */ outline) {
+            value: function setOutlineY (/** number */ outline) {
                 obj.outlineY = outline;
             },
             writable: false
         },
 
         "getOutlineX": {
-            value: function () {
+            value: function getOutlineX () {
                 return obj.outlineX;
             },
             writable: false
         },
 
         "getOutlineY": {
-            value: function () {
+            value: function getOutlineY () {
                 return obj.outlineY;
             },
             writable: false
         },
 
         "setShadow": {
-            value: function (/** number */ shadow) {
+            value: function setShadow (/** number */ shadow) {
                 obj.shadow = shadow;
             },
             writable: false
         },
 
         "getShadow": {
-            value: function () {
+            value: function getShadow () {
                 return obj.shadow;
             },
             writable: false
         },
 
         "setAlignment": {
-            value: function (/** number */ alignment) {
+            value: function setAlignment (/** number */ alignment) {
                 obj.alignment = alignment;
             },
             writable: false
         },
 
         "getAlignment": {
-            value: function () {
+            value: function getAlignment () {
                 return obj.alignment;
             },
             writable: false
         },
 
         "setMargins": {
-            value: function (
+            value: function setMargins (
                 /** number */ left,
                 /** number */ right,
                 /** number */ vertical
@@ -362,42 +362,42 @@ sabre["SSAStyleDefinition"] = function () {
         },
 
         "setMarginLeft": {
-            value: function (/** number */ left) {
+            value: function setMarginLeft (/** number */ left) {
                 obj.margins[0] = left;
             },
             writable: false
         },
 
         "setMarginRight": {
-            value: function (/** number */ right) {
+            value: function setMarginRight (/** number */ right) {
                 obj.margins[1] = right;
             },
             writable: false
         },
 
         "setMarginVertical": {
-            value: function (/** number */ vertical) {
+            value: function setMarginVertical (/** number */ vertical) {
                 obj.margins[2] = vertical;
             },
             writable: false
         },
 
         "getMargins": {
-            value: function () {
+            value: function getMargins () {
                 return obj.margins.slice(0);
             },
             writable: false
         },
 
         "setEncoding": {
-            value: function (/** number */ encoding) {
+            value: function setEncoding (/** number */ encoding) {
                 obj.encoding = encoding;
             },
             writable: false
         },
 
         "getEncoding": {
-            value: function () {
+            value: function getEncoding () {
                 return obj.encoding;
             },
             writable: false

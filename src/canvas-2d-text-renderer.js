@@ -210,7 +210,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         /**
          * Initializes the rendering canvas.
          */
-        value: function () {
+        value: function _init () {
             const options = Object.freeze({
                 "alpha": true,
                 "desynchronized": true
@@ -241,7 +241,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcScale (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let scaleX = overrides.getScaleX() ?? style.getScaleX();
             let scaleY = overrides.getScaleY() ?? style.getScaleY();
@@ -272,7 +272,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         /**
          * Sets up the canvas to render to the correct scale.
          */
-        value: function () {
+        value: function _setScale () {
             let scale = this._scale;
             this._ctx.scale(
                 scale.x * this._pixelScaleRatio.xratio,
@@ -289,7 +289,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcOutline (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
             let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
@@ -323,7 +323,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _setOutline (time, style, overrides) {
             let outline = this._calcOutline(time, style, overrides);
 
             this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
@@ -338,7 +338,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcFontSize (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let fontSize =
                 (overrides.getFontSize() ?? style.getFontSize()) +
@@ -365,7 +365,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _setFont (time, style, overrides) {
             let fontSize = this._calcFontSize(time, style, overrides);
             let fontName = overrides.getFontName() ?? style.getFontName();
             let fontWeight = overrides.getWeight() ?? style.getWeight();
@@ -400,7 +400,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} pass
          * @param {boolean} mask
          */
-        value: function (time, style, overrides, pass, mask) {
+        value: function _setColors (time, style, overrides, pass, mask) {
             if (mask) {
                 if (
                     pass === sabre.RenderPasses.BACKGROUND &&
@@ -517,7 +517,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcSpacing (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let spacing = overrides.getSpacing() ?? style.getSpacing();
             for (let i = 0; i < transitionOverrides.length; i++)
@@ -542,7 +542,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleOverride} overrides
          * @returns {{x:number, y:number}} Shadow x and y offsets.
          */
-        value: function (time, style, overrides){
+        value: function _calcShadow (time, style, overrides){
             const shadowComponent =
             Math.sign(style.getShadow()) *
             Math.sqrt(Math.pow(style.getShadow(), 2) / 2);
@@ -560,7 +560,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleOverride} overrides
          * @returns {number} Ratio of completion of the wipe in the range 0 to 1.
          */
-        value: function (time, style, overrides){
+        value: function _calcKaraokeWipeProgress (time, style, overrides){
             return Math.max(time - overrides.getKaraokeStart(), 0) / (overrides.getKaraokeEnd() - overrides.getKaraokeStart());
         },
         writable: false
@@ -575,7 +575,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {boolean} mask is this a mask for setable colors.
          * @returns {number} Hash of the state.
          */
-        value: function (time, event, pass, mask) {
+        value: function _getStateHash (time, event, pass, mask) {
             const style = event.getStyle();
             const overrides = event.getOverrides();
 
@@ -635,7 +635,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} pass
          * @param {boolean} mask
          */
-        value: function (time, style, overrides, pass, mask) {
+        value: function _handleStyling (time, style, overrides, pass, mask) {
             this._ctx.textAlign = "left";
             this._ctx.textBaseline = "top";
             this._ctx.lineCap = "round";
@@ -659,7 +659,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {boolean} strikethrough if true, strikethrough text, if false do nothing.
          * @param {boolean} underline if true, underline text, if false do nothing.
          */
-        value: function (glyph, offsetX, offsetY, stroke, strikethrough, underline) {
+        value: function _drawGlyph (glyph, offsetX, offsetY, stroke, strikethrough, underline) {
             const glyphbb = glyph.getBoundingBox();
             const fontSize = this._fontInfo.size;
             const fontUnitsScale = this._fontInfo.font.unitsPerEm || 1000;
@@ -711,7 +711,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} time the time relative to the start of the event.
          * @param {SSASubtitleEvent} event the subtitle event
          */
-        value: function (time, event) {
+        value: function calcBounds (time, event) {
             if (!this._initialized) this._init();
 
             const style = event.getStyle();
@@ -787,7 +787,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {boolean} mask is this a mask for setable colors.
          * @returns {number} event style state hash. 
          */
-        value: function (time, event, pass, mask) {
+        value: function startEventRender (time, event, pass, mask) {
             if (!this._initialized) this._init();
 
             const style = event.getStyle();
@@ -839,7 +839,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Return info on the next glyph for rendering.
          * @returns {{prevGlyph:?Glyph, glyph:?Glyph, breakOut:boolean}} Information on the glyph to render.
          */
-        value: function () {
+        value: function nextGlyph () {
             if (
                 this._glyphs.length <= 0 ||
                 this._glyphIndex > this._glyphs.length ||
@@ -865,7 +865,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Position a cached glyph.
          * @param {{prevGlyph:?Glyph, glyph:?Glyph, breakOut:boolean}} glyphInfo Glyph information.
          */
-        value: function (glyphInfo) {
+        value: function positionCachedGlyph (glyphInfo) {
             if (glyphInfo.breakOut && (glyphInfo.glyph === null || typeof(glyphInfo.glyph) === "undefined"))
                 return;
             const prevGlyph = glyphInfo["prevGlyph"];
@@ -900,7 +900,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {boolean} mask is this a mask for setable colors.
          * @returns {boolean} Is glyph cachable.
          */
-        value: function (time, event, glyphInfo, pass, mask) {
+        value: function renderGlyph (time, event, glyphInfo, pass, mask) {
             if (glyphInfo.breakOut && (glyphInfo.glyph === null || typeof(glyphInfo.glyph) === "undefined"))
                 return false;
             let style = event.getStyle();
@@ -1162,7 +1162,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Sets the function used to request fonts from the font server.
          * @param {!function(string,number,boolean):!{font:Font,foundItalic:boolean,foundWeight:number}} callback the callback function to fetch a font.
          */
-        value: function (callback) {
+        value: function setRequestFont (callback) {
             this._requestFont = callback;
         },
         writable: false
@@ -1174,7 +1174,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} xratio the ratio in the x coordinate.
          * @param {number} yratio the ratio in the y coordinate.
          */
-        value: function (xratio, yratio) {
+        value: function setPixelScaleRatio (xratio, yratio) {
             if(this._ctx){
                 const backingRatio = sabre.getBackingRatio(this._ctx);
                 this._pixelScaleRatio = { xratio: xratio/backingRatio, yratio: yratio/backingRatio, preFactoredBacking: true };
@@ -1190,7 +1190,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Gets the internal offset of the resulting image.
          * @return {Array<number>} internal offset of the resulting image
          */
-        value: function () {
+        value: function getOffset () {
             return [
                 this._offsetX / this._pixelScaleRatio.xratio,
                 this._offsetY / this._pixelScaleRatio.yratio
@@ -1204,7 +1204,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Gets the offset of the resulting image relative to its positioning coordinates.
          * @return {Array<number>} external offset of the resulting image
          */
-        value: function () {
+        value: function getOffsetExternal () {
             return [
                 this._eOffsetX / this._pixelScaleRatio.xratio,
                 this._eOffsetY / this._pixelScaleRatio.yratio
@@ -1218,7 +1218,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Gets the collision bounds of the text.
          * @return {Array<number>} dimensions of the text.
          */
-        value: function () {
+        value: function getBounds () {
             return [
                 this._textSpacingWidth / this._pixelScaleRatio.xratio,
                 this._height / this._pixelScaleRatio.yratio
@@ -1232,7 +1232,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Gets the dimensions of the resulting image.
          * @return {Array<number>} dimensions of the resulting image
          */
-        value: function () {
+        value: function getDimensions () {
             return [
                 this._width / this._pixelScaleRatio.xratio,
                 this._height / this._pixelScaleRatio.yratio
@@ -1246,7 +1246,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Gets the dimensions of the resulting image.
          * @return {Array<number>} dimensions of the resulting image
          */
-        value: function () {
+        value: function getTextureDimensions () {
             return [this._width, this._height];
         },
         writable: false
@@ -1257,7 +1257,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * Gets the dimensions of the canvas.
          * @return {Array<number>} dimensions of the canvas
          */
-        value: function () {
+        value: function getExtents () {
             return [
                 Math.max(
                     Math.max(Math.ceil(this._width), 64),
@@ -1273,13 +1273,13 @@ const text_renderer_prototype = global.Object.create(Object, {
     },
 
     "getImage": {
-        value: function () {
+        value: function getImage () {
             return this._canvas;
         },
         writable: true
     }
 });
 
-sabre["Canvas2DTextRenderer"] = function () {
+sabre["Canvas2DTextRenderer"] = function Canvas2DTextRenderer () {
     return Object.create(text_renderer_prototype);
 };

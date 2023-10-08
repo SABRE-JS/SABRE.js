@@ -2,7 +2,7 @@
 //@include [style]
 //@include [style-override]
 
-sabre["SSASubtitleEvent"] = function () {
+sabre["SSASubtitleEvent"] = function SSASubtitleEvent () {
     let obj = {
         id: NaN,
         order: NaN,
@@ -18,7 +18,7 @@ sabre["SSASubtitleEvent"] = function () {
     };
     return Object.create(Object, {
         "toJSON": {
-            value: function () {
+            value: function toJSON () {
                 return {
                     id: obj.id,
                     or: obj.order,
@@ -37,146 +37,146 @@ sabre["SSASubtitleEvent"] = function () {
         },
 
         "setId": {
-            value: function (/** number */ id) {
+            value: function setId (/** number */ id) {
                 obj.id = id;
             },
             writable: false
         },
 
         "getId": {
-            value: function () {
+            value: function getId () {
                 return obj.id;
             },
             writable: false
         },
 
         "setOrder": {
-            value: function (/** number */ order) {
+            value: function setOrder (/** number */ order) {
                 obj.order = order;
             },
             writable: false
         },
 
         "getOrder": {
-            value: function () {
+            value: function getOrder () {
                 return obj.order;
             },
             writable: false
         },
 
         "setNewLine": {
-            value: function (/** boolean */ newLine) {
+            value: function setNewLine (/** boolean */ newLine) {
                 obj.newLine = newLine;
             },
             writable: false
         },
 
         "isNewLine": {
-            value: function () {
+            value: function isNewLine () {
                 return obj.newLine;
             },
             writable: false
         },
 
         "setStart": {
-            value: function (/** number */ start) {
+            value: function setStart (/** number */ start) {
                 obj.start = start;
             },
             writable: false
         },
 
         "getStart": {
-            value: function () {
+            value: function getStart () {
                 return obj.start;
             },
             writable: false
         },
 
         "setEnd": {
-            value: function (/** number */ end) {
+            value: function setEnd (/** number */ end) {
                 obj.end = end;
             },
             writable: false
         },
 
         "getEnd": {
-            value: function () {
+            value: function getEnd () {
                 return obj.end;
             },
             writable: false
         },
 
         "setText": {
-            value: function (/** string */ text) {
+            value: function setText (/** string */ text) {
                 obj.text = text;
             },
             writable: false
         },
         "getText": {
-            value: function () {
+            value: function getText () {
                 return obj.text;
             },
             writable: false
         },
 
         "setLayer": {
-            value: function (/** number */ layer) {
+            value: function setLayer (/** number */ layer) {
                 obj.layer = layer;
             },
             writable: false
         },
 
         "getLayer": {
-            value: function () {
+            value: function getLayer () {
                 return obj.layer;
             },
             writable: false
         },
 
         "setStyle": {
-            value: function (/** SSAStyleDefinition */ style) {
+            value: function setStyle (/** SSAStyleDefinition */ style) {
                 obj.style = style;
             },
             writable: false
         },
 
         "getStyle": {
-            value: function () {
+            value: function getStyle () {
                 return obj.style;
             },
             writable: false
         },
 
         "setOverrides": {
-            value: function (/** SSAStyleOverride */ overrides) {
+            value: function setOverrides (/** SSAStyleOverride */ overrides) {
                 obj.overrides = overrides;
             },
             writable: false
         },
 
         "getOverrides": {
-            value: function () {
+            value: function getOverrides () {
                 return obj.overrides;
             },
             writable: false
         },
 
         "setLineOverrides": {
-            value: function (/** SSALineStyleOverride */ line_overrides) {
+            value: function setLineOverrides (/** SSALineStyleOverride */ line_overrides) {
                 obj.lineOverrides = line_overrides;
             },
             writable: false
         },
 
         "getLineOverrides": {
-            value: function () {
+            value: function getLineOverrides () {
                 return obj.lineOverrides;
             },
             writable: false
         },
 
         "setLineTransitionTargetOverrides": {
-            value: function (
+            value: function setLineTransitionTargetOverrides (
                 /** Array<SSALineTransitionTargetOverride> */ targets
             ) {
                 obj.lineTransitionTargetOverrides = targets;
@@ -185,7 +185,7 @@ sabre["SSASubtitleEvent"] = function () {
         },
 
         "addLineTransitionTargetOverrides": {
-            value: function (
+            value: function addLineTransitionTargetOverrides (
                 /** SSALineTransitionTargetOverride */ line_overrides
             ) {
                 for (
@@ -217,7 +217,7 @@ sabre["SSASubtitleEvent"] = function () {
         },
 
         "getLineTransitionTargetOverrides": {
-            value: function () {
+            value: function getLineTransitionTargetOverrides () {
                 return obj.lineTransitionTargetOverrides.slice(0);
             },
             writable: false

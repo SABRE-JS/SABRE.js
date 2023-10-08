@@ -16,7 +16,7 @@
 (function (global, exterior) {
     const ComplaintPrototype = {
         "grumble": {
-            value: function () {
+            value: function grumble () {
                 if (!this._grumbled) {
                     console.warn(this._issue + "\tgrumble... grumble...");
                     this._grumbled = true;
@@ -25,7 +25,7 @@
             writable: false
         },
         "reset": {
-            value: function () {
+            value: function reset () {
                 this._grumbled = false;
             },
             writable: false
@@ -37,7 +37,7 @@
      * @constructor
      * @param {string} warning the warning to display.
      */
-    const Complaint = function (warning) {
+    const Complaint = function Complaint (warning) {
         warning = warning.trim().replace(/\.+$/, "").trim() + ".";
         var newComplaint = global.Object.seal(
             global.Object.create(
@@ -51,7 +51,7 @@
     /**
      * Reset all Complaint states.
      */
-    Complaint["resetAll"] = function () {
+    Complaint["resetAll"] = function resetAll () {
         allComplaints.forEach(function (val) {
             val["reset"]();
         });
@@ -103,7 +103,7 @@ global.Math.trunc =
 
     let lastVideoMetrics = {};
 
-    function getMetricForVideo(video) {
+    function getMetricForVideo (video) {
         let metric = video.mozPresentedFrames ?? null;
         if (
             typeof video.getVideoPlaybackQuality === "undefined" ||
@@ -116,7 +116,7 @@ global.Math.trunc =
         }
     }
 
-    function checkForNewVideoFrame(currentTime) {
+    function checkForNewVideoFrame (currentTime) {
         if (currentTime >= Number.MAX_SAFE_INTEGER && !shownTimeAlert) {
             shownTimeAlert = true;
             if (
@@ -238,7 +238,7 @@ global.Math.trunc =
  * @param {number} acceleration the acceleration value.
  * @return {number} the result of the transition.
  */
-sabre["performTransition"] = function (
+sabre["performTransition"] = function performTransition (
     curtime,
     originalValue,
     transitionValue,
@@ -260,7 +260,7 @@ sabre["performTransition"] = function (
  * @param {SSASubtitleEvent} event
  * @return {SSASubtitleEvent} the clone.
  */
-sabre["cloneEventWithoutText"] = function (event) {
+sabre["cloneEventWithoutText"] = function cloneEventWithoutText (event) {
     let new_event = new sabre.SSASubtitleEvent();
     new_event.setId(event.getId());
     new_event.setStart(event.getStart());
@@ -413,7 +413,7 @@ const jsonFix = function (key, value) {
  * @param {(!Object|!Array<*>)} obj Object or Array to hash.
  * @return {number} The Hash of the events.
  */
-sabre["hashObject"] = function (obj) {
+sabre["hashObject"] = function hashObject (obj) {
     let str_rep = JSON.stringify(obj, jsonFix);
     let hash = 0,
         i,
@@ -433,7 +433,7 @@ sabre["hashObject"] = function (obj) {
  * @param {string} b string 2 in comparison.
  * @return {boolean} Equal or not.
  */
-sabre["stringEqualsCaseInsensitive"] = function (a, b) {
+sabre["stringEqualsCaseInsensitive"] = function stringEqualsCaseInsensitive (a, b) {
     return typeof a === "string" && typeof b === "string"
         ? a.localeCompare(b, undefined, { sensitivity: "accent" }) === 0
         : a === b;
@@ -445,7 +445,7 @@ sabre["stringEqualsCaseInsensitive"] = function (a, b) {
  * @param {number} p Number of places.
  * @return {number} Rounded result.
  */
-sabre["roundTo"] = function (n, p) {
+sabre["roundTo"] = function roundTo (n, p) {
     var value = +n.toFixed(p);
     var q = +(n - value + this.pow(10, -(p + 2))).toFixed(p + 1);
     var test = q >= this.pow(10, -(p + 1)) * 5;
@@ -453,7 +453,7 @@ sabre["roundTo"] = function (n, p) {
     return value;
 };
 
-sabre["getPixelRatio"] = function() {
+sabre["getPixelRatio"] = function getPixelRatio () {
     return global.devicePixelRatio ?? 1;
 };
 /**
@@ -461,7 +461,7 @@ sabre["getPixelRatio"] = function() {
  * @param {CanvasRenderingContext2D} context the target context.
  * @return {number} Backing Pixel Ratio.
  */
-sabre["getBackingRatio"] = function (context) {
+sabre["getBackingRatio"] = function getBackingRatio (context) {
     return (
         context.backingStorePixelRatio ??
         context.webkitBackingStorePixelRatio ??
