@@ -54,7 +54,7 @@ const font_server_prototype = Object.create(Object, {
          * @param {Array<number>} arr
          * @returns {string}
          */
-        value: function (arr) {
+        value: function _wcharByteArrayToString (arr) {
             let array = [];
             for (var i = 0; i < arr.length; i += 2) {
                 array.push(parseInt((arr[i] << 8) | arr[i + 1], 10));
@@ -65,7 +65,7 @@ const font_server_prototype = Object.create(Object, {
     },
 
     init: {
-        value: function (config) {
+        value: function init (config) {
             this._fonts = config.fontserver;
             this._fontMapping = {};
         },
@@ -73,7 +73,7 @@ const font_server_prototype = Object.create(Object, {
     },
 
     _fixUnsignedToSignedShort: {
-        value: function (num) {
+        value: function _fixUnsignedToSignedShort (num) {
             num = 0xffff & num;
             if (num > 0x7fff) num = -(0xffff & (~num + 1));
             return num;
@@ -97,7 +97,7 @@ const font_server_prototype = Object.create(Object, {
          *              selection:number
          *          }>} the resulting font and info.
          */
-        value: function (name) {
+        value: function getFontsAndInfo (name) {
             name = name.toLowerCase().trim();
             if (this._fontMapping[name]) return this._fontMapping[name];
             let results = [];
@@ -159,7 +159,7 @@ const font_server_prototype = Object.create(Object, {
  * @private
  * @param {RendererData} config
  */
-sabre["FontServer"] = function (config) {
+sabre["FontServer"] = function FontServer (config) {
     let server = Object.create(font_server_prototype);
     server.init(config);
     return server;
