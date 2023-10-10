@@ -37,20 +37,26 @@ describe("SSAStyleDefinition", () => {
     beforeEach(() => {
         defaultStyleDefinitionObject = {
             al: 2,
+            an: 0,
             bs: 1,
             en: 1,
             fn: "Arial",
             fs: 18,
+            i: false,
             m: [ 20, 20, 20 ],
             n: "Default",
+            ox: 2,
+            oy: 2,
             pc: { color: 0x00ffffff },
             qc: { color: 0x00000080 },
             sc: { color: 0x00ffff00 },
             sh: 3,
             sp: 0,
+            st: false,
             sx: 1,
             sy: 1,
             tc: { color: 0x00000000 },
+            u: false,
             w: 200
         }
     });

@@ -152,6 +152,8 @@ var SSAStyleOverride;
  *      getMovement:function():?Array<number>,
  *      getPosition:function():?Array<number>,
  *      getRotationOrigin:function():?Array<number>,
+ *      hasMovement:function():boolean,
+ *      hasPosition:function():boolean,
  *      setClip:function(number,(number|string),number=,number=):void,
  *      setClipInverted:function(boolean):void,
  *      setFade:function(number,number,number,number,number,number,number):void,

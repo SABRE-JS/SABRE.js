@@ -300,7 +300,7 @@ const renderer_prototype = global.Object.create(Object, {
     //BEGIN LOCAL FUNCTIONS
 
     _getCacheWidth: {
-        value: function () {
+        value: function _getCacheWidth () {
             const pixelRatio = sabre.getPixelRatio();
             return Math.max(this._compositingCanvas.width*2,global.screen.width*pixelRatio);
         },
@@ -308,7 +308,7 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _getCacheHeight: {
-        value: function () {
+        value: function _getCacheHeight () {
             const pixelRatio = sabre.getPixelRatio();
             return Math.max(this._compositingCanvas.height*2,global.screen.height*pixelRatio);
         },
@@ -316,7 +316,7 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _findFont: {
-        value: function (name, weight, italic) {
+        value: function _findFont (name, weight, italic) {
             const fonts = this._fontServer.getFontsAndInfo(name);
             let result = null;
             let bestScore = 0;
@@ -384,7 +384,7 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _bezierCurve: {
-        value: function (t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+        value: function _bezierCurve (t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
             let cX = 3 * (p1x - p0x),
                 bX = 3 * (p2x - p1x) - cX,
                 aX = p3x - p0x - cX - bX;
@@ -408,7 +408,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} size size of the float32array.
          * @return {Float32Array} the array.
          */
-        value: function (name, size) {
+        value: function _getFloat32Array (name, size) {
             if (!this._renderData[name]) {
                 return (this._renderData[name] = new Float32Array(size));
             }
@@ -423,7 +423,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @private
          * @return {Array<number>} the array representation.
          */
-        value: function (a) {
+        value: function _matrixToArrayRepresentation4x4 (a) {
             return [
                 a.m00,
                 a.m10,
@@ -454,7 +454,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Object} b second matrix
          * @return {Object} the resulting matrix
          */
-        value: function (a, b) {
+        value: function _matrixMultiply4x4 (a, b) {
             let result = {};
             result.m00 =
                 a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20 + a.m03 * b.m30;
@@ -502,10 +502,10 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Array<SSASubtitleEvent>} events list of SSASubtitleEvents
          * @return {boolean} do they use animation?
          */
-        value: function (events) {
+        value: function _listOfEventsContainsAnimation (events) {
             for (let i = 0; i < events.length; i++) {
                 if (
-                    events[i].getLineOverrides().getMovement() !== null ||
+                    events[i].getLineOverrides().hasMovement() ||
                     events[i].getLineOverrides().getFade() !== null ||
                     events[i].getLineTransitionTargetOverrides() !== null ||
                     events[i].getOverrides().getKaraokeMode() !==
@@ -520,7 +520,7 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _rectangleOffset: {
-        value: function (x1, y1, w1, h1, x2, y2, w2, h2) {
+        value: function _rectangleOffset (x1, y1, w1, h1, x2, y2, w2, h2) {
             let m = [0, 0];
             if (x1 >= x2 && x1 < x2 + w2 && y1 >= y2 && y1 < y2 + h2) {
                 if (
@@ -555,7 +555,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcEdgeBlur (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let iterations = overrides.getEdgeBlur() ?? 0;
             for (let i = 0; i < transitionOverrides.length; i++)
@@ -573,7 +573,7 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _calcGaussianBlur: {
-        value: function (time, style, overrides) {
+        value: function _calcGaussianBlur (time, style, overrides) {
             const blurConstant = 1; //1.17741002251547469;
             let transitionOverrides = overrides.getTransitions();
             let factor = overrides.getGaussianEdgeBlur() ?? 0;
@@ -598,7 +598,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcOutline (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let outlineX = overrides.getOutlineX() ?? style.getOutlineX();
             let outlineY = overrides.getOutlineY() ?? style.getOutlineY();
@@ -632,7 +632,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcShear (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let shearX = overrides.getShearX() ?? 0;
             let shearY = overrides.getShearY() ?? 0;
@@ -667,7 +667,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
          */
-        value: function (time, style, overrides) {
+        value: function _calcRotation(time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
             let rotation = overrides.getRotation();
             for (let i = 0; i < transitionOverrides.length; i++) {
@@ -714,7 +714,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {SSASubtitleEvent} event the current event we're positioning.
          * @return {CollisionInfo} the positioning info of the event.
          */
-        value: function (time, index, event) {
+        value: function _positionEvent (time, index, event) {
             let alignment =
                 (event.getOverrides().getAlignment() ??
                     event.getStyle().getAlignment()) - 1;
@@ -749,12 +749,14 @@ const renderer_prototype = global.Object.create(Object, {
                 }
             }
             let lineOverrides = event.getLineOverrides();
+            let overridePos = lineOverrides.getPosition();
+            let overrideMove = lineOverrides.getMovement();
             if (!event.getOverrides().getDrawingMode()) {
                 this._textRenderer.calcBounds(time, event);
                 let dim = this._textRenderer.getBounds();
                 if (
-                    lineOverrides.getPosition() === null &&
-                    lineOverrides.getMovement() === null
+                    overridePos === null &&
+                    overrideMove === null
                 ) {
                     let anchorPoint = [0, 0];
                     let alignmentOffsetX = 0;
@@ -809,8 +811,8 @@ const renderer_prototype = global.Object.create(Object, {
                     let curPos = [0, 0];
                     let alignmentOffsetX = 0;
                     let alignmentOffsetY = 0;
-                    if (lineOverrides.getMovement() === null) {
-                        curPos = lineOverrides.getPosition();
+                    if (overrideMove === null) {
+                        curPos = overridePos;
                         switch (verticalAlignment) {
                             case 2:
                                 //TOP
@@ -846,7 +848,7 @@ const renderer_prototype = global.Object.create(Object, {
                         result.originalX = result.x = curPos[0];
                         result.originalY = result.y = curPos[1];
                     } else {
-                        let move = lineOverrides.getMovement();
+                        let move = overrideMove;
                         switch (verticalAlignment) {
                             case 2:
                                 //TOP
@@ -918,8 +920,8 @@ const renderer_prototype = global.Object.create(Object, {
                 );
                 let dim = this._shapeRenderer.getBounds();
                 if (
-                    lineOverrides.getPosition() === null &&
-                    lineOverrides.getMovement() === null
+                    overridePos === null &&
+                    overrideMove === null
                 ) {
                     let anchorPoint = [0, 0];
                     let alignmentOffsetX = 0;
@@ -973,8 +975,8 @@ const renderer_prototype = global.Object.create(Object, {
                     let curPos = [0, 0];
                     let alignmentOffsetX = 0;
                     let alignmentOffsetY = 0;
-                    if (lineOverrides.getMovement() === null) {
-                        curPos = lineOverrides.getPosition();
+                    if (overrideMove === null) {
+                        curPos = overridePos;
                         switch (verticalAlignment) {
                             case 2:
                                 //TOP
@@ -1012,7 +1014,7 @@ const renderer_prototype = global.Object.create(Object, {
                         result.alignmentOffsetX = alignmentOffsetX;
                         result.alignmentOffsetY = alignmentOffsetY;
                     } else {
-                        let move = lineOverrides.getMovement();
+                        let move = overrideMove;
                         switch (verticalAlignment) {
                             case 2:
                                 //TOP
@@ -1087,7 +1089,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {CollisionInfo} localPositionInfo the current position info.
          * @param {Array<CollisionInfo>} lineInfos the current line's infos.
          */
-        value: function (newLine, lines, localPositionInfo, lineInfos) {
+        value: function _collideInternally (newLine, lines, localPositionInfo, lineInfos) {
             let horizontalAlignment = Math.floor(
                 localPositionInfo.alignment % 3
             );
@@ -1237,7 +1239,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Array<CollisionInfo>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
          * @return {boolean} did we move something?
          */
-        value: function (
+        value: function _collideEvent (
             positionInfo1,
             posInfosForMatchingId1,
             positionInfo2,
@@ -1356,7 +1358,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Array<CollisionInfo>} posInfosForMatchingId position infos for events who's id matches the current event's id.
          * @return {boolean} did we move something?
          */
-        value: function (positionInfo, posInfosForMatchingId) {
+        value: function _collideEventWithViewport (positionInfo, posInfosForMatchingId) {
             let horizontalAlignment = Math.floor(positionInfo.alignment % 3);
             let verticalAlignment = Math.floor(positionInfo.alignment / 3);
             let xshouldmove = false;
@@ -1423,7 +1425,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Breakup the events on spaces.
          * @param {Array<SSASubtitleEvent>} events
          */
-        value: function (events) {
+        value: function _subdivideEvents (events) {
             let cur_event, new_event, next_event, text;
             for (let i = 0; i < events.length; i++) {
                 cur_event = events[i];
@@ -1457,7 +1459,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} time The current time.
          * @param {Array<SSASubtitleEvent>} events the list of events
          */
-        value: function (time, events) {
+        value: function _wordWrap (time, events) {
             let width = 0;
             let last_id = -1;
             let line_start = 0;
@@ -1572,7 +1574,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Array<SSASubtitleEvent>} events list of onscreen subtitle events for this frame in order of layer.
          * @return {Array<CollisionInfo>} each event's position onscreen.
          */
-        value: function (time, events) {
+        value: function _organizeEvents (time, events) {
             let result = new Array(events.length);
             let resultsForId = {};
             this._subdivideEvents(events);
@@ -1619,8 +1621,8 @@ const renderer_prototype = global.Object.create(Object, {
                     if (result[i].width === 0 || result[i].height === 0)
                         continue;
                     if (
-                        events[i].getLineOverrides().getPosition() !== null ||
-                        events[i].getLineOverrides().getMovement() !== null
+                        events[i].getLineOverrides().hasPosition() ||
+                        events[i].getLineOverrides().hasMovement()
                     )
                         continue;
                     let id = events[i].getId();
@@ -1657,7 +1659,7 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _glSetup: {
-        value: function () {
+        value: function _glSetup () {
             this._clearCache();
             const default_tex_coords = this._getFloat32Array("tex_coords", 12);
             default_tex_coords.set([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1], 0);
@@ -2121,7 +2123,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} pass the render pass we're on.
          * @return {?{blur:number,gaussBlur:number}}
          */
-        value: function (time, currentEvent, pass) {
+        value: function _getBlurInfoForCompositing (time, currentEvent, pass) {
             let borderStyle = currentEvent.getStyle().getBorderStyle();
             let outline = this._calcOutline(
                 time,
@@ -2168,7 +2170,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} pass
          * @return {boolean} should we disable blend?
          */
-        value: function (currentEvent, pass) {
+        value: function _shouldDisableBlendForCompositePass (currentEvent, pass) {
             return (
                 pass === sabre.RenderPasses.BACKGROUND &&
                 currentEvent.getStyle().getBorderStyle() ===
@@ -2188,7 +2190,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {?GlyphCacheInfo} cachedGlyphInfo the info for the cached glyph.
          * @return {Object} the resulting matrix.
          */
-        value: function (time, source, position, event, cachedGlyphInfo) {
+        value: function _calcPositioningMatrices (time, source, position, event, cachedGlyphInfo) {
             const toRad = Math.PI / 180;
 
             let rotation = this._calcRotation(
@@ -2359,7 +2361,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {string} path the path itself.
          * @return {Array<Array<number>>} the shapes.
          */
-        value: function (scale, path) {
+        value: function _getShapesFromPath (scale, path) {
             //prep runtime stuff
             const parseFloat = global.parseFloat;
             const BSpline = sabre.BSpline;
@@ -2525,7 +2527,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {boolean} inverse is the clip inverted?
          * @return {Float32Array} the resulting vertices.
          */
-        value: function (clip, inverse) {
+        value: function _calcRectangularClipCoords (clip, inverse) {
             let minX = Math.min(clip[0], clip[2]);
             let minY = Math.min(clip[1], clip[3]);
             let maxX = Math.max(clip[0], clip[2]);
@@ -2598,7 +2600,7 @@ const renderer_prototype = global.Object.create(Object, {
          *  @param {boolean} inverse is it inverse?
          *  @return {Float32Array} result
          */
-        value: function (clip, inverse) {
+        value: function _calcClipPathCoords (clip, inverse) {
             let scale = /** @type {number} */ (clip[0]);
             let path = /** @type {string} */ (clip[1]);
             let shapes = this._getShapesFromPath(scale, path);
@@ -2637,7 +2639,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {boolean} extraSpace Check for extra space.
          * @returns {?Array<number>} Results of allocation attempt.
          */
-        value: function (requiredWidth, requiredHeight, extraSpace) {
+        value: function _allocateCacheSpace (requiredWidth, requiredHeight, extraSpace) {
             requiredWidth = requiredWidth / this._getCacheWidth();
             requiredHeight = requiredHeight / this._getCacheHeight();
             let result = null;
@@ -2685,7 +2687,7 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Clears the cache.
          */
-        value: function () {
+        value: function _clearCache () {
             this._cacheAvailability = [{x:0,y:0,x2:1,y2:1}];
             this._glyphCache = {};
         },
@@ -2699,7 +2701,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} glyphIndex Uniquely identifies the glyph.
          * @returns {boolean} Is glyph cached.
          */
-        value: function (stateHash, glyphIndex) {
+        value: function _checkGlyphCache (stateHash, glyphIndex) {
             const glyphDictionary = this._glyphCache[stateHash];
             if (glyphDictionary) {
                 return !!glyphDictionary[glyphIndex];
@@ -2716,7 +2718,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} glyphIndex Uniquely identifies the glyph.
          * @returns {?GlyphCacheInfo} The positioning info of the cached glyph.
          */
-        value: function (stateHash, glyphIndex) {
+        value: function _fetchInfoFromGlyphCache (stateHash, glyphIndex) {
             const glyphDictionary = this._glyphCache[stateHash];
             if (glyphDictionary) {
                 return glyphDictionary[glyphIndex];
@@ -2734,7 +2736,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Canvas2DTextRenderer} source The source for the texture.
          * @param {boolean} extraSpace Check for extra space.
          */
-        value: function (stateHash, glyphIndex, source, extraSpace) {
+        value: function _cacheGlyph (stateHash, glyphIndex, source, extraSpace) {
             let positionAttrib = this._cacheShader.getAttribute(
                 this._gl,
                 "a_position"
@@ -2848,7 +2850,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Loads a subtitle into graphics card's VRAM.
          * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source The source.
          */
-        value: function (source, bounds) {
+        value: function _loadSubtitleToVram (source, bounds) {
             let extents = source.getExtents();
             if (extents[0] < bounds[0] && extents[1] < bounds[1]) {
                 this._gl.texSubImage2D(
@@ -2889,7 +2891,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {?number} texMaskHash State hash for the texture mask.
          * @param {?number} texMaskIndex Index for the texture mask.
          */
-        value: function (time, currentEvent, pass, position, isShape, texHash, texIndex, texMaskHash, texMaskIndex) {
+        value: function _compositeSubtitle (time, currentEvent, pass, position, isShape, texHash, texIndex, texMaskHash, texMaskIndex) {
             let blurInfo = this._getBlurInfoForCompositing(
                 time,
                 currentEvent,
@@ -3830,7 +3832,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Initializes the renderer.
          * @return {void}
          */
-        value: function () {
+        value: function init () {
             this._lastDim = [NaN,NaN];
             this._scheduler = new sabre.SubtitleScheduler();
             this._textRenderer = new sabre.Canvas2DTextRenderer();
@@ -3849,10 +3851,10 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {RendererData} config configuration for the renderer.
          * @return {void}
          */
-        value: function (config) {
+        value: function load (config) {
             this._fontServer = new sabre.FontServer(config);
             const _this = this;
-            const requestFont = function (name, weight, italic) {
+            const requestFont = function requestFont (name, weight, italic) {
                 return _this._findFont(name, weight, italic);
             };
             this._textRenderer.setRequestFont(requestFont);
@@ -3906,7 +3908,7 @@ const renderer_prototype = global.Object.create(Object, {
 
             this._compositingCanvas.addEventListener(
                 "webglcontextlost",
-                function (event) {
+                function lostContext(event) {
                     console.log("[SABRE.js] WebGL Context Lost...");
                     _this._contextLost = true;
                     event.preventDefault();
@@ -3917,7 +3919,7 @@ const renderer_prototype = global.Object.create(Object, {
 
             this._compositingCanvas.addEventListener(
                 "webglcontextrestored",
-                function (event) {
+                function restoredContext(event) {
                     console.log(
                         "[SABRE.js] WebGL Context Restored. Recovering..."
                     );
@@ -3940,7 +3942,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} height the new height of the output.
          * @return {void}
          */
-        value: function (width, height) {
+        value: function updateViewport(width, height) {
             const pixelRatio = sabre.getPixelRatio();
             this._lastPixelRatio = pixelRatio;
             this._lastDim[0] = width;
@@ -4014,7 +4016,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Returns false if context is lost and not recovered yet.
          * @return {boolean}
          */
-        value: function () {
+        value: function canRender() {
             return !this._contextLost;
         },
         writable: false
@@ -4026,7 +4028,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} time the current frame time.
          * @return {void}
          */
-        value: function (time) {
+        value: function frame (time) {
             if (this._contextLost) return;
             if (time === this._lastTime) return;
             {
@@ -4169,7 +4171,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {function(string):void} callback the callback to call with the URI.
          * @return {void}
          */
-        value: function (callback) {
+        value: function getDisplayUri (callback) {
             this._compositingCanvas.toBlobHD((a) => {
                 let output = global.URL.createObjectURL(a);
                 if (this._lastOutput !== null)
@@ -4186,7 +4188,7 @@ const renderer_prototype = global.Object.create(Object, {
          * Get an ImageBitmap containing the frame or null if ImageBitmap is unsupported.
          * @return {?ImageBitmap} the bitmap.
          */
-        value: function () {
+        value: function getDisplayBitmap () {
             if (!isImageBitmapSupported) return null;
             if (this._compositingCanvas instanceof global.OffscreenCanvas) {
                 return this._compositingCanvas.transferToImageBitmap();
@@ -4202,7 +4204,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {boolean} bitmap should we use bitmap context?
          * @return {void}
          */
-        value: function (canvas, bitmap) {
+        value: function copyToCanvas (canvas, bitmap) {
             let context;
             if (bitmap) {
                 context = canvas.getContext("bitmaprenderer");
@@ -4220,7 +4222,7 @@ const renderer_prototype = global.Object.create(Object, {
     //END PUBLIC FUNCTIONS
 });
 
-sabre["Renderer"] = function () {
+sabre["Renderer"] = function Renderer () {
     let renderer = global.Object.create(renderer_prototype);
     renderer.init();
     return renderer;

@@ -24,7 +24,7 @@
  * @param {number} y new point y
  * @private
  */
-const expandBounds = function (max, min, x, y) {
+const expandBounds = function expandBounds (max, min, x, y) {
     if (x > max[0]) max[0] = x;
     if (x < min[0]) min[0] = x;
     if (y > max[1]) max[1] = y;

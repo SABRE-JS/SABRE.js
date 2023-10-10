@@ -1172,6 +1172,13 @@ sabre["SSALineStyleOverride"] = function SSALineStyleOverride () {
             writable: false
         },
 
+        "hasMovement": {
+            value: function hasMovement () {
+                return obj.movement !== null;
+            },
+            writable:false
+        },
+
         "getMovement": {
             value: function getMovement () {
                 if (obj.movement !== null) return obj.movement.slice(0);
@@ -1183,6 +1190,13 @@ sabre["SSALineStyleOverride"] = function SSALineStyleOverride () {
         "setPosition": {
             value: function setPosition (/** number */ x, /** number */ y) {
                 obj.position = [x, y];
+            },
+            writable: false
+        },
+
+        "hasPosition": {
+            value: function hasPosition () {
+                return obj.position !== null;
             },
             writable: false
         },
