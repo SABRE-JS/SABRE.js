@@ -30,7 +30,7 @@ var RendererData;
  * @param {boolean} test
  * @private
  */
-const gassert = function (complaint, test) {
+const gassert = function gassert (complaint, test) {
     if (!test) complaint.grumble();
     return test;
 };
@@ -1053,7 +1053,7 @@ const parser_prototype = global.Object.create(global.Object, {
         value: (function () {
             let data = "";
             let fontNameData = null;
-            return function (line) {
+            return function _handleEmbeddedFont (line) {
                 const foundFontname = line.indexOf("fontname:") === 0;
                 const foundHeading =
                     line.indexOf("[") === 0 && line.indexOf("]") > 0;
@@ -1287,7 +1287,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
          * @param {Array<Font>} fonts preloaded fonts necessary for this subtitle file (one of these MUST be Arial).
          * @return {void}
          */
-        "loadSubtitles": function (subsText, fonts) {
+        "loadSubtitles": function loadSubtitles (subsText, fonts) {
             parser["load"](subsText, fonts, (config) => renderer.load(config));
         },
         /**
@@ -1296,14 +1296,14 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
          * @param {number} height the desired height of the resolution (in CSS pixels).
          * @return {void}
          */
-        "setViewport": function (width, height) {
+        "setViewport": function setViewport (width, height) {
             renderer.updateViewport(width, height);
         },
         /**
          * Checks if the renderer is ready to render a frame.
          * @return {boolean} is the renderer ready?
          */
-        "checkReadyToRender": function () {
+        "checkReadyToRender": function checkReadyToRender () {
             return renderer.canRender();
         },
         /**
@@ -1311,7 +1311,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
          * @param {number} time the time at which to draw subtitles.
          * @return {?ImageBitmap}
          */
-        "getFrame": function (time) {
+        "getFrame": function getFrame (time) {
             if (!bitmapSupported) return null;
             renderer.frame(time);
             return renderer.getDisplayBitmap();
@@ -1322,7 +1322,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
          * @param {function(string):void} callback a callback that provides the URI for the image generated.
          * @return {void}
          */
-        "getFrameAsUri": function (time, callback) {
+        "getFrameAsUri": function getFrameAsUri (time, callback) {
             renderer.frame(time);
             renderer.getDisplayUri(callback);
         },
@@ -1333,7 +1333,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
          * @param {string=} contextType the context type to use (must be one of "bitmap" or "2d"), defaults to "bitmap" unless unsupported by the browser, in which case "2d" is the default.
          * @return {void}
          */
-        "drawFrame": function (time, canvas, contextType) {
+        "drawFrame": function drawFrame (time, canvas, contextType) {
             let bitmapUsed =
                 bitmapSupported &&
                 (typeof contextType === "undefined" || contextType !== "2d");

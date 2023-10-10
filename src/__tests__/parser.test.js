@@ -5,6 +5,7 @@ require('../color.js');
 require('../style.js');
 require('../style-override.js');
 require('../subtitle-event.js');
+require("../subtitle-tags.js");
 require("../subtitle-parser.js");
 
 const assStyleKeys = [
@@ -190,7 +191,7 @@ describe("Parser", () => {
                 expect(config.renderer.default_wrap_style).toBe(sabre.WrapStyleModes.SMART);
                 expect(config.renderer.events).toBeInstanceOf(Array);
                 expect(config.renderer.events.length).toBe(1);
-                expect(JSON.stringify(config.renderer.events[0])).toBe('{"id":0,"or":0,"nl":false,"l":0,"s":6.6,"e":8.9,"st":{"n":"Default","fn":"Arial","fs":18,"pc":[1,1,1,1],"sc":[0,1,1,1],"tc":[0,0,0,1],"qc":[0.5019607843137255,0,0,1],"w":200,"i":false,"sx":1,"sy":1,"sp":0,"bs":1,"ox":2,"oy":2,"sh":2.1213203435596424,"al":2,"m":[20,20,20],"en":1},"o":{"a":null,"bO":0,"bI":0,"dM":false,"dS":1,"e":null,"fN":null,"fS":null,"fSM":0,"gB":0,"i":null,"kM":0,"kS":6.6,"kE":6.6,"m":[0,0,0],"oX":null,"oY":null,"pC":null,"sC":null,"tC":null,"qC":null,"r":[0,0,0],"sX":null,"sY":null,"shX":null,"shY":null,"sheX":0,"sheY":0,"sp":null,"st":null,"t":[],"u":null,"w":null,"wS":0},"lO":{"cl":null,"cli":false,"mo":null,"p":null,"rO":null,"f":null},"tO":[],"t":"This file tests SubStation Alpha parsing."}');
+                expect(JSON.stringify(config.renderer.events[0])).toBe('{"id":0,"or":0,"nl":false,"l":0,"s":6.6,"e":8.9,"st":{"n":"Default","fn":"Arial","fs":18,"pc":[1,1,1,1],"sc":[0,1,1,1],"tc":[0,0,0,1],"qc":[0.5019607843137255,0,0,1],"w":200,"i":false,"u":false,"st":false,"sx":1,"sy":1,"sp":0,"an":0,"bs":1,"ox":2,"oy":2,"sh":2.1213203435596424,"al":2,"m":[20,20,20],"en":1},"o":{"a":null,"bO":0,"bI":0,"dM":false,"dS":1,"e":null,"fN":null,"fS":null,"fSM":0,"gB":0,"i":null,"kM":0,"kS":6.6,"kE":6.6,"m":[0,0,0],"oX":null,"oY":null,"pC":null,"sC":null,"tC":null,"qC":null,"r":[0,0,0],"sX":null,"sY":null,"shX":null,"shY":null,"sheX":0,"sheY":0,"sp":null,"st":null,"t":[],"u":null,"w":null,"wS":0},"lO":{"cl":null,"cli":false,"mo":null,"p":null,"rO":null,"f":null},"tO":[],"t":"This file tests SubStation Alpha parsing."}');
                 
             });
         });
@@ -227,7 +228,7 @@ describe("Parser", () => {
                 expect(config.renderer.default_wrap_style).toBe(sabre.WrapStyleModes.SMART);
                 expect(config.renderer.events).toBeInstanceOf(Array);
                 expect(config.renderer.events.length).toBe(1);
-                expect(JSON.stringify(config.renderer.events[0])).toBe('{"id":0,"or":0,"nl":false,"l":0,"s":6.6,"e":8.9,"st":{"n":"Default","fn":"Arial","fs":18,"pc":[1,1,1,1],"sc":[0,1,1,1],"tc":[0,0,0,1],"qc":[0.5019607843137255,0,0,1],"w":200,"i":false,"sx":1,"sy":1,"sp":0,"bs":1,"ox":2,"oy":2,"sh":2.1213203435596424,"al":2,"m":[20,20,20],"en":1},"o":{"a":null,"bO":0,"bI":0,"dM":false,"dS":1,"e":null,"fN":null,"fS":null,"fSM":0,"gB":0,"i":null,"kM":0,"kS":6.6,"kE":6.6,"m":[0,0,0],"oX":null,"oY":null,"pC":null,"sC":null,"tC":null,"qC":null,"r":[0,0,0],"sX":null,"sY":null,"shX":null,"shY":null,"sheX":0,"sheY":0,"sp":null,"st":null,"t":[],"u":null,"w":null,"wS":0},"lO":{"cl":null,"cli":false,"mo":null,"p":null,"rO":null,"f":null},"tO":[],"t":"This file tests SubStation Alpha parsing with a non-standard order."}');
+                expect(JSON.stringify(config.renderer.events[0])).toBe('{"id":0,"or":0,"nl":false,"l":0,"s":6.6,"e":8.9,"st":{"n":"Default","fn":"Arial","fs":18,"pc":[1,1,1,1],"sc":[0,1,1,1],"tc":[0,0,0,1],"qc":[0.5019607843137255,0,0,1],"w":200,"i":false,"u":false,"st":false,"sx":1,"sy":1,"sp":0,"an":0,"bs":1,"ox":2,"oy":2,"sh":2.1213203435596424,"al":2,"m":[20,20,20],"en":1},"o":{"a":null,"bO":0,"bI":0,"dM":false,"dS":1,"e":null,"fN":null,"fS":null,"fSM":0,"gB":0,"i":null,"kM":0,"kS":6.6,"kE":6.6,"m":[0,0,0],"oX":null,"oY":null,"pC":null,"sC":null,"tC":null,"qC":null,"r":[0,0,0],"sX":null,"sY":null,"shX":null,"shY":null,"sheX":0,"sheY":0,"sp":null,"st":null,"t":[],"u":null,"w":null,"wS":0},"lO":{"cl":null,"cli":false,"mo":null,"p":null,"rO":null,"f":null},"tO":[],"t":"This file tests SubStation Alpha parsing with a non-standard order."}');
                 
             });
         });
