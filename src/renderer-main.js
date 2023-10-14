@@ -1614,9 +1614,10 @@ const renderer_prototype = global.Object.create(Object, {
                     resultsForId[id].push(result[i]);
                 }
             }
-            let moved = false;
+            let moved;
             let count = 0;
             do {
+                moved = false;
                 for (let i = 0; i < events.length; i++) {
                     if (result[i].width === 0 || result[i].height === 0)
                         continue;
@@ -1638,9 +1639,8 @@ const renderer_prototype = global.Object.create(Object, {
                         if (result[j].width === 0 || result[j].height === 0)
                             continue;
                         if (
-                            events[j].getLineOverrides().getPosition() !==
-                                null ||
-                            events[j].getLineOverrides().getMovement() !== null
+                            events[j].getLineOverrides().hasPosition() ||
+                            events[j].getLineOverrides().hasMovement()
                         )
                             continue;
                         moved |= this._collideEvent(
