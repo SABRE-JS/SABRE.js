@@ -35,12 +35,12 @@ To view the gallery click [here](/gallery/gallery.md) if you're using a decent b
 ### Documentation
 How to include the library (from the jsdelivr CDN, this cdn is recommended as they publish usage statistics for each package):
 ```html
-<script src="https://cdn.jsdelivr.net/npm/opentype.js@latest/dist/opentype.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/opentype.js@^2.0.0/dist/opentype.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@sabre-js/sabre@latest/dist/sabre.min.js"></script>
 ```
 How to include the library (from the unpkg CDN, for the more privacy minded):
 ```html
-<script src="https://unpkg.com/opentype.js@latest/dist/opentype.min.js"></script>
+<script src="https://unpkg.com/opentype.js@^2.0.0/dist/opentype.min.js"></script>
 <script src="https://unpkg.com/@sabre-js/sabre@latest/dist/sabre.min.js"></script>
 ```
 
@@ -167,4 +167,4 @@ Fetches a rendered frame of subtitles to a canvas.
 | [contextType] | <code>string</code> | the context type to use (must be one of "bitmap" or "2d"), defaults to "bitmap" unless unsupported by the browser, in which case "2d" is the default. |
 
 
-&copy; 2012-2022 Patrick "ILOVEPIE" Rhodes Martin.
+&copy; 2012-2023 Patrick "ILOVEPIE" Rhodes Martin.

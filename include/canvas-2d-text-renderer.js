@@ -5,7 +5,7 @@
 *              nextGlyph:function():{prevGlyph:?Glyph,glyph:?Glyph,breakOut:boolean},
 *              positionCachedGlyph:function({prevGlyph:?Glyph,glyph:?Glyph,breakOut:boolean}):void,
 *              renderGlyph:function(number,SSASubtitleEvent,{prevGlyph:?Glyph,glyph:?Glyph,breakOut:boolean},number,boolean):boolean,
-*              setRequestFont:function(!function(string):!{font:Font,foundItalic:boolean,foundWeight:number}):void,
+*              setRequestFont:function(!function(string,number,boolean):!{font:Font,foundItalic:boolean,foundWeight:number}):void,
 *              setPixelScaleRatio:function(number,number):void,
 *              getOffset:function():Array<number>,
 *              getOffsetExternal:function():Array<number>,
