@@ -26,6 +26,12 @@
 
 /**
  * @private
+ * @typedef {!{m00:number,m01:number,m02:number,m03:number,m10:number,m11:number,m12:number,m13:number,m20:number,m21:number,m22:number,m23:number,m30:number,m31:number,m32:number,m33:number}}
+ */
+let Matrix4x4;
+
+/**
+ * @private
  * @typedef {!{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number,alignmentOffsetX:number,alignmentOffsetY:number}}
  */
 let CollisionInfo;
@@ -300,6 +306,11 @@ const renderer_prototype = global.Object.create(Object, {
     //BEGIN LOCAL FUNCTIONS
 
     _getCacheWidth: {
+        /**
+         * Get the target width for the cache texture.
+         * @private
+         * @returns {number} the width of of the cache texture to generate.
+         */
         value: function _getCacheWidth () {
             const pixelRatio = sabre.getPixelRatio();
             return Math.max(this._compositingCanvas.width*2,global.screen.width*pixelRatio);
@@ -308,6 +319,11 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _getCacheHeight: {
+        /**
+         * Get the target height for the cache texture.
+         * @private
+         * @returns {number} the height of of the cache texture to generate.
+         */
         value: function _getCacheHeight () {
             const pixelRatio = sabre.getPixelRatio();
             return Math.max(this._compositingCanvas.height*2,global.screen.height*pixelRatio);
@@ -316,6 +332,14 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _findFont: {
+        /**
+         * Find a font for use in the canvas 2d renderer.
+         * @private
+         * @param {string} name name to search for.
+         * @param {number} weight weight to search for.
+         * @param {boolean} italic weither or not to search for an italic font.
+         * @returns {{font:Font,foundItalic:boolean,foundWeight:number}} Result of the search.
+         */
         value: function _findFont (name, weight, italic) {
             const fonts = this._fontServer.getFontsAndInfo(name);
             let result = null;
@@ -384,6 +408,20 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _bezierCurve: {
+        /**
+         * Interpolate a bezier curve.
+         * @private
+         * @param {number} t time
+         * @param {number} p0x point 0 x
+         * @param {number} p0y point 0 y
+         * @param {number} p1x point 1 x
+         * @param {number} p1y point 1 y
+         * @param {number} p2x point 2 x
+         * @param {number} p2y point 2 y
+         * @param {number} p3x point 3 x
+         * @param {number} p3y point 3 y
+         * @returns {Array<number>} interpolated position
+         */
         value: function _bezierCurve (t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
             let cX = 3 * (p1x - p0x),
                 bX = 3 * (p2x - p1x) - cX,
@@ -450,9 +488,9 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Matrix multiplication for 4x4 matrix.
          * @private
-         * @param {Object} a first matrix
-         * @param {Object} b second matrix
-         * @return {Object} the resulting matrix
+         * @param {Matrix4x4} a first matrix
+         * @param {Matrix4x4} b second matrix
+         * @return {Matrix4x4} the resulting matrix
          */
         value: function _matrixMultiply4x4 (a, b) {
             let result = {};
@@ -499,6 +537,7 @@ const renderer_prototype = global.Object.create(Object, {
     _listOfEventsContainsAnimation: {
         /**
          * Determines if a list of SSASubtitleEvent objects contains use any animation features.
+         * @private
          * @param {Array<SSASubtitleEvent>} events list of SSASubtitleEvents
          * @return {boolean} do they use animation?
          */
@@ -551,6 +590,7 @@ const renderer_prototype = global.Object.create(Object, {
     _calcEdgeBlur: {
         /**
          * Calc blur iterations, handing transitions.
+         * @private
          * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
@@ -573,6 +613,14 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _calcGaussianBlur: {
+        /**
+         * Calculates the gaussian blur factor.
+         * @private
+         * @param {number} time the current time
+         * @param {SSAStyleDefinition} style the style of the subtitle
+         * @param {SSAStyleOverride} overrides the overrides for the subtitle
+         * @returns {number} the factor
+         */
         value: function _calcGaussianBlur (time, style, overrides) {
             const blurConstant = 1; //1.17741002251547469;
             let transitionOverrides = overrides.getTransitions();
@@ -594,9 +642,11 @@ const renderer_prototype = global.Object.create(Object, {
     _calcOutline: {
         /**
          * Calc outline width, handing transitions.
-         * @param {number} time
-         * @param {SSAStyleDefinition} style
-         * @param {SSAStyleOverride} overrides
+         * @private
+         * @param {number} time the current time
+         * @param {SSAStyleDefinition} style the style of the subtitle
+         * @param {SSAStyleOverride} overrides the overrides for the subtitle
+         * @return {!{x:number,y:number}} the resulting outline values.
          */
         value: function _calcOutline (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
@@ -628,9 +678,11 @@ const renderer_prototype = global.Object.create(Object, {
     _calcShear: {
         /**
          * Calc shear, handling transitions.
-         * @param {number} time
-         * @param {SSAStyleDefinition} style
-         * @param {SSAStyleOverride} overrides
+         * @private
+         * @param {number} time the current time
+         * @param {SSAStyleDefinition} style the style of the subtitle
+         * @param {SSAStyleOverride} overrides the overrides for the subtitle
+         * @return {!{x:number,y:number}} the resulting shear values.
          */
         value: function _calcShear (time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
@@ -663,9 +715,11 @@ const renderer_prototype = global.Object.create(Object, {
     _calcRotation: {
         /**
          * Calc rotation, handing transitions.
+         * @private
          * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
+         * @returns {Array<number>} the rotation axes
          */
         value: function _calcRotation(time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
@@ -1456,6 +1510,7 @@ const renderer_prototype = global.Object.create(Object, {
     _wordWrap: {
         /**
          * Handle if a line gets too long.
+         * @private
          * @param {number} time The current time.
          * @param {Array<SSASubtitleEvent>} events the list of events
          */
@@ -1566,6 +1621,29 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _mergeEvents: {
+        /** 
+         * Merge the events back togeather after word wrapping.
+         * @private
+         * @param {Array<SSASubtitleEvent>} events the list of events
+         */
+        value: function _mergeEvents (events) {
+            for(let i = 0; i < events.length-1; i++){
+                const firstEvent = events[i];
+                const secondEvent = events[i+1];
+                if(!secondEvent.isNewLine() && firstEvent.getId() === secondEvent.getId()){
+                    if(firstEvent.getOverrides() === secondEvent.getOverrides() &&
+                       firstEvent.getStyle() === secondEvent.getStyle()){
+                        firstEvent.setText(firstEvent.getText()+secondEvent.getText())
+                        events.splice(i+1,1);
+                        i--;
+                    }
+                }
+            }
+        },
+        writable: false
+    },
+
     _organizeEvents: {
         /**
          * Positions events onscreen and handles collisions.
@@ -1579,6 +1657,7 @@ const renderer_prototype = global.Object.create(Object, {
             let resultsForId = {};
             this._subdivideEvents(events);
             this._wordWrap(time, events);
+            this._mergeEvents(events);
             {
                 let lineInfos = [];
                 let lines = [lineInfos];
@@ -1659,6 +1738,10 @@ const renderer_prototype = global.Object.create(Object, {
     },
 
     _glSetup: {
+        /**
+         * Setup the WebGL context.
+         * @private
+         */
         value: function _glSetup () {
             this._clearCache();
             const default_tex_coords = this._getFloat32Array("tex_coords", 12);
@@ -2118,10 +2201,11 @@ const renderer_prototype = global.Object.create(Object, {
     _getBlurInfoForCompositing: {
         /**
          * Gets the blur information required for compositing.
+         * @private
          * @param {number} time the current time we're rendering at.
          * @param {SSASubtitleEvent} currentEvent the current subtitle event.
          * @param {number} pass the render pass we're on.
-         * @return {?{blur:number,gaussBlur:number}}
+         * @return {?{blur:number,gaussBlur:number}} the blur info
          */
         value: function _getBlurInfoForCompositing (time, currentEvent, pass) {
             let borderStyle = currentEvent.getStyle().getBorderStyle();
@@ -2166,6 +2250,7 @@ const renderer_prototype = global.Object.create(Object, {
     _shouldDisableBlendForCompositePass: {
         /**
          * Test if we should disable the blend for compositing.
+         * @private
          * @param {SSASubtitleEvent} currentEvent
          * @param {number} pass
          * @return {boolean} should we disable blend?
@@ -2183,12 +2268,13 @@ const renderer_prototype = global.Object.create(Object, {
     _calcPositioningMatrices: {
         /**
          * Calculates the matrix used to position the subtitle
+         * @private
          * @param {number} time the current frame's time.
          * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source the source.
          * @param {CollisionInfo} position the collision and positiong info of the event.
          * @param {SSASubtitleEvent} event the event we're working on.
          * @param {?GlyphCacheInfo} cachedGlyphInfo the info for the cached glyph.
-         * @return {Object} the resulting matrix.
+         * @return {Array<Matrix4x4>} the resulting matrix.
          */
         value: function _calcPositioningMatrices (time, source, position, event, cachedGlyphInfo) {
             const toRad = Math.PI / 180;
@@ -2229,29 +2315,8 @@ const renderer_prototype = global.Object.create(Object, {
                     m30: 0, m31: 0, m32: 0, m33: 1
                 };
             }
-            //NOTE: Shear the subtitle.
-            {
-                let shear = this._calcShear(
-                    time,
-                    event.getStyle(),
-                    event.getOverrides()
-                );
 
-                // prettier-ignore
-                let shearMatrix = {
-                    m00: 1 + (-shear.x * -shear.y), m01: -shear.x, m02: 0, m03: 0,
-                    m10: -shear.y,                  m11: 1,        m12: 0, m13: 0,
-                    m20: 0,                         m21: 0,        m22: 1, m23: 0,
-                    m30: 0,                         m31: 0,        m32: 0, m33: 1
-                };
-
-                preRotationMatrix = this._matrixMultiply4x4(
-                    preRotationMatrix,
-                    shearMatrix
-                );
-            }
-
-            let rotationOrigin = event.getLineOverrides().getRotationOrigin();
+            const rotationOrigin = event.getLineOverrides().getRotationOrigin();
 
             let rotationOffset;
             if (rotationOrigin === null)
@@ -2326,11 +2391,11 @@ const renderer_prototype = global.Object.create(Object, {
 
             //NOTE: Position for display.
             {
-                let translatedPositionY =
+                const translatedPositionY =
                     this._config.renderer["resolution_y"] - position.y;
 
                 // prettier-ignore
-                let finalOffsetMatrix = {
+                const positioningOffsetMatrix = {
                     m00: 1, m01: 0, m02: 0, m03: position.x,
                     m10: 0, m11: 1, m12: 0, m13: translatedPositionY,
                     m20: 0, m21: 0, m22: 1, m23: 0,
@@ -2339,7 +2404,55 @@ const renderer_prototype = global.Object.create(Object, {
 
                 postRotationMatrix = this._matrixMultiply4x4(
                     postRotationMatrix,
-                    finalOffsetMatrix
+                    positioningOffsetMatrix
+                );
+            }
+
+            //NOTE: Shear the subtitle.
+            {
+                let shear = this._calcShear(
+                    time,
+                    event.getStyle(),
+                    event.getOverrides()
+                );
+
+                // prettier-ignore
+                const shearOffsetMatrix = {
+                    m00: 1,     m01: 0,     m02: 0, m03: -position.alignmentOffsetX,
+                    m10: 0,     m11: 1,     m12: 0, m13: position.alignmentOffsetY,
+                    m20: 0,     m21: 0,     m22: 1, m23: 0,
+                    m30: 0,     m31: 0,     m32: 0, m33: 1,
+                };
+
+                // prettier-ignore
+                const shearMatrix = {
+                    m00: 1 + (-shear.x * -shear.y), m01: -shear.x, m02: 0, m03: 0,
+                    m10: -shear.y,                  m11: 1,        m12: 0, m13: 0,
+                    m20: 0,                         m21: 0,        m22: 1, m23: 0,
+                    m30: 0,                         m31: 0,        m32: 0, m33: 1
+                };
+
+                // prettier-ignore
+                const shearOffsetResetMatrix = {
+                    m00: 1,     m01: 0,     m02: 0, m03: position.alignmentOffsetX,
+                    m10: 0,     m11: 1,     m12: 0, m13: -position.alignmentOffsetY,
+                    m20: 0,     m21: 0,     m22: 1, m23: 0,
+                    m30: 0,     m31: 0,     m32: 0, m33: 1,
+                };
+
+                postRotationMatrix = this._matrixMultiply4x4(
+                    postRotationMatrix,
+                    shearOffsetMatrix
+                );
+
+                postRotationMatrix = this._matrixMultiply4x4(
+                    postRotationMatrix,
+                    shearMatrix
+                );
+
+                postRotationMatrix = this._matrixMultiply4x4(
+                    postRotationMatrix,
+                    shearOffsetResetMatrix
                 );
             }
 
@@ -2357,6 +2470,7 @@ const renderer_prototype = global.Object.create(Object, {
     _getShapesFromPath: {
         /**
          * Takes a scale and a path and returns the perimeters of the shapes drawn.
+         * @private
          * @param {number} scale the scale of the path.
          * @param {string} path the path itself.
          * @return {Array<Array<number>>} the shapes.
@@ -2523,6 +2637,7 @@ const renderer_prototype = global.Object.create(Object, {
     _calcRectangularClipCoords: {
         /**
          * Calculates rectangular clip coordinates.
+         * @private
          * @param {Array<number>} clip the clip bounds.
          * @param {boolean} inverse is the clip inverted?
          * @return {Float32Array} the resulting vertices.
@@ -2595,10 +2710,11 @@ const renderer_prototype = global.Object.create(Object, {
 
     _calcClipPathCoords: {
         /**
-         *  Gets clip path coords.
-         *  @param {Array<number|string>} clip the clip params
-         *  @param {boolean} inverse is it inverse?
-         *  @return {Float32Array} result
+         * Gets clip path coords.
+         * @private
+         * @param {Array<number|string>} clip the clip params
+         * @param {boolean} inverse is it inverse?
+         * @return {Float32Array} result
          */
         value: function _calcClipPathCoords (clip, inverse) {
             let scale = /** @type {number} */ (clip[0]);
@@ -2634,6 +2750,7 @@ const renderer_prototype = global.Object.create(Object, {
     _allocateCacheSpace: {
         /**
          * Allocates some space in the cache for a glyph or shape.
+         * @private
          * @param {number} requiredWidth Width required for the texture.
          * @param {number} requiredHeight Height required for the texture.
          * @param {boolean} extraSpace Check for extra space.
@@ -2686,6 +2803,7 @@ const renderer_prototype = global.Object.create(Object, {
     _clearCache: {
         /**
          * Clears the cache.
+         * @private
          */
         value: function _clearCache () {
             this._cacheAvailability = [{x:0,y:0,x2:1,y2:1}];
@@ -2697,6 +2815,7 @@ const renderer_prototype = global.Object.create(Object, {
     _checkGlyphCache: {
         /**
          * Checks if a glyph is cached in VRAM.
+         * @private
          * @param {number} stateHash Hash of the text renderer state.
          * @param {number} glyphIndex Uniquely identifies the glyph.
          * @returns {boolean} Is glyph cached.
@@ -2714,6 +2833,7 @@ const renderer_prototype = global.Object.create(Object, {
     _fetchInfoFromGlyphCache: {
         /**
          * Fetches glyph positioning info from cache.
+         * @private
          * @param {number} stateHash Hash of the text renderer state.
          * @param {number} glyphIndex Uniquely identifies the glyph.
          * @returns {?GlyphCacheInfo} The positioning info of the cached glyph.
@@ -2731,6 +2851,7 @@ const renderer_prototype = global.Object.create(Object, {
     _cacheGlyph: {
         /**
          * Puts a glyph in VRAM cache.
+         * @private
          * @param {number} stateHash Hash of the text renderer state.
          * @param {number} glyphIndex Uniquely identifies the glyph.
          * @param {Canvas2DTextRenderer} source The source for the texture.
@@ -2848,6 +2969,7 @@ const renderer_prototype = global.Object.create(Object, {
     _loadSubtitleToVram: {
         /**
          * Loads a subtitle into graphics card's VRAM.
+         * @private
          * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source The source.
          */
         value: function _loadSubtitleToVram (source, bounds) {
@@ -2881,6 +3003,7 @@ const renderer_prototype = global.Object.create(Object, {
     _compositeSubtitle: {
         /**
          * Performs the actual compositing of the subtitles onscreen.
+         * @private
          * @param {number} time The time the subtitle must be rendered at.
          * @param {SSASubtitleEvent} currentEvent The properties of the subtitle.
          * @param {number} pass the current render pass we are on.
