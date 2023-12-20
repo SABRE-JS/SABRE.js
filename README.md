@@ -9,6 +9,8 @@ A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer.
 SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substation Alpha Subtitles.
 It allows you to draw styled/stylized subtitles over web video with multiple fonts, colors, animations and effects.
 
+<span style="text-align:center; width:100%; display: inline-block;"></span>[![karaoke demo loop](gallery/images/demo_loop.gif)](gallery/video/demo_loop.mp4)</video></span>
+
 #### Other Similar software.
 
 - Javascript-Subtitles-Octopus

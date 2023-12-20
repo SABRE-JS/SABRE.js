@@ -3129,7 +3129,7 @@ const renderer_prototype = global.Object.create(Object, {
             let cachedGlyphInfo = null;
             let cachedMaskGlyphInfo = null;
             this._gl.activeTexture(this._gl.TEXTURE0);
-            if (texHash === null) {
+            if (texHash === null || !this._checkGlyphCache(texHash,texIndex)) {
                 this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
                 this._loadSubtitleToVram(source, this._textureSubtitleBounds); 
             } else {
@@ -3138,7 +3138,7 @@ const renderer_prototype = global.Object.create(Object, {
             }
             if (!isShape) {
                 this._gl.activeTexture(this._gl.TEXTURE1);
-                if (texMaskHash === null) {
+                if (texMaskHash === null || !this._checkGlyphCache(texMaskHash,texMaskIndex)) {
                     this._gl.bindTexture(
                         this._gl.TEXTURE_2D,
                         this._textureSubtitleMask
@@ -3216,7 +3216,7 @@ const renderer_prototype = global.Object.create(Object, {
             ],0);
 
             let tex_coords;
-            if (texHash === null) {
+            if (texHash === null || !this._checkGlyphCache(texHash,texIndex)) {
                 let dimensions = source.getTextureDimensions();
                 let extents = this._textureSubtitleBounds;
                 let width = dimensions[0] / extents[0];
@@ -3247,7 +3247,7 @@ const renderer_prototype = global.Object.create(Object, {
 
             let mask_coords;
             if (!isShape) {
-                if (texMaskHash === null) {
+                if (texMaskHash === null || !this._checkGlyphCache(texMaskHash,texMaskIndex)) {
                     let maskDimensions =
                         this._textMaskRenderer.getTextureDimensions();
                     let extents = this._textureSubtitleMaskBounds;
