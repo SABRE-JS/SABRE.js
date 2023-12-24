@@ -437,7 +437,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                             Math.min(progress + 1 / this._width, 1),
                             "rgba(255,0,255,1)"
                         );
-                        gradient.addColorStop(1, "rgba(0,255,255,1)");
+                        gradient.addColorStop(1, "rgba(255,0,255,1)");
                         this._ctx.fillStyle = gradient;
                     } else {
                         this._ctx.fillStyle = "rgba(0,255,255,1)";
@@ -489,7 +489,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                             Math.min(progress + 1 / this._width, 1),
                             "rgba(0,255,0,1)"
                         );
-                        gradient.addColorStop(1, "rgba(255,0,0,1)");
+                        gradient.addColorStop(1, "rgba(0,255,0,1)");
                         this._ctx.fillStyle = gradient;
                     } else {
                         this._ctx.fillStyle = "rgba(255,0,0,1)";
@@ -663,9 +663,9 @@ const text_renderer_prototype = global.Object.create(Object, {
             const glyphbb = glyph.getBoundingBox();
             const fontSize = this._fontInfo.size;
             const fontUnitsScale = this._fontInfo.font.unitsPerEm || 1000;
-            const fontSizeMulitplier = fontSize / fontUnitsScale;
+            const fontSizeMultiplier = fontSize / fontUnitsScale;
             const yoffset =
-                this._fontInfo.font.ascender * fontSizeMulitplier;
+                this._fontInfo.font.ascender * fontSizeMultiplier;
             const path = glyph.getPath(
                 offsetX,
                 offsetY + yoffset,
@@ -681,9 +681,9 @@ const text_renderer_prototype = global.Object.create(Object, {
             }
             if (strikethrough) {
                 this._ctx.beginPath();
-                const size =  this._fontInfo.strikethroughSize * fontSizeMulitplier;
-                const position = this._fontInfo.strikethroughPosition * fontSizeMulitplier;
-                this._ctx.rect(offsetX + Math.min(glyphbb.x1, 0) * fontSizeMulitplier, offsetY + yoffset - position, glyph.advanceWidth * fontSizeMulitplier, size);
+                const size =  this._fontInfo.strikethroughSize * fontSizeMultiplier;
+                const position = this._fontInfo.strikethroughPosition * fontSizeMultiplier;
+                this._ctx.rect(offsetX + Math.min(glyphbb.x1, 0) * fontSizeMultiplier, offsetY + yoffset - position, glyph.advanceWidth * fontSizeMultiplier, size);
                 if (stroke) {
                     this._ctx.stroke();
                 } else {
@@ -692,9 +692,9 @@ const text_renderer_prototype = global.Object.create(Object, {
             }
             if (underline) {
                 this._ctx.beginPath();
-                const size = this._fontInfo.underlineThickness * fontSizeMulitplier;
-                const position = this._fontInfo.underlinePosition * fontSizeMulitplier;
-                this._ctx.rect(offsetX + Math.min(glyphbb.x1, 0)  * fontSizeMulitplier, offsetY + yoffset - position, glyph.advanceWidth * fontSizeMulitplier, size);
+                const size = this._fontInfo.underlineThickness * fontSizeMultiplier;
+                const position = this._fontInfo.underlinePosition * fontSizeMultiplier;
+                this._ctx.rect(offsetX + Math.min(glyphbb.x1, 0)  * fontSizeMultiplier, offsetY + yoffset - position, glyph.advanceWidth * fontSizeMultiplier, size);
                 if (stroke) {
                     this._ctx.stroke();
                 } else {
@@ -1061,11 +1061,12 @@ const text_renderer_prototype = global.Object.create(Object, {
                     if (
                         borderStyle === sabre.BorderStyleModes.NONE ||
                         borderStyle === sabre.BorderStyleModes.SRT_STYLE ||
-                        borderStyle === sabre.BorderStyleModes.SRT_NO_OVERLAP
+                        borderStyle === sabre.BorderStyleModes.SRT_NO_OVERLAP ||
+                        (outline_x === 0 && outline_y === 0)
                     )
                         return false;
-                    let outline_x_bigger = outline_x > outline_y;
-                    let outline_gt_zero = outline_x > 0 && outline_y > 0;
+                    const outline_x_bigger = outline_x > outline_y;
+                    const outline_gt_zero = outline_x > 0 && outline_y > 0;
                     this._ctx.fillStyle = this._ctx.strokeStyle;
                     // Smear outline
                     if (outline_x_bigger) {
