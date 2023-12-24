@@ -734,9 +734,12 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 //draw the shape
                 if (!noDraw) {
                     if (pass === sabre.RenderPasses.OUTLINE) {
-                        let outline_gt_zero = outline_x > 0 && outline_y > 0;
+                        if(outline_x === 0 && outline_y === 0)
+                            return;
+                        const outline_x_bigger = outline_x > outline_y;
+                        const outline_gt_zero = outline_x > 0 && outline_y > 0;
                         this._ctx.fillStyle = this._ctx.strokeStyle;
-                        if (outline_x > outline_y) {
+                        if (outline_x_bigger) {
                             if (outline_gt_zero) {
                                 for (
                                     let i = -outline_x / outline_y;
