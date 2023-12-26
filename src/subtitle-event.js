@@ -218,7 +218,7 @@ sabre["SSASubtitleEvent"] = function SSASubtitleEvent () {
 
         "getLineTransitionTargetOverrides": {
             value: function getLineTransitionTargetOverrides () {
-                return obj.lineTransitionTargetOverrides.slice(0);
+                return obj.lineTransitionTargetOverrides;
             },
             writable: false
         }

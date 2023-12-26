@@ -546,7 +546,8 @@ const renderer_prototype = global.Object.create(Object, {
                 if (
                     events[i].getLineOverrides().hasMovement() ||
                     events[i].getLineOverrides().getFade() !== null ||
-                    events[i].getLineTransitionTargetOverrides() !== null ||
+                    (events[i].getLineTransitionTargetOverrides() !== null &&
+                    events[i].getLineTransitionTargetOverrides().length > 0) ||
                     events[i].getOverrides().getKaraokeMode() !==
                         sabre.KaraokeModes.OFF ||
                     events[i].getOverrides().getTransitions().length > 0
@@ -3070,7 +3071,7 @@ const renderer_prototype = global.Object.create(Object, {
                         ].getTransitionAcceleration();
                     clip[0] = sabre.performTransition(
                         time,
-                        /** @type {number} */ (clip[0]),
+                        /** @type {!number} */ (clip[0]),
                         transitionClip[0],
                         transitionStart,
                         transitionEnd,
@@ -3078,7 +3079,7 @@ const renderer_prototype = global.Object.create(Object, {
                     );
                     clip[1] = sabre.performTransition(
                         time,
-                        /** @type {number} */ (clip[1]),
+                        /** @type {!number} */ (clip[1]),
                         transitionClip[1],
                         transitionStart,
                         transitionEnd,
@@ -3086,7 +3087,7 @@ const renderer_prototype = global.Object.create(Object, {
                     );
                     clip[2] = sabre.performTransition(
                         time,
-                        /** @type {number} */ (clip[2]),
+                        /** @type {!number} */ (clip[2]),
                         transitionClip[2],
                         transitionStart,
                         transitionEnd,
@@ -3094,7 +3095,7 @@ const renderer_prototype = global.Object.create(Object, {
                     );
                     clip[3] = sabre.performTransition(
                         time,
-                        /** @type {number} */ (clip[3]),
+                        /** @type {!number} */ (clip[3]),
                         transitionClip[3],
                         transitionStart,
                         transitionEnd,
