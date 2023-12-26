@@ -106,15 +106,42 @@ const font_server_prototype = Object.create(Object, {
                 const nameTable = this._fonts[i].tables.name;
                 const fontFamily =
                     nameTable?.windows?.fontFamily?.en ??
-                    nameTable?.unicode?.unicode?.fontFamily?.en ??
+                    nameTable?.unicode?.fontFamily?.en ??
                     nameTable?.macintosh?.fontFamily?.en;
+                const fontSubfamily = 
+                    nameTable?.windows?.fontSubfamily?.en ??
+                    nameTable?.unicode?.fontSubfamily?.en ??
+                    nameTable?.macintosh?.fontSubfamily?.en;
+                const preferredFamily = 
+                    nameTable?.windows?.preferredFamily?.en ??
+                    nameTable?.unicode?.preferredFamily?.en ??
+                    nameTable?.macintosh?.preferredFamily?.en;
+                const preferredSubfamily = 
+                    nameTable?.windows?.preferredSubfamily?.en ??
+                    nameTable?.unicode?.preferredSubfamily?.en ??
+                    nameTable?.macintosh?.preferredSubfamily?.en;
                 const fullName =
                     nameTable?.windows?.fullName?.en ??
-                    nameTable?.unicode?.unicode?.fullName?.en ??
+                    nameTable?.unicode?.fullName?.en ??
                     nameTable?.macintosh?.fullName?.en;
+
                 if (fontFamily) {
                     if (fontFamily.toLowerCase().trim() === name)
                         addFont = true;
+                    else if (fontSubfamily){
+                        if((fontFamily+" "+fontSubfamily).toLowerCase().trim() === name){
+                            addFont = true;
+                        }
+                    }
+                }
+                if (preferredFamily) {
+                    if (preferredFamily.toLowerCase().trim() === name)
+                        addFont = true;
+                    else if (preferredSubfamily){
+                        if((preferredFamily+" "+preferredSubfamily).toLowerCase().trim() === name){
+                            addFont = true;
+                        }
+                    }
                 }
                 if (fullName) {
                     if (fullName.toLowerCase().trim() === nameTypes)
