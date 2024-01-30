@@ -1,7 +1,7 @@
 /*
  |   shader.js
  |----------------
- |  shader.js is copyright Patrick Rhodes Martin 2013,2017, used with permission.
+ |  shader.js is copyright Patrick Rhodes Martin 2013,2017,2024 used with permission.
  |
  |-
 */
@@ -12,6 +12,7 @@
  */
 const shaderlog = {};
 let statetracker = {};
+let shadercounter = Number.MIN_SAFE_INTEGER;
 
 function isArrayish(a) {
     return (
@@ -28,6 +29,11 @@ function isArrayish(a) {
 }
 
 const ShaderPrototype = Object.create(Object, {
+    _shaderId: {
+        value: NaN,
+        writable: true
+    },
+
     _shader: {
         value: null,
         writable: true
@@ -54,16 +60,16 @@ const ShaderPrototype = Object.create(Object, {
     },
 
     _isUnchanged: {
-        value: function _isUnchanged (property, uniformid, context) {
+        value: function _isUnchanged (property, uniformid) {
             let val = property.val;
-            let cval = statetracker[context][uniformid];
+            let cval = statetracker[this._shaderId][uniformid];
             let i;
             let unchanged = true;
             if (isArrayish(val) && isArrayish(cval)) {
                 if (val.length !== cval.length) return false;
                 else
                     for (i = 0; i < val.length; i++)
-                        if (!(unchanged = unchanged && val[i] === cval[i]))
+                        if (!(unchanged = (unchanged && val[i] === cval[i])))
                             break;
 
                 return unchanged;
@@ -242,6 +248,7 @@ const ShaderPrototype = Object.create(Object, {
     "bindShader": {
         value: function bindShader (gl) {
             gl.useProgram(this._shader);
+            statetracker[this._shaderId] = statetracker[this._shaderId] ?? {};
             let props = Object.keys(this._keys);
             let key = null;
             let uniform = null;
@@ -254,7 +261,7 @@ const ShaderPrototype = Object.create(Object, {
                         key
                     );
                 uniform = this._uniformLocations[key];
-                if (this._isUnchanged(this._keys[key], uniform, gl)) continue;
+                if (this._isUnchanged(this._keys[key], i)) continue;
                 if ((uniform || null) !== null) {
                     type = this._keys[key].datatype;
                     switch (type) {
@@ -358,7 +365,14 @@ const ShaderPrototype = Object.create(Object, {
                             );
                             break;
                     }
-                    statetracker[uniform] = this._keys[key].val;
+                    if(isArrayish(this._keys[key].val)){
+                        if(!statetracker[this._shaderId][uniform])
+                            statetracker[this._shaderId][uniform] = Array.from(this._keys[key].val);
+                        else{
+                            for (let i = 0; i < this._keys[key].val.length; i++)
+                                statetracker[this._shaderId][uniform][i] = this._keys[key].val[i];
+                        }
+                    }else statetracker[this._shaderId][uniform] = this._keys[key].val;
                 }
             }
         },
@@ -387,7 +401,6 @@ const ShaderPrototype = Object.create(Object, {
 
     "compile": {
         value: function compile (gl, defines, err, version) {
-            statetracker[gl] = statetracker[gl] ?? {};
             this._uniformLocations = {};
             if (typeof err === "undefined" || err === null) {
                 err = defines;
@@ -442,29 +455,42 @@ const ShaderPrototype = Object.create(Object, {
 
     _compile: {
         value: function _compile (gl, source, defines, type, version) {
-            let shaderHeader = "";
+            let shaderHeader = "#ifndef WEB_GL\n";
+            shaderHeader += "#define WEB_GL\n";
+            shaderHeader += "#endif\n";
             if (version && version !== "100") {
                 shaderHeader += "#version " + version + " es\n";
             }
-            shaderHeader += "#ifndef WEB_GL\n";
-            shaderHeader += "#define WEB_GL\n";
-            shaderHeader += "#endif\n";
             shaderHeader += "#ifdef GL_ES\n";
-            shaderHeader += "precision highp float;\n";
-            shaderHeader += "precision highp int;\n";
+            if(type === gl.VERTEX_SHADER){
+                shaderHeader += "precision highp float;\n";
+                shaderHeader += "precision highp int;\n";
+                shaderHeader += "#if !defined(GL_FRAGMENT_PRECISION_HIGH) || !GL_FRAGMENT_PRECISION_HIGH\n";
+                shaderHeader += "#define MEDIUM_FRAGMENT_PRECISION\n";
+            }else if(type === gl.FRAGMENT_SHADER){
+                shaderHeader += "#if defined(GL_FRAGMENT_PRECISION_HIGH) && GL_FRAGMENT_PRECISION_HIGH\n";
+                shaderHeader += "precision highp float;\n";
+                shaderHeader += "precision highp int;\n";
+                shaderHeader += "#else\n";
+                shaderHeader += "#define MEDIUM_FRAGMENT_PRECISION\n";
+                shaderHeader += "precision mediump float;\n";
+                shaderHeader += "precision mediump int;\n";
+            }
+            shaderHeader += "#endif\n";
             shaderHeader += "#endif\n";
             if (defines !== null) {
                 let define_names = Object.keys(defines);
                 for (let i = 0; i < define_names.length; i++) {
-                    if (defines[define_names[i]] === true)
+                    if (defines[define_names[i]] === true){
                         shaderHeader += "#define " + define_names[i] + "\n";
-                    else if (defines[define_names[i]] !== null)
+                    }else if (defines[define_names[i]] !== null){
                         shaderHeader +=
                             "#define " +
                             define_names[i] +
                             " " +
                             defines[define_names[i]].toString() +
                             "\n";
+                    }
                 }
             }
 
@@ -492,7 +518,9 @@ const ShaderPrototype = Object.create(Object, {
 });
 
 sabre["Shader"] = function Shader () {
-    return Object.create(ShaderPrototype);
+    let shader = Object.create(ShaderPrototype);
+    shader._shaderId = shadercounter++;
+    return shader;
 };
 sabre["Shader"]["resetStateEngine"] = function resetStateEngine () {
     statetracker = {};
