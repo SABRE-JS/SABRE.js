@@ -50,8 +50,8 @@ do
         
 		INCLUDE_LIST="--externs '$PROJECT_INCLUDE_DIR/shared.include.js' --externs '$PROJECT_INCLUDE_DIR/sabre.js'"
 		FILES_TO_INCLUDE="$(echo "$SOURCE_CODE" | grep -E "//@include \[..*?\]" | sed -E "s|//@include \[(..*?)\]|\1.js|g" | tr '\r\n' ' ' | tr '\n' ' ')"
-        SOURCE_CODE_DEBUG="const DEBUG=true;$(echo "$SOURCE_CODE" | sed -E 's~//@include \[(..*?)\]~if(typeof require !== "function"){sabre.import("\1");}else{require("./\1.js");}~g')"
-        SOURCE_CODE_BUILD="const DEBUG=false;$(echo "$SOURCE_CODE" | sed -E 's~//@include \[(..*?)\]~if(typeof require !== "function"){sabre.import("\1");}else{require("./\1.min.js");}~g')"
+        SOURCE_CODE_DEBUG="$(echo "const DEBUG=true;"; echo "$SOURCE_CODE" | sed -E 's~//@include \[(..*?)\]~if(typeof require !== "function"){sabre.import("\1");}else{require("./\1.js");}~g')"
+        SOURCE_CODE_BUILD="$(echo "const DEBUG=false;"; echo "$SOURCE_CODE" | sed -E 's~//@include \[(..*?)\]~if(typeof require !== "function"){sabre.import("\1");}else{require("./\1.min.js");}~g')"
 
         echo "$DEBUG_PREFIX" > "$OUTPUT_FILE_DEBUG"
         echo "$SOURCE_CODE_DEBUG" >> "$OUTPUT_FILE_DEBUG"
@@ -67,6 +67,8 @@ do
         
         sed -i "s|$OUTPUT_FILE|$(basename $OUTPUT_FILE)|g" "$OUTPUT_SOURCEMAP"
         sed -i "s|stdin|$(basename $f)|g" "$OUTPUT_SOURCEMAP"
+        
+        $SCRIPT_BIN_DIR/helpers/execute-toolscript.sh editsourcemap.js "$OUTPUT_SOURCEMAP" "$OUTPUT_SOURCEMAP" "$f" 1:0 0:0  2>&1 | tee -a $LOG_FILE
 
         echo "" >> "$OUTPUT_FILE"
         echo "//# sourceMappingURL=$(basename "$OUTPUT_SOURCEMAP")" >> "$OUTPUT_FILE"
