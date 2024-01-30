@@ -107,6 +107,10 @@ if (typeof require !== "function") {
             console.log("Finished Importing: " + scriptName);
             callback(true);
         });
+        scriptImport.addEventListener("error", function () {
+            console.log("Failed Importing: " + scriptName);
+            callback(false);
+        });
         includelog[scriptName] = true;
         head.appendChild(scriptImport);
     };
@@ -152,6 +156,10 @@ if (typeof require !== "function") {
             console.log("Finished Including: " + scriptName);
             callback(true);
         });
+        scriptImport.addEventListener("error", function () {
+            console.log("Failed Including: " + scriptName);
+            callback(false);
+        });
         includelog[scriptName] = true;
         head.appendChild(scriptImport);
     };
@@ -165,11 +173,17 @@ if (typeof require !== "function") {
     };
 
     //This is a stub for loading.
-    sabre.include("util");
-    sabre.include("renderer-main");
+    sabre.include("util", function (success) {
+        if(!success) return;
+        sabre.include("global-constants", function (success) {
+            if(!success) return;
+            sabre.include("renderer-main");
+        });
+    });
 } else {
     //This is a stub for loading.
     require("./util.min.js");
+    require("./global-constants.min.js");
     require("./renderer-main.min.js");
     /**
      * returns the root directory for included ecmascript files.
