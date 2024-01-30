@@ -52,7 +52,7 @@ const font_server_prototype = Object.create(Object, {
         /**
          * converts a wchar byte array to a string.
          * @param {Array<number>} arr
-         * @returns {string}
+         * @return {string}
          */
         value: function _wcharByteArrayToString (arr) {
             let array = [];
@@ -85,7 +85,7 @@ const font_server_prototype = Object.create(Object, {
         /**
          * @private
          * @param {string} name
-         * @returns {Array<{
+         * @return {Array<{
          *              font:Font,
          *              ascent:number,
          *              descent:number,

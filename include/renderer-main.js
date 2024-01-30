@@ -1,6 +1,7 @@
 /**
  * @typedef {{
  *      load:function(RendererData):void,
+ *      setColorSpace:function(number):void,
  *      updateViewport:function(number,number):void,
  *      canRender:function():boolean,
  *      frame:function(number):void,

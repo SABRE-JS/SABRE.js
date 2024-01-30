@@ -158,7 +158,7 @@ const _parseTransitionTags = function (
 /**
  * Contains parsing methods for override tags.
  * @private
- * @returns {Array<OverrideTag>}
+ * @return {Array<OverrideTag>}
  */
 sabre["getOverrideTags"] = function(){
     if(override_tags === null){

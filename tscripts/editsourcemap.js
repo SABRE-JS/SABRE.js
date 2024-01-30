@@ -1,6 +1,7 @@
 const sourceMap = require('source-map');
 const fs = require('node:fs');
 const path = require('node:path');
+const process = require('node:process');
 
 try{
     const arguments = process.argv.slice(2);

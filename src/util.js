@@ -286,7 +286,7 @@ const lehex = function (value) {
 };
 
 //implement toBlob on systems that don't support it in a manner that avoids using costly dataurls
-const canvas2blob = function (callback /*, type, quality*/) {
+const canvasToBlobPolyfill = function canvasToBlobPolyfill(callback /*, type, quality*/) {
     var tempCanvas = null;
     if (typeof global.OffscreenCanvas === "undefined") {
         tempCanvas = global.document.createElement("canvas");
@@ -361,7 +361,7 @@ const canvas2blob = function (callback /*, type, quality*/) {
 
 if (typeof global.HTMLCanvasElement !== "undefined") {
     global.HTMLCanvasElement.prototype["toBlob"] =
-        global.HTMLCanvasElement.prototype["toBlob"] ?? canvas2blob;
+        global.HTMLCanvasElement.prototype["toBlob"] ?? canvasToBlobPolyfill;
     global.HTMLCanvasElement.prototype["toBlobHD"] =
         global.HTMLCanvasElement.prototype["toBlobHD"] ??
         global.HTMLCanvasElement.prototype["toBlob"];
@@ -371,22 +371,23 @@ if (typeof global.OffscreenCanvas !== "undefined") {
     global.OffscreenCanvas.prototype["toBlob"] =
         global.OffscreenCanvas.prototype["toBlob"] ??
         (typeof global.OffscreenCanvas.prototype.convertToBlob !== "undefined"
-            ? function (callback, type, quality) {
+            ? function offscreenCanvasToBlob(callback, type, quality) {
                   this.convertToBlob({ "type": type, "quality": quality }).then(
                       callback
                   );
               }
             : null) ??
-        canvas2blob;
+            canvasToBlobPolyfill;
     global.OffscreenCanvas.prototype["toBlobHD"] =
         global.OffscreenCanvas.prototype["toBlobHD"] ??
         global.OffscreenCanvas.prototype["toBlob"];
 }
 
-/**
- * Polyfill for CanvasRenderingContext2D.resetTransform
- */
 if (typeof global.CanvasRenderingContext2D !== "undefined") {
+    /**
+     * Polyfill for CanvasRenderingContext2D.resetTransform
+     * @return {void}
+     */
     global.CanvasRenderingContext2D.prototype["resetTransform"] =
         global.CanvasRenderingContext2D.prototype["resetTransform"] ??
         function () {
@@ -395,13 +396,33 @@ if (typeof global.CanvasRenderingContext2D !== "undefined") {
 }
 
 /**
+ * Freezes an object and all of its own child properties.
+ * @param {!Object} obj the object to freeze.
+ * @return {!Object} the frozen object.
+ */
+sabre["totalObjectFreeze"] = function totalObjectFreeze (obj) {
+    let queue = [obj];
+    do{
+        let cur = queue.shift();
+        let keys = Object.getOwnPropertyNames(cur);
+        for (let i = 0; i < keys.length; i++){
+            if(typeof(cur[keys[i]]) === "object" && cur[keys[i]] !== null){
+                queue.push(cur[keys[i]] = Object.freeze(cur[keys[i]]));
+            }
+        }
+    }while (queue.length > 0);
+
+    return Object.freeze(obj);
+};
+
+/**
  * Fixes JSON that is being hashed.
  * @private
  * @param {string} key the key of the field of the object.
  * @param {*} value the value of the field of the object.
  * @return {*}
  */
-const jsonFix = function (key, value) {
+const hashJSONFixHelper = function hashJSONFixHelper(key, value) {
     if (value === null) return "null";
     else if (typeof value === "number" && global.isNaN(value)) return "NaN";
     return value;
@@ -409,12 +430,11 @@ const jsonFix = function (key, value) {
 
 /**
  * Hashes an object or array.
- * @private
  * @param {(!Object|!Array<*>)} obj Object or Array to hash.
- * @return {number} The Hash of the events.
+ * @return {number} The hash of the object or array.
  */
 sabre["hashObject"] = function hashObject (obj) {
-    let str_rep = JSON.stringify(obj, jsonFix);
+    let str_rep = JSON.stringify(obj, hashJSONFixHelper);
     let hash = 0,
         i,
         chr;

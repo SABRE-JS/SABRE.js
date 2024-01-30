@@ -213,6 +213,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         value: function _init () {
             const options = Object.freeze({
                 "alpha": true,
+                "colorSpace": "srgb",
                 "desynchronized": true
             });
             if (typeof global.OffscreenCanvas === "undefined") {
@@ -221,7 +222,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             } else {
                 this._canvas = new global.OffscreenCanvas(64, 64);
             }
-            this._height = this._width = 1;
+            this._height = this._width = 64;
             this._ctx = /** @type {CanvasRenderingContext2D} */(this._canvas.getContext("2d", options));
             if(!this._pixelScaleRatio.preFactoredBacking){
                 const backingRatio = sabre.getBackingRatio(this._ctx);
@@ -311,7 +312,7 @@ const text_renderer_prototype = global.Object.create(Object, {
                     transitionOverrides[i].getTransitionAcceleration()
                 );
             }
-            return { x: outlineX, y: outlineY };
+            return { x: Math.max(outlineX,0), y: Math.max(outlineY,0) };
         },
         writable: false
     },
@@ -540,7 +541,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
-         * @returns {{x:number, y:number}} Shadow x and y offsets.
+         * @return {{x:number, y:number}} Shadow x and y offsets.
          */
         value: function _calcShadow (time, style, overrides){
             const shadowComponent =
@@ -558,7 +559,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
-         * @returns {number} Ratio of completion of the wipe in the range 0 to 1.
+         * @return {number} Ratio of completion of the wipe in the range 0 to 1.
          */
         value: function _calcKaraokeWipeProgress (time, style, overrides){
             return Math.max(time - overrides.getKaraokeStart(), 0) / (overrides.getKaraokeEnd() - overrides.getKaraokeStart());
@@ -573,7 +574,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSASubtitleEvent} event the subtitle event to render
          * @param {number} pass the pass we are on.
          * @param {boolean} mask is this a mask for setable colors.
-         * @returns {number} Hash of the state.
+         * @return {number} Hash of the state.
          */
         value: function _getStateHash (time, event, pass, mask) {
             const style = event.getStyle();
@@ -785,7 +786,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {SSASubtitleEvent} event the subtitle event to render
          * @param {number} pass the pass we are on.
          * @param {boolean} mask is this a mask for setable colors.
-         * @returns {number} event style state hash. 
+         * @return {number} event style state hash. 
          */
         value: function startEventRender (time, event, pass, mask) {
             if (!this._initialized) this._init();
@@ -837,7 +838,7 @@ const text_renderer_prototype = global.Object.create(Object, {
     "nextGlyph": {
         /**
          * Return info on the next glyph for rendering.
-         * @returns {{prevGlyph:?Glyph, glyph:?Glyph, breakOut:boolean}} Information on the glyph to render.
+         * @return {{prevGlyph:?Glyph, glyph:?Glyph, breakOut:boolean}} Information on the glyph to render.
          */
         value: function nextGlyph () {
             if (
@@ -898,7 +899,7 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {{prevGlyph:?Glyph, glyph:?Glyph, breakOut:boolean}} glyphInfo Glyph information.
          * @param {number} pass the pass we are on.
          * @param {boolean} mask is this a mask for setable colors.
-         * @returns {boolean} Is glyph cachable.
+         * @return {boolean} Is glyph cachable.
          */
         value: function renderGlyph (time, event, glyphInfo, pass, mask) {
             if (glyphInfo.breakOut && (glyphInfo.glyph === null || typeof(glyphInfo.glyph) === "undefined"))

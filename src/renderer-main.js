@@ -50,13 +50,27 @@ let GlyphCacheInfo;
 
 /**
  * Is ImageBitmap Supported.
- * @type {boolean}
+ * @const {boolean}
  * @private
  */
 const isImageBitmapSupported =
     typeof global.ImageBitmapRenderingContext !== "undefined" &&
     typeof global.ImageBitmap !== "undefined" &&
     typeof global.OffscreenCanvas !== "undefined";
+
+/**
+ * Constant RGB to DisplayP3 conversion matrix.
+ * @const {!Array<number>}
+ * @private
+ */
+const RGB_TO_DISPLAY_P3 = [0.737906,0.232591,0.0148199,-0.0605656,1.05716,0.000246902,-0.0166685,0.119825,0.903059];
+
+/**
+ * Constant RGB to RGB conversion matrix.
+ * @const {!Array<number>}
+ * @private
+ */
+const RGB_TO_RGB = [1,0,0,0,1,0,0,0,1];
 
 const renderer_prototype = global.Object.create(Object, {
     //BEGIN MODULE VARIABLES
@@ -93,6 +107,18 @@ const renderer_prototype = global.Object.create(Object, {
 
     //END MODULE VARIABLES
     //BEGIN LOCAL VARIABLES
+
+    _nativeColorSpace: {
+        /** @type {number} */
+        value: sabre.ColorSpaces.RGB,
+        writable: true
+    },
+
+    _colorSpace: {
+        /** @type {number} */
+        value: sabre.ColorSpaces.BT601_TV,
+        writable: true
+    },
 
     _lastPixelRatio: {
         /** @type {number} */
@@ -309,11 +335,11 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Get the target width for the cache texture.
          * @private
-         * @returns {number} the width of of the cache texture to generate.
+         * @return {number} the width of of the cache texture to generate.
          */
         value: function _getCacheWidth () {
             const pixelRatio = sabre.getPixelRatio();
-            return Math.max(this._compositingCanvas.width*2,global.screen.width*pixelRatio);
+            return Math.min(this._compositingCanvas.width*2,global.screen.width*pixelRatio);
         },
         writable: false
     },
@@ -322,11 +348,11 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Get the target height for the cache texture.
          * @private
-         * @returns {number} the height of of the cache texture to generate.
+         * @return {number} the height of of the cache texture to generate.
          */
         value: function _getCacheHeight () {
             const pixelRatio = sabre.getPixelRatio();
-            return Math.max(this._compositingCanvas.height*2,global.screen.height*pixelRatio);
+            return Math.min(this._compositingCanvas.height*2,global.screen.height*pixelRatio);
         },
         writable: false
     },
@@ -338,7 +364,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {string} name name to search for.
          * @param {number} weight weight to search for.
          * @param {boolean} italic weither or not to search for an italic font.
-         * @returns {{font:Font,foundItalic:boolean,foundWeight:number}} Result of the search.
+         * @return {{font:Font,foundItalic:boolean,foundWeight:number}} Result of the search.
          */
         value: function _findFont (name, weight, italic) {
             const fonts = this._fontServer.getFontsAndInfo(name);
@@ -420,7 +446,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} p2y point 2 y
          * @param {number} p3x point 3 x
          * @param {number} p3y point 3 y
-         * @returns {Array<number>} interpolated position
+         * @return {Array<number>} interpolated position
          */
         value: function _bezierCurve (t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
             let cX = 3 * (p1x - p0x),
@@ -620,7 +646,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} time the current time
          * @param {SSAStyleDefinition} style the style of the subtitle
          * @param {SSAStyleOverride} overrides the overrides for the subtitle
-         * @returns {number} the factor
+         * @return {number} the factor
          */
         value: function _calcGaussianBlur (time, style, overrides) {
             const blurConstant = 1; //1.17741002251547469;
@@ -720,7 +746,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} time
          * @param {SSAStyleDefinition} style
          * @param {SSAStyleOverride} overrides
-         * @returns {Array<number>} the rotation axes
+         * @return {Array<number>} the rotation axes
          */
         value: function _calcRotation(time, style, overrides) {
             let transitionOverrides = overrides.getTransitions();
@@ -1481,10 +1507,11 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {Array<SSASubtitleEvent>} events
          */
         value: function _subdivideEvents (events) {
-            let cur_event, new_event, next_event, text;
+            let cur_event, cur_overrides, new_event, next_event, text;
             for (let i = 0; i < events.length; i++) {
                 cur_event = events[i];
-                if (cur_event.getOverrides().getDrawingMode()) continue;
+                cur_overrides = cur_event.getOverrides()
+                if (cur_overrides.getDrawingMode()) continue;
                 text = cur_event.getText();
                 for (let j = 1; j < text.length; j++) {
                     if (text[j] === " ") {
@@ -1494,6 +1521,18 @@ const renderer_prototype = global.Object.create(Object, {
                         next_event = sabre.cloneEventWithoutText(cur_event);
                         new_event.setText(text.slice(0, j));
                         next_event.setText(text.slice(j));
+                        if(cur_overrides.getKaraokeMode() !== sabre.KaraokeModes.OFF){
+                            let kstart = cur_overrides.getKaraokeStart();
+                            let kend = cur_overrides.getKaraokeEnd();
+                            let new_end = ((kend-kstart)*(j-1)/(text.length-1))+kstart;
+                            let next_start = ((kend-kstart)*j/(text.length-1))+kstart;
+                            let new_overrides = cur_overrides.clone();
+                            let next_overrides = cur_overrides.clone();
+                            new_overrides.setKaraokeEnd(new_end);
+                            next_overrides.setKaraokeStart(next_start);
+                            new_event.setOverrides(new_overrides);
+                            next_event.setOverrides(next_overrides);
+                        }
                         events.splice(i, 1, new_event, next_event);
                         break;
                     }
@@ -1738,6 +1777,66 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _createWebGLContext: {
+        /**
+         * Create the WebGL context accounting for the various quirks of different browsers.
+         * @private
+         * @param {Object} options the options for the context.
+         * @return {({canvas:(HTMLCanvasElement|OffscreenCanvas),gl:(WebGLRenderingContext|WebGL2RenderingContext)}|null)} the canvas and webgl context.
+         */
+        value: function _createWebGLContext (options) {
+            const contextStrings = Object.freeze(["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"]);
+            /**
+             * @type {(HTMLCanvasElement|OffscreenCanvas|null)}
+             */
+            let canvas = null;
+            /**
+             * @type {(WebGLRenderingContext|WebGL2RenderingContext|null)}
+             */
+            let gl = null;
+            let isCanvasOffscreen;
+            //Try-catch to account for safari's weird handling of canvas options.
+            try {
+                for(let i = 0; i < contextStrings.length; i++){
+                    gl = null;
+                    if (typeof global.OffscreenCanvas === "undefined") {
+                        if(!canvas){
+                            canvas = /** @type {HTMLCanvasElement} */ (global.document.createElement("canvas"));
+                            canvas.width = this._config.renderer["resolution_x"];
+                            canvas.height = this._config.renderer["resolution_y"];
+                            isCanvasOffscreen = false;
+                        }
+                    } else {
+                        if(!canvas || canvas instanceof global.HTMLCanvasElement){
+                            canvas = /** @type {OffscreenCanvas} */ (new global.OffscreenCanvas(
+                                this._config.renderer["resolution_x"],
+                                this._config.renderer["resolution_y"]
+                            ));
+                            isCanvasOffscreen = true
+                        }
+                    }
+
+                    gl = /** @type {(WebGLRenderingContext|WebGL2RenderingContext|null)} */ (canvas.getContext(contextStrings[i], options));
+                    //To work around safari bug in safari 16:
+                    if(!gl&&isCanvasOffscreen){
+                        canvas = /** @type {HTMLCanvasElement} */ (global.document.createElement("canvas"));
+                        canvas.width = this._config.renderer["resolution_x"];
+                        canvas.height = this._config.renderer["resolution_y"];
+                        isCanvasOffscreen = false;
+                        gl = /** @type {(WebGLRenderingContext|WebGL2RenderingContext|null)} */ (canvas.getContext(contextStrings[i], options));
+                    }
+
+                    if (gl && canvas)
+                        return {canvas: /** @type {(HTMLCanvasElement|OffscreenCanvas)} */ (canvas), gl: /** @type {(WebGLRenderingContext|WebGL2RenderingContext)} */ (gl)};
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        },
+        writable: false
+    },
+
     _glSetup: {
         /**
          * Setup the WebGL context.
@@ -1768,12 +1867,20 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.SRC_ALPHA,
                 this._gl.ONE_MINUS_SRC_ALPHA
             );
+            if (this._gl.UNPACK_COLORSPACE_CONVERSION_WEBGL){
+                this._gl.pixelStorei(this._gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, this._gl.NONE);
+            }
 
             this._textureCoordinatesBuffer = this._gl.createBuffer();
+            this._textureCoordinatesBuffer["__SPECTOR_Metadata"] = { "name": "textureCoordinatesBuffer", "tldr": "main texture coord buff" };
             this._maskCoordinatesBuffer = this._gl.createBuffer();
+            this._maskCoordinatesBuffer["__SPECTOR_Metadata"] = { "name": "maskCoordinatesBuffer", "tldr": "mask texture coord buff" };
             this._subtitlePositioningBuffer = this._gl.createBuffer();
+            this._subtitlePositioningBuffer["__SPECTOR_Metadata"] = { "name": "subtitlePositioningBuffer", "tldr": "subtitle vertex buff" };
             this._fullscreenPositioningBuffer = this._gl.createBuffer();
+            this._fullscreenPositioningBuffer["__SPECTOR_Metadata"] = { "name": "fullscreenPositioningBuffer", "tldr": "fullscreen vertex buff for effects" };
             this._clipBuffer = this._gl.createBuffer();
+            this._clipBuffer["__SPECTOR_Metadata"] = { "name": "clipBuffer", "tldr": "clip vertex buff" };
 
             this._gl.bindBuffer(
                 this._gl.ARRAY_BUFFER,
@@ -1806,6 +1913,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._textureSubtitle = this._gl.createTexture();
+            this._textureSubtitle["__SPECTOR_Metadata"] = { "name": "textureSubtitle", "tldr": "subtitle texture" };
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
             this._gl.texParameteri(
                 this._gl.TEXTURE_2D,
@@ -1841,6 +1949,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._textureSubtitleMask = this._gl.createTexture();
+            this._textureSubtitleMask["__SPECTOR_Metadata"] = { "name": "textureSubtitleMask", "tldr": "subtitle mask texture" };
             this._gl.bindTexture(
                 this._gl.TEXTURE_2D,
                 this._textureSubtitleMask
@@ -1882,6 +1991,7 @@ const renderer_prototype = global.Object.create(Object, {
             this._textureSubtitleMaskBounds = [1, 1];
 
             this._fbTextureA = this._gl.createTexture();
+            this._fbTextureA["__SPECTOR_Metadata"] = { "name": "fbTextureA", "tldr": "framebuffer texture A" };
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureA);
             this._gl.texParameteri(
                 this._gl.TEXTURE_2D,
@@ -1916,6 +2026,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._fbTextureB = this._gl.createTexture();
+            this._fbTextureB["__SPECTOR_Metadata"] = { "name": "fbTextureB", "tldr": "framebuffer texture B" };
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureB);
             this._gl.texParameteri(
                 this._gl.TEXTURE_2D,
@@ -1950,6 +2061,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._fbTextureCache = this._gl.createTexture();
+            this._fbTextureCache["__SPECTOR_Metadata"] = { "name": "fbTextureCache", "tldr": "glyph cache texture" };
             this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureCache);
             this._gl.texParameteri(
                 this._gl.TEXTURE_2D,
@@ -1984,6 +2096,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._frameBufferA = this._gl.createFramebuffer();
+            this._frameBufferA["__SPECTOR_Metadata"] = { "name": "frameBufferA", "tldr": "framebuffer A" };
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferA);
             this._gl.viewport(
                 0,
@@ -2000,6 +2113,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._frameBufferB = this._gl.createFramebuffer();
+            this._frameBufferB["__SPECTOR_Metadata"] = { "name": "frameBufferB", "tldr": "framebuffer B" };
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferB);
             this._gl.viewport(
                 0,
@@ -2016,6 +2130,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
 
             this._frameBufferCache = this._gl.createFramebuffer();
+            this._frameBufferCache["__SPECTOR_Metadata"] = { "name": "frameBufferCache", "tldr": "glyph cache framebuffer" };
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBufferCache);
             this._gl.viewport(
                 0,
@@ -2126,6 +2241,164 @@ const renderer_prototype = global.Object.create(Object, {
                 "u_quaternary_color",
                 [0, 0, 0, 0],
                 "4f"
+            );
+            const headerColorSpaceOffset = this._getFloat32Array(
+                "headerColorSpaceOffset",
+                3
+            );
+            const headerColorSpaceScale = this._getFloat32Array(
+                "headerColorSpaceScale",
+                3
+            );
+            const headerColorSpaceCoefficients = this._getFloat32Array(
+                "headerColorSpaceCoefficients",
+                3
+            );
+            const headerColorSpaceGamutBounds = this._getFloat32Array(
+                "headerColorSpaceGamutBounds",
+                4
+            );
+            const headerColorSpaceMatrix = this._getFloat32Array(
+                "headerColorSpaceMatrix",
+                9
+            );
+            let headerConversion = sabre.ColorSpaceConversionTable[this._config.renderer["color_mangling_mode"]];
+            if(headerConversion){
+                headerColorSpaceOffset.set(headerConversion.offset,0);
+                if(headerConversion.type !== sabre.ColorSpaceConversionTypes.NON_CONSTANT_LUMINANCE){
+                    headerColorSpaceScale.set(headerConversion.scale,0);
+                    headerColorSpaceCoefficients.set(headerConversion.coefficients,0);
+                    headerColorSpaceGamutBounds[0] = headerConversion.Nr;
+                    headerColorSpaceGamutBounds[1] = headerConversion.Nb;
+                    headerColorSpaceGamutBounds[3] = headerConversion.Pr;
+                    headerColorSpaceGamutBounds[4] = headerConversion.Pb;
+                    headerColorSpaceMatrix.set(RGB_TO_RGB,0);
+                }else{
+                    headerColorSpaceScale.set([1,1,1],0);
+                    headerColorSpaceCoefficients.set([1,1,1],0);
+                    headerColorSpaceGamutBounds.set([0,0,1,1],0);
+                    headerColorSpaceMatrix.set(headerConversion.fromRGB,0);
+                }
+            }else{
+                headerColorSpaceOffset.set([0,0,0],0);
+                headerColorSpaceMatrix.set(RGB_TO_RGB,0);
+            }
+            this._positioningShader.addOption(
+                "u_header_colorspace_type",
+                headerConversion ? headerConversion.type : sabre.ColorSpaceConversionTypes.NON_CONSTANT_LUMINANCE,
+                "1i"
+            );
+            this._positioningShader.addOption(
+                "u_header_colorspace_offset",
+                headerColorSpaceOffset,
+                "3f"
+            );
+            this._positioningShader.addOption(
+                "u_header_colorspace_scale",
+                headerColorSpaceScale,
+                "3f"
+            );
+            this._positioningShader.addOption(
+                "u_header_colorspace_coefficients",
+                headerColorSpaceCoefficients,
+                "3f"
+            );
+            this._positioningShader.addOption(
+                "u_header_colorspace_gamut_bounds",
+                headerColorSpaceGamutBounds,
+                "4f"
+            );
+            this._positioningShader.addOption(
+                "u_header_colorspace_matrix",
+                headerColorSpaceMatrix,
+                "Matrix3fv"
+            );
+            const videoColorSpaceOffset = this._getFloat32Array(
+                "videoColorSpaceOffset",
+                3
+            );
+            const videoColorSpaceScale = this._getFloat32Array(
+                "videoColorSpaceScale",
+                3
+            );
+            const videoColorSpaceCoefficients = this._getFloat32Array(
+                "videoColorSpaceCoefficients",
+                3
+            );
+            const videoColorSpaceGamutBounds = this._getFloat32Array(
+                "videoColorSpaceGamutBounds",
+                4
+            );
+            const videoColorSpaceMatrix = this._getFloat32Array(
+                "videoColorSpaceMatrix",
+                9
+            );;
+            const videoConversion = sabre.ColorSpaceConversionTable[this._colorSpace];
+            if(videoConversion && this._config.renderer["color_mangling_mode"] !== sabre.ColorManglingModes.NONE){
+                videoColorSpaceOffset.set(videoConversion.offset,0);
+                if(videoConversion.type !== sabre.ColorSpaceConversionTypes.NON_CONSTANT_LUMINANCE){
+                    videoColorSpaceScale.set(videoConversion.scale,0);
+                    videoColorSpaceCoefficients.set(videoConversion.coefficients,0);
+                    videoColorSpaceGamutBounds[0] = videoConversion.Nr;
+                    videoColorSpaceGamutBounds[1] = videoConversion.Nb;
+                    videoColorSpaceGamutBounds[3] = videoConversion.Pr;
+                    videoColorSpaceGamutBounds[4] = videoConversion.Pb;
+                    if(this._nativeColorSpace === sabre.NativeColorSpaces.DISPLAY_P3){
+                        videoColorSpaceMatrix.set([0.737906,0.232591,0.0148199,-0.0605656,1.05716,0.000246902,-0.0166685,0.119825,0.903059],0);
+                    }else{
+                        videoColorSpaceMatrix.set(RGB_TO_RGB,0);
+                    }
+                }else{
+                    videoColorSpaceScale.set([1,1,1],0);
+                    videoColorSpaceCoefficients.set([1,1,1],0);
+                    videoColorSpaceGamutBounds.set([0,0,1,1],0);
+                    if(this._nativeColorSpace === sabre.NativeColorSpaces.DISPLAY_P3){
+                        videoColorSpaceMatrix.set(videoConversion.toDisplayP3,0);
+                    }else{
+                        videoColorSpaceMatrix.set(videoConversion.toRGB,0);
+                    }
+                }
+                
+            }else{
+                videoColorSpaceOffset.set([0,0,0],0);
+                videoColorSpaceScale.set([1,1,1],0);
+                videoColorSpaceCoefficients.set([1,1,1],0);
+                videoColorSpaceGamutBounds.set([0,0,1,1],0);
+                if(this._nativeColorSpace === sabre.NativeColorSpaces.DISPLAY_P3){
+                    videoColorSpaceMatrix.set(videoConversion.toDisplayP3,0);
+                }else{
+                    videoColorSpaceMatrix.set(RGB_TO_RGB,0);
+                }
+            }
+            this._positioningShader.addOption(
+                "u_video_colorspace_type",
+                videoConversion ? videoConversion.type : sabre.ColorSpaceConversionTypes.NON_CONSTANT_LUMINANCE,
+                "1i"
+            );
+            this._positioningShader.addOption(
+                "u_video_colorspace_offset",
+                videoColorSpaceOffset,
+                "3f"
+            );
+            this._positioningShader.addOption(
+                "u_video_colorspace_scale",
+                videoColorSpaceScale,
+                "3f"
+            );
+            this._positioningShader.addOption(
+                "u_video_colorspace_coefficients",
+                videoColorSpaceCoefficients,
+                "3f"
+            );
+            this._positioningShader.addOption(
+                "u_video_colorspace_gamut_bounds",
+                videoColorSpaceGamutBounds,
+                "4f"
+            );
+            this._positioningShader.addOption(
+                "u_video_inverse_colorspace_matrix",
+                videoColorSpaceMatrix,
+                "Matrix3fv"
             );
 
             this._convEdgeBlurShader = new sabre.Shader();
@@ -2755,7 +3028,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {number} requiredWidth Width required for the texture.
          * @param {number} requiredHeight Height required for the texture.
          * @param {boolean} extraSpace Check for extra space.
-         * @returns {?Array<number>} Results of allocation attempt.
+         * @return {?Array<number>} Results of allocation attempt.
          */
         value: function _allocateCacheSpace (requiredWidth, requiredHeight, extraSpace) {
             requiredWidth = requiredWidth / this._getCacheWidth();
@@ -2819,7 +3092,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @private
          * @param {number} stateHash Hash of the text renderer state.
          * @param {number} glyphIndex Uniquely identifies the glyph.
-         * @returns {boolean} Is glyph cached.
+         * @return {boolean} Is glyph cached.
          */
         value: function _checkGlyphCache (stateHash, glyphIndex) {
             const glyphDictionary = this._glyphCache[stateHash];
@@ -2837,7 +3110,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @private
          * @param {number} stateHash Hash of the text renderer state.
          * @param {number} glyphIndex Uniquely identifies the glyph.
-         * @returns {?GlyphCacheInfo} The positioning info of the cached glyph.
+         * @return {?GlyphCacheInfo} The positioning info of the cached glyph.
          */
         value: function _fetchInfoFromGlyphCache (stateHash, glyphIndex) {
             const glyphDictionary = this._glyphCache[stateHash];
@@ -2890,7 +3163,7 @@ const renderer_prototype = global.Object.create(Object, {
                 allocationInfo = this._allocateCacheSpace(cacheInfo.textureDimensions[0],cacheInfo.textureDimensions[1],extraSpace);
             }
             [cacheInfo.x,cacheInfo.y,cacheInfo.width,cacheInfo.height] = allocationInfo;
-            this._loadSubtitleToVram(source, this._textureSubtitleBounds);
+            this._loadGlyphToVram(source, this._textureSubtitleBounds);
             this._gl.bindBuffer(
                 this._gl.ARRAY_BUFFER,
                 this._subtitlePositioningBuffer
@@ -2967,13 +3240,13 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    _loadSubtitleToVram: {
+    _loadGlyphToVram: {
         /**
-         * Loads a subtitle into graphics card's VRAM.
+         * Loads a glyph into graphics card's VRAM.
          * @private
          * @param {Canvas2DTextRenderer|Canvas2DShapeRenderer} source The source.
          */
-        value: function _loadSubtitleToVram (source, bounds) {
+        value: function _loadGlyphToVram (source, bounds) {
             let extents = source.getExtents();
             if (extents[0] < bounds[0] && extents[1] < bounds[1]) {
                 this._gl.texSubImage2D(
@@ -3132,7 +3405,7 @@ const renderer_prototype = global.Object.create(Object, {
             this._gl.activeTexture(this._gl.TEXTURE0);
             if (texHash === null || !this._checkGlyphCache(texHash,texIndex)) {
                 this._gl.bindTexture(this._gl.TEXTURE_2D, this._textureSubtitle);
-                this._loadSubtitleToVram(source, this._textureSubtitleBounds); 
+                this._loadGlyphToVram(source, this._textureSubtitleBounds); 
             } else {
                 this._gl.bindTexture(this._gl.TEXTURE_2D, this._fbTextureCache);
                 cachedGlyphInfo = this._fetchInfoFromGlyphCache(texHash,texIndex);
@@ -3145,7 +3418,7 @@ const renderer_prototype = global.Object.create(Object, {
                         this._textureSubtitleMask
                     );
     
-                    this._loadSubtitleToVram(
+                    this._loadGlyphToVram(
                         this._textMaskRenderer,
                         this._textureSubtitleMaskBounds
                     );
@@ -3549,6 +3822,157 @@ const renderer_prototype = global.Object.create(Object, {
                     this._positioningShader.updateOption(
                         "u_quaternary_color",
                         quaternaryColorArray
+                    );
+                }
+
+                {
+                    let headerColorSpaceType = sabre.ColorSpaceConversionTypes.NON_CONSTANT_LUMINANCE;
+                    let headerColorSpaceOffset = this._getFloat32Array(
+                        "headerColorSpaceOffset",
+                        3
+                    );
+                    let headerColorSpaceScale = this._getFloat32Array(
+                        "headerColorSpaceScale",
+                        3
+                    );
+                    let headerColorSpaceCoefficients = this._getFloat32Array(
+                        "headerColorSpaceCoefficients",
+                        3
+                    );
+                    let headerColorSpaceGamutBounds = this._getFloat32Array(
+                        "headerColorSpaceGamutBounds",
+                        4
+                    );
+                    let headerColorSpaceMatrix = this._getFloat32Array(
+                        "headerColorSpaceMatrix",
+                        9
+                    );
+                    let videoColorSpaceType = sabre.ColorSpaceConversionTypes.NON_CONSTANT_LUMINANCE;
+                    let videoColorSpaceOffset = this._getFloat32Array(
+                        "videoColorSpaceOffset",
+                        3
+                    );
+                    let videoColorSpaceScale = this._getFloat32Array(
+                        "videoColorSpaceScale",
+                        3
+                    );
+                    let videoColorSpaceCoefficients = this._getFloat32Array(
+                        "videoColorSpaceCoefficients",
+                        3
+                    );
+                    let videoColorSpaceGamutBounds = this._getFloat32Array(
+                        "videoColorSpaceGamutBounds",
+                        4
+                    );
+                    let videoColorSpaceMatrix = this._getFloat32Array(
+                        "videoColorSpaceMatrix",
+                        9
+                    );
+                    if (this._config.renderer["color_mangling_mode"] !== sabre.ColorManglingModes.NONE) {
+                        const headerConversion = sabre.ColorSpaceConversionTable[this._config.renderer["color_mangling_mode"]];
+                        if(headerConversion){
+                            headerColorSpaceType = headerConversion.type;
+                            headerColorSpaceOffset.set(headerConversion.offset,0);
+                            if(headerColorSpaceType !== sabre.ColorSpaceConversionTypes.NON_CONSTANT_LUMINANCE){
+                                headerColorSpaceScale.set(headerConversion.scale,0);
+                                headerColorSpaceCoefficients.set(headerConversion.coefficients,0);
+                                headerColorSpaceGamutBounds[0] = headerConversion.Nr;
+                                headerColorSpaceGamutBounds[1] = headerConversion.Nb;
+                                headerColorSpaceGamutBounds[3] = headerConversion.Pr;
+                                headerColorSpaceGamutBounds[4] = headerConversion.Pb;
+                            }else{
+                                headerColorSpaceMatrix.set(headerConversion.fromRGB,0);
+                            }
+                        }else{
+                            headerColorSpaceOffset.set([0,0,0],0);
+                            headerColorSpaceMatrix.set(RGB_TO_RGB,0);
+                        }
+                        const videoConversion = sabre.ColorSpaceConversionTable[this._colorSpace];
+                        if(videoConversion){
+                            videoColorSpaceType = videoConversion.type;
+                            videoColorSpaceOffset.set(videoConversion.offset,0);
+                            if(videoColorSpaceType !== sabre.ColorSpaceConversionTypes.NON_CONSTANT_LUMINANCE){
+                                videoColorSpaceScale.set(videoConversion.scale,0);
+                                videoColorSpaceCoefficients.set(videoConversion.coefficients,0);
+                                videoColorSpaceGamutBounds[0] = videoConversion.Nr;
+                                videoColorSpaceGamutBounds[1] = videoConversion.Nb;
+                                videoColorSpaceGamutBounds[3] = videoConversion.Pr;
+                                videoColorSpaceGamutBounds[4] = videoConversion.Pb;
+                                if(this._nativeColorSpace === sabre.NativeColorSpaces.DISPLAY_P3){
+                                    videoColorSpaceMatrix.set(RGB_TO_DISPLAY_P3,0);
+                                }else{
+                                    videoColorSpaceMatrix.set(RGB_TO_RGB,0);
+                                }
+                            }else{
+                                if(this._nativeColorSpace === sabre.NativeColorSpaces.DISPLAY_P3){
+                                    videoColorSpaceMatrix.set(videoConversion.toDisplayP3,0);
+                                }else{
+                                    videoColorSpaceMatrix.set(videoConversion.toRGB,0);
+                                }
+                            }
+                        }else{
+                            videoColorSpaceOffset.set([0,0,0],0);
+                            videoColorSpaceMatrix.set(RGB_TO_RGB,0);
+                        }
+                    }else{
+                        const headerConversion = sabre.ColorSpaceConversionTable[sabre.ColorSpaces.RGB];
+                        headerColorSpaceOffset.set(headerConversion.offset,0);
+                        headerColorSpaceMatrix.set(headerConversion.fromRGB,0);
+                        const videoConversion = sabre.ColorSpaceConversionTable[sabre.ColorSpaces.RGB];
+                        videoColorSpaceOffset.set(videoConversion.offset,0);
+                        if(this._nativeColorSpace === sabre.NativeColorSpaces.DISPLAY_P3){
+                            videoColorSpaceMatrix.set(videoConversion.toDisplayP3,0);
+                        }else{
+                            videoColorSpaceMatrix.set(videoConversion.toRGB,0);
+                        }
+                    }
+                    this._positioningShader.updateOption(
+                        "u_header_colorspace_type",
+                        headerColorSpaceType
+                    );
+                    this._positioningShader.updateOption(
+                        "u_header_colorspace_offset",
+                        headerColorSpaceOffset
+                    );
+                    this._positioningShader.updateOption(
+                        "u_header_colorspace_scale",
+                        headerColorSpaceScale
+                    );
+                    this._positioningShader.updateOption(
+                        "u_header_colorspace_coefficients",
+                        headerColorSpaceCoefficients
+                    );
+                    this._positioningShader.updateOption(
+                        "u_header_colorspace_gamut_bounds",
+                        headerColorSpaceGamutBounds
+                    );
+                    this._positioningShader.updateOption(
+                        "u_header_colorspace_matrix",
+                        headerColorSpaceMatrix
+                    );
+                    this._positioningShader.updateOption(
+                        "u_video_colorspace_type",
+                        videoColorSpaceType
+                    );
+                    this._positioningShader.updateOption(
+                        "u_video_colorspace_offset",
+                        videoColorSpaceOffset
+                    );
+                    this._positioningShader.updateOption(
+                        "u_video_colorspace_scale",
+                        videoColorSpaceScale
+                    );
+                    this._positioningShader.updateOption(
+                        "u_video_colorspace_coefficients",
+                        videoColorSpaceCoefficients
+                    );
+                    this._positioningShader.updateOption(
+                        "u_video_colorspace_gamut_bounds",
+                        videoColorSpaceGamutBounds
+                    );
+                    this._positioningShader.updateOption(
+                        "u_video_inverse_colorspace_matrix",
+                        videoColorSpaceMatrix
                     );
                 }
 
@@ -3989,45 +4413,70 @@ const renderer_prototype = global.Object.create(Object, {
                     config.renderer["events"]
                 )
             );
-            const options = Object.freeze({
+            const optionsFallback = Object.freeze({
                 "alpha": true,
-                //"desynchronized": true,
+                "desynchronized": true,
+                "preserveDrawingBuffer": true,
                 "antialias": true,
                 "powerPreference": "high-performance",
                 "premultipliedAlpha": false
             });
 
-            let isCanvasOffscreen = false;
-            if (typeof global.OffscreenCanvas === "undefined") {
-                this._compositingCanvas =
-                    global.document.createElement("canvas");
-                this._compositingCanvas.width = config.renderer["resolution_x"];
-                this._compositingCanvas.height =
-                    config.renderer["resolution_y"];
-            } else {
-                this._compositingCanvas = new global.OffscreenCanvas(
-                    config.renderer["resolution_x"],
-                    config.renderer["resolution_y"]
-                );
-                isCanvasOffscreen = true
+            const wantedColorSpace = (global.matchMedia && global.matchMedia("(color-gamut: p3)").matches ? "display-p3" : "srgb");
+
+            const options = Object.freeze(Object.assign({
+                "colorSpace": wantedColorSpace, //TODO: Make this support BT.2100 when HDR is added to browsers.
+            }, optionsFallback));
+
+            {
+                let contextInfo = this._createWebGLContext(options);
+                if (contextInfo === null) {
+                    contextInfo = this._createWebGLContext(optionsFallback);
+                }
+                if (contextInfo === null) {
+                    throw new Error("Failed to create a WebGL context.");
+                }else{
+                    this._compositingCanvas = contextInfo.canvas;
+                    this._gl = contextInfo.gl;
+                }
             }
 
-            this._gl = this._compositingCanvas.getContext("webgl", options);
-            //To work around safari bug in safari 16:
-            if(!this._gl&&isCanvasOffscreen){
-                this._compositingCanvas =
-                    global.document.createElement("canvas");
-                this._compositingCanvas.width = config.renderer["resolution_x"];
-                this._compositingCanvas.height =
-                    config.renderer["resolution_y"];
-                this._gl = this._compositingCanvas.getContext("webgl", options);
+            if("drawingBufferColorSpace" in this._gl){
+                this._gl.drawingBufferColorSpace = wantedColorSpace;
+                if("unpackColorSpace" in this._gl){
+                    this._gl.unpackColorSpace = "srgb";
+                }
             }
 
-            if (!this._gl) {
-                this._gl = this._compositingCanvas.getContext(
-                    "experimental-webgl",
-                    options
-                );
+            if (this._gl.colorSpace??this._gl.drawingBufferColorSpace) {
+                switch (this._gl.colorSpace??this._gl.drawingBufferColorSpace??"none") {
+                    default:
+                        console.warn("Unknown color space: " + this._gl.colorSpace + ", assuming sRGB. YOU MAY SEE INCORRECT COLORS.");
+                        this._nativeColorSpace = sabre.NativeColorSpaces.RGB;
+                        break;
+                    case "none":
+                        console.info("Color space support is not available for canvas, falling back to sRGB.");
+                        this._nativeColorSpace = sabre.NativeColorSpaces.RGB;
+                        break;
+                    case "srgb":
+                        console.info("Display Color Space: sRGB");
+                        this._nativeColorSpace = sabre.NativeColorSpaces.RGB;
+                        break;
+                    case "display-p3":
+                        console.info("Display Color Space: Display P3");
+                        this._nativeColorSpace = sabre.NativeColorSpaces.DISPLAY_P3;
+                        break;
+                    /*
+                    case <BT.2100's PQ string here>:
+                        this._nativeColorSpace = sabre.ColorSpaces.BT2100_PQ;
+                        break;
+                    case <BT.2100's HLG string here>:
+                        this._nativeColorSpace = sabre.ColorSpaces.BT2100_HLG;
+                        break;
+                    */
+                }
+            }else{
+                this._nativeColorSpace = sabre.NativeColorSpaces.RGB;
             }
 
             this._compositingCanvas.addEventListener(
@@ -4059,6 +4508,19 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    "setColorSpace": {
+        /**
+         * Set the output color space for color mangling.
+         * @private
+         * @param {number} colorSpace the color space to use.
+         * @return {void}
+         */
+        value: function setColorSpace (colorSpace) {
+            this._colorSpace = colorSpace;
+        },
+        writable: false
+    },
+
     "updateViewport": {
         /**
          * Update the size of the compositing canvas and base rendering scale.
@@ -4071,8 +4533,8 @@ const renderer_prototype = global.Object.create(Object, {
             this._lastPixelRatio = pixelRatio;
             this._lastDim[0] = width;
             this._lastDim[1] = height;
-            width *= pixelRatio;
-            height *= pixelRatio;
+            width = Math.ceil(width*pixelRatio);
+            height = Math.ceil(height*pixelRatio);
             this._compositingCanvas.width = width;
             this._compositingCanvas.height = height;
             let scale_x = width / this._config.renderer["resolution_x"];
@@ -4153,6 +4615,8 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {void}
          */
         value: function frame (time) {
+            if (this._config.renderer["sync_offset"])
+                time += this._config.renderer["sync_offset"];
             if (this._contextLost) return;
             if (time === this._lastTime) return;
             {

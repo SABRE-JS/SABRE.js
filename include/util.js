@@ -48,10 +48,19 @@ sabre.cloneEventWithoutText = function (event) {
 };
 
 /**
+ * Freezes an object and all of its own child properties.
+ * @param {!Object} obj the object to freeze.
+ * @return {!Object} the frozen object.
+ */
+sabre.totalObjectFreeze = function (obj) {
+    return {};
+}
+
+/**
  * Hashes an object or array.
  * @private
  * @param {(!Object|!Array<*>)} obj Object or Array to hash.
- * @return {number} The Hash of the events.
+ * @return {number} The hash of the object or array.
  */
 sabre.hashObject = function (obj) {
     return 0;
