@@ -27,8 +27,21 @@ var sabre = {};
 sabre.$ = null;
 
 //These are definitions for APIs the closure compiler doesn't know by default.
-/** @type {function():void} */
-global.CanvasRenderingContext2D.prototype.resetTransform = function () {};
+/** @type {string|undefined} */
+global.WebGLRenderingContext.prototype.unpackColorSpace = 'srgb';
+/** @type {string|undefined} */
+global.WebGLRenderingContext.prototype.drawingBufferColorSpace = 'srgb';
+/** @type {string|undefined} */
+global.WebGLRenderingContext.prototype.colorSpace = 'srgb';
+/** @type {string|undefined} */
+global.WebGL2RenderingContext.prototype.unpackColorSpace = 'srgb';
+/** @type {string|undefined} */
+global.WebGL2RenderingContext.prototype.drawingBufferColorSpace = 'srgb';
+/** @type {string|undefined} */
+global.WebGL2RenderingContext.prototype.colorSpace = 'srgb';
+// This seems to have been added to Closure Compiler, but if you get bad compiles you can uncomment it.
+// /** @type {function():void} */
+// global.CanvasRenderingContext2D.prototype.resetTransform = function () {};
 /** @type {number|undefined} */
 global.CanvasRenderingContext2D.prototype.webkitBackingStorePixelRatio = 1;
 /** @type {number|undefined} */
@@ -58,6 +71,7 @@ global.HTMLCanvasElement.prototype.toBlobHD = function () {};
  */
 global.OffscreenCanvas.prototype.toBlobHD = function () {};
 
+//These are definitions for opentype.js types.
 /**
  * @typedef{{x1:number,y1:number,x2:number,y2:number}}
  */

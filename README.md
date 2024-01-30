@@ -86,6 +86,12 @@ to render a frame of subtitles.
 <dt><a href="#loadSubtitles">loadSubtitles(subsText, fonts)</a> ⇒ <code>void</code></dt>
 <dd><p>Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.</p>
 </dd>
+<dt><a href="#setColorSpace">setColorSpace(colorSpace, [width], [height])</a></dt>
+<dd><p>Configures the output colorspace to the set value (or guesses when automatic is specified based on resolution).
+AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
+that must be set by selecting AUTOMATIC_PC. AUTOMATIC and AUTOMATIC_PC are also incapable of determining if the
+video is HDR, so you need to manually set either BT.2100_PQ or BT.2100_HLG if it is.</p>
+</dd>
 <dt><a href="#setViewport">setViewport(width, height)</a> ⇒ <code>void</code></dt>
 <dd><p>Updates the resolution (in CSS pixels) at which the subtitles are rendered (if the player is resized, for example).</p>
 </dd>
@@ -112,6 +118,22 @@ Begins the process of parsing the passed subtitles in SSA/ASS format into subtit
 | --- | --- | --- |
 | subsText | <code>string</code> | the subtitle file's contents. |
 | fonts | <code>Array.&lt;Font&gt;</code> | preloaded fonts necessary for this subtitle file (one of these MUST be Arial). |
+
+<a name="setColorSpace"></a>
+
+#### setColorSpace(colorSpace, [width], [height])
+Configures the output colorspace to the set value (or guesses when automatic is specified based on resolution).
+AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
+that must be set by selecting AUTOMATIC_PC. AUTOMATIC and AUTOMATIC_PC are also incapable of determining if the
+video is HDR, so you need to manually set either BT.2100_PQ or BT.2100_HLG if it is.
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| colorSpace | <code>number</code> | the colorspace to use for output. |
+| [width] | <code>number</code> | the x component of the video's resolution (only required when colorSpace is AUTOMATIC). |
+| [height] | <code>number</code> | the y component of the video's resolution (only required when colorSpace is AUTOMATIC). |
 
 <a name="setViewport"></a>
 

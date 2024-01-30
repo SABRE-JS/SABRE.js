@@ -98,38 +98,6 @@ sabre["SSAColor"] = function SSAColor (r, g, b, a) {
                 return obj.a;
             },
             writable: false
-        },
-
-        "getYUVA": {
-            value: function getYUVA () {
-                //https://en.wikipedia.org/wiki/YUV#Conversion_to/from_RGB
-                throw "METHOD_STUBBED: SSAColor.getYUVA";
-            },
-            writable: false
-        },
-
-        "getYUV": {
-            value: function getYUV () {
-                //https://en.wikipedia.org/wiki/YUV#Conversion_to/from_RGB
-                throw "METHOD_STUBBED: SSAColor.getYUV";
-            },
-            writable: false
-        },
-
-        "getYCbCrA": {
-            value: function getYCbCrA () {
-                //https://en.wikipedia.org/wiki/YCbCr
-                throw "METHOD_STUBBED: SSAColor.getYCbCrA";
-            },
-            writable: false
-        },
-
-        "getYCbCr": {
-            value: function getYCbCr () {
-                //https://en.wikipedia.org/wiki/YCbCr
-                throw "METHOD_STUBBED: SSAColor.getYCbCr";
-            },
-            writable: false
         }
     });
 };

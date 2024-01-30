@@ -275,6 +275,63 @@ const parser_prototype = global.Object.create(global.Object, {
                             10
                         );
                         return;
+                    case "YCbCr Matrix":
+                        {
+                            let colorspace_name = keypair[1].toLowerCase();
+                            switch (colorspace_name) {
+                                case "none":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.NONE;
+                                    break;
+                                default:
+                                    console.warn("Warning: Unrecognized color space, defaulting to BT.601.");
+                                case "tv.601":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT601_TV;
+                                    break;
+                                case "pc.601":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT601_PC;
+                                    break;
+                                case "tv.709":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT709_TV;
+                                    break;
+                                case "pc.709":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT709_PC;
+                                    break;
+                                case "tv.2020":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT2020_TV;
+                                    break;
+                                case "pc.2020":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT2020_PC;
+                                    break;
+                                case "tv.2020.cl":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT2020_CL_TV;
+                                    break;
+                                case "pc.2020.cl":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT2020_CL_PC;
+                                    break;
+                                //TODO: Implement HDR stuff.
+                                /*
+                                case "tv.2100.pq":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT2100_PQ;
+                                    break;
+                                case "tv.2100.hlg":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.BT2100_HLG;
+                                    break;
+                                */
+                                case "tv.240m":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.SMPTE240M_TV;
+                                    break;
+                                case "pc.240m":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.SMPTE240M_PC;
+                                    break;
+                                case "tv.fcc":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.FCC_TV;
+                                    break;
+                                case "pc.fcc":
+                                    config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.FCC_PC;
+                                    break;
+                            }
+                        }
+                        return;
                     case "PlayDepth":
                         config["renderer"]["bit_depth"] = global.parseInt(
                             keypair[1],
@@ -440,13 +497,27 @@ const parser_prototype = global.Object.create(global.Object, {
          */
         value: function _parseTime (timestring) {
             let array = timestring.split(":");
+            let sign = 1;
             let time = 0;
-            for (let i = 0; i < array.length; i++) {
+            for (let i = 1; i < array.length; i++) {
+                let ltime = 0;
                 if (i !== array.length - 1) {
-                    time += global.parseInt(array[i], 10);
+                    ltime = global.parseInt(array[i], 10);
+                    if(i === 0){
+                        sign = global.Math.sign(ltime)
+                    }else{
+                        ltime *= sign;
+                    }
+                    time += ltime;
                     time *= 60;
                 } else {
-                    time += global.parseFloat(array[i]);
+                    ltime = global.parseFloat(array[i]);
+                    if(i === 0){
+                        sign = global.Math.sign(ltime)
+                    }else{
+                        ltime *= sign; 
+                    }
+                    time += ltime;
                 }
             }
             return time;
@@ -1015,7 +1086,7 @@ const parser_prototype = global.Object.create(global.Object, {
         /**
          * Decodes embedded files.
          * @param {string} data
-         * @returns {ArrayBuffer}
+         * @return {ArrayBuffer}
          */
         value: function _decodeEmbeddedFile (data) {
             const bindata = [];
@@ -1231,7 +1302,8 @@ const parser_prototype = global.Object.create(global.Object, {
                     "resolution_x": 640,
                     "resolution_y": 480,
                     "default_wrap_style": sabre.WrapStyleModes.SMART,
-                    "default_collision_mode": sabre.CollisionModes.NORMAL
+                    "default_collision_mode": sabre.CollisionModes.NORMAL,
+                    "color_mangling_mode": sabre.ColorManglingModes.DEFAULT
                 }
             });
             if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
@@ -1289,6 +1361,56 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
          */
         "loadSubtitles": function loadSubtitles (subsText, fonts) {
             parser["load"](subsText, fonts, (config) => renderer.load(config));
+        },
+        /**
+         * Configures the output colorspace to the set value (or guesses when automatic is specified based on resolution).
+         * AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
+         * that must be set by selecting AUTOMATIC_PC. AUTOMATIC and AUTOMATIC_PC are also incapable of determining if the
+         * video is HDR, so you need to manually set either BT.2100_PQ or BT.2100_HLG if it is.
+         * @param {number} colorSpace the colorspace to use for output.
+         * @param {number=} width the x component of the video's resolution (only required when colorSpace is AUTOMATIC).
+         * @param {number=} height the y component of the video's resolution (only required when colorSpace is AUTOMATIC).
+         */
+        "setColorSpace": function setColorSpace (colorSpace,width,height){
+            if(colorSpace === external.VideoColorSpaces.AUTOMATIC){
+                if(typeof width === "undefined" || typeof height === "undefined"){
+                    console.warn("Color Space set to AUTOMATIC, but resolution not provided, defaulting to BT.601 (studio-swing).");
+                    colorSpace = sabre.ColorSpaces.BT601_TV;
+                }else{
+                    const pixels = width * height;
+                    if(pixels <= 604800){
+                        colorSpace = sabre.ColorSpaces.BT601_TV;
+                    }else if(pixels <= 2073600){
+                        colorSpace = sabre.ColorSpaces.BT709_TV;
+                    }else{
+                        //This is technically only likely for 4k and 8K video but nobody has a 16K display yet so we'll ignore that.
+                        //Also, there's no way to tell if the video is HDR or not so we'll just assume it's not.
+                        //If is HDR that's up to the developer using this library to set the color space to BT.2100_PQ or BT.2100_HLG.
+                        colorSpace = sabre.ColorSpaces.BT2020_TV;
+                    }
+                }
+            }else if(colorSpace === external.VideoColorSpaces.AUTOMATIC_PC){
+                if(typeof width === "undefined" || typeof height === "undefined"){
+                    console.warn("Color Space set to AUTOMATIC_PC, but resolution not provided, defaulting to BT.601 (full-swing).");
+                    colorSpace = sabre.ColorSpaces.BT601_PC;
+                }else{
+                    const pixels = width * height;
+                    if(pixels <= 604800){
+                        colorSpace = sabre.ColorSpaces.BT601_PC;
+                    }else if(pixels <= 2073600){
+                        colorSpace = sabre.ColorSpaces.BT709_PC;
+                    }else{
+                        //This is technically only likely for 4k and 8K video but nobody has a 16K display yet so we'll ignore that.
+                        //Also, there's no way to tell if the video is HDR or not so we'll just assume it's not.
+                        //If is HDR that's up to the developer using this library to set the color space to BT.2100_PQ or BT.2100_HLG.
+                        colorSpace = sabre.ColorSpaces.BT2020_PC;
+                    }
+                }
+            }else if(Object.values(sabre.ColorSpaces).indexOf(colorSpace) === -1){
+                console.warn("Invalid Color Space " + colorSpace + " defaulting to BT.601 (studio-swing).");
+                colorSpace = sabre.ColorSpaces.BT601_TV;
+            }
+            renderer.setColorSpace(colorSpace);
         },
         /**
          * Updates the resolution (in CSS pixels) at which the subtitles are rendered (if the player is resized, for example).
