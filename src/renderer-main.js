@@ -2991,8 +2991,8 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {Float32Array} result
          */
         value: function _calcClipPathCoords (clip, inverse) {
-            let scale = /** @type {number} */ (clip[0]);
-            let path = /** @type {string} */ (clip[1]);
+            let scale = /** @private @type {number} */ (clip[0]);
+            let path = /** @private @type {string} */ (clip[1]);
             let shapes = this._getShapesFromPath(scale, path);
             let triangles = [];
             for (let i = 0; i < shapes.length; i++) {
@@ -3344,7 +3344,7 @@ const renderer_prototype = global.Object.create(Object, {
                         ].getTransitionAcceleration();
                     clip[0] = sabre.performTransition(
                         time,
-                        /** @type {!number} */ (clip[0]),
+                        /** @private @type {!number} */ (clip[0]),
                         transitionClip[0],
                         transitionStart,
                         transitionEnd,
@@ -4406,7 +4406,9 @@ const renderer_prototype = global.Object.create(Object, {
                 return _this._findFont(name, weight, italic);
             };
             this._textRenderer.setRequestFont(requestFont);
+            this._textRenderer.setScaledOutlineAndShadowEnabled(config.renderer["scaled_border_and_shadow"]);
             this._textMaskRenderer.setRequestFont(requestFont);
+            this._textMaskRenderer.setScaledOutlineAndShadowEnabled(config.renderer["scaled_border_and_shadow"]);
             this._config = config;
             this._scheduler.setEvents(
                 /** @type {Array<SSASubtitleEvent>} */ (

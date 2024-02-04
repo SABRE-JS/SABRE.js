@@ -50,6 +50,15 @@ const shape_renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _scaledOutlineAndShadow: {
+        /**
+         * If the outline is scaled.
+         * @type {boolean}
+         */
+        value: false,
+        writable: true
+    },
+
     _canvas: {
         /**
          * The canvas for the shape renderer.
@@ -251,7 +260,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
         ) {
             //TODO: Figure out a good way to do dimension specific line widths.
             let outline = this._calcOutline(time, style, overrides);
-            this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
+            this._ctx.lineWidth = Math.min((!this._scaledOutlineAndShadow?outline.x/this._pixelScaleRatio.xratio:outline.x), (!this._scaledOutlineAndShadow?outline.y/this._pixelScaleRatio.yratio:outline.y)) * 2;
         },
         writable: false
     },
@@ -636,12 +645,12 @@ const shape_renderer_prototype = global.Object.create(Object, {
                 pass === sabre.RenderPasses.BACKGROUND
             ) {
                 let outline = this._calcOutline(time, style, overrides);
-                this._width += outline.x * 2;
-                this._height += outline.x * 2;
-                this._offsetX += outline.x;
-                this._offsetY += outline.y;
-                outline_x = outline.x;
-                outline_y = outline.y;
+                outline_x = (!this._scaledOutlineAndShadow?outline.x/this._pixelScaleRatio.xratio:outline.x);
+                outline_y = (!this._scaledOutlineAndShadow?outline.y/this._pixelScaleRatio.yratio:outline.y);
+                this._width += outline_x * 2;
+                this._height += outline_y * 2;
+                this._offsetX += outline_x;
+                this._offsetY += outline_y;
             }
 
             let offsetXUnscaled = this._offsetX;
@@ -660,8 +669,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
                     let shadowX = overrides.getShadowX() ?? shadowComponent;
                     let shadowY = overrides.getShadowY() ?? shadowComponent;
                     if (shadowX === 0 && shadowY === 0) noDraw = true;
-                    this._offsetX -= shadowX;
-                    this._offsetY -= shadowY;
+                    this._offsetX -= shadowX/(this._scaledOutlineAndShadow?this._pixelScaleRatio.xratio:1);
+                    this._offsetY -= shadowY/(this._scaledOutlineAndShadow?this._pixelScaleRatio.yratio:1);
                 } else if (borderStyle === sabre.BorderStyleModes.NONE) {
                     noDraw = true;
                 }
@@ -827,6 +836,17 @@ const shape_renderer_prototype = global.Object.create(Object, {
             }else{
                 this._pixelScaleRatio = { xratio: xratio, yratio: yratio, preFactoredBacking: false };
             }
+        },
+        writable: false
+    },
+
+    "setScaledOutlineAndShadowEnabled": {
+        /**
+         * Sets whether the outline should be scaled when we are rendering to a higher resolution than the video.
+         * @param {boolean} enabled if true, the outline will be scaled.
+         */
+        value: function setScaledOutlineEnabled (enabled) {
+            this._scaledOutlineAndShadow = enabled;
         },
         writable: false
     },

@@ -2,6 +2,7 @@
  * @typedef {!{
  *              renderEvent:function(number,SSASubtitleEvent,number,boolean):void,
  *              setPixelScaleRatio:function(number,number):void,
+ *              setScaledOutlineAndShadowEnabled:function(boolean):void,
  *              getOffset:function():Array<number>,
  *              getOffsetExternal:function():Array<number>,
  *              getDimensions:function():Array<number>,

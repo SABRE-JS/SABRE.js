@@ -207,7 +207,7 @@ sabre["getOverrideTags"] = function(){
                         parameters[1] !== ""
                     ) {
                         a = global.parseInt(
-                            sabre.cleanRawColor(/** @type {string} */ (parameters[1])),
+                            sabre.cleanRawColor(/** @private @type {string} */ (parameters[1])),
                             16
                         );
                         if (isNaN(a)) return;
@@ -653,7 +653,7 @@ sabre["getOverrideTags"] = function(){
                         parameters[1] !== ""
                     ) {
                         let pcolor = global.parseInt(
-                            sabre.cleanRawColor(/** @type {string} */ (parameters[1])),
+                            sabre.cleanRawColor(/** @private @type {string} */ (parameters[1])),
                             16
                         );
                         if (isNaN(pcolor)) return;

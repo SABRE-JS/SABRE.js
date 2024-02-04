@@ -359,6 +359,16 @@ const parser_prototype = global.Object.create(global.Object, {
                                 wrap_style;
                         }
                         return;
+                    case "ScaledBorderAndShadow":
+                        {
+                            const value = keypair[1].toLowerCase();
+                            if(value === "yes"){
+                                config["renderer"]["scaled_border_and_shadow"] = true;
+                            }else{
+                                config["renderer"]["scaled_border_and_shadow"] = false;
+                            }
+                        }
+                        return;
                     default:
                         console.warn(
                             'Warning: Unrecognized key "' +
@@ -1303,7 +1313,8 @@ const parser_prototype = global.Object.create(global.Object, {
                     "resolution_y": 480,
                     "default_wrap_style": sabre.WrapStyleModes.SMART,
                     "default_collision_mode": sabre.CollisionModes.NORMAL,
-                    "color_mangling_mode": sabre.ColorManglingModes.DEFAULT
+                    "color_mangling_mode": sabre.ColorManglingModes.DEFAULT,
+                    "scaled_border_and_shadow": false
                 }
             });
             if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
@@ -1346,30 +1357,39 @@ const bitmapSupported =
 
 /**
  * The entry point for the library; returns the delegate for controlling the library.
- * @param {function(ArrayBuffer):Font} parseFont a function that returns an opentype.js Font object when passed an ArrayBuffer.
+ * Note: In the options object resolution is the resolution the video is displayed at (in CSS pixels),
+ * nativeResolution is the native resolution of the video (in regular pixels).
+ * Note: if you use the options parameter is recommended you set colorSpace to either AUTOMATIC (for studio-swing)
+ * or AUTOMATIC_PC (for full-swing) and set the nativeResolution option unless you know the video's colorspace.
+ * @public
+ * @param {!function(ArrayBuffer):Font} parseFont a function that returns an opentype.js Font object when passed an ArrayBuffer.
+ * @param {!{fonts:(!Array<Font>|undefined),subtitles:(!string|undefined),colorSpace:(!number|undefined),resolution:(!Array<number>|undefined),nativeResolution:(!Array<number>|undefined)}=} options Initialization options as a shortcut to using the configuration functions (the functions still need to be used if the viewport changes, the subtitle file needs to be changed, the colorspace need to be changed or to request a frame).
  */
 
-external["SABRERenderer"] = function SABRERenderer (parseFont) {
-    let parser = new sabre["Parser"](parseFont);
-    let renderer = new sabre.Renderer();
-    return Object.freeze({
+external["SABRERenderer"] = function SABRERenderer (parseFont,options) {
+    const parser = new sabre["Parser"](parseFont);
+    const renderer = new sabre.Renderer();
+    const delegate = Object.freeze({
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
-         * @param {string} subsText the subtitle file's contents.
+         * @public
+         * @param {string} subtitles the subtitle file's contents.
          * @param {Array<Font>} fonts preloaded fonts necessary for this subtitle file (one of these MUST be Arial).
          * @return {void}
          */
-        "loadSubtitles": function loadSubtitles (subsText, fonts) {
-            parser["load"](subsText, fonts, (config) => renderer.load(config));
+        "loadSubtitles": function loadSubtitles (subtitles, fonts) {
+            parser["load"](subtitles, fonts, (config) => renderer.load(config));
         },
         /**
          * Configures the output colorspace to the set value (or guesses when automatic is specified based on resolution).
-         * AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
+         * Note: AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
          * that must be set by selecting AUTOMATIC_PC. AUTOMATIC and AUTOMATIC_PC are also incapable of determining if the
          * video is HDR, so you need to manually set either BT.2100_PQ or BT.2100_HLG if it is.
+         * Note: HDR support is stubbed and unimplemented currently.
+         * @public
          * @param {number} colorSpace the colorspace to use for output.
-         * @param {number=} width the x component of the video's resolution (only required when colorSpace is AUTOMATIC).
-         * @param {number=} height the y component of the video's resolution (only required when colorSpace is AUTOMATIC).
+         * @param {number=} width the x component of the video's resolution in regular pixels (only required when colorSpace is AUTOMATIC).
+         * @param {number=} height the y component of the video's resolution in regular pixels (only required when colorSpace is AUTOMATIC).
          */
         "setColorSpace": function setColorSpace (colorSpace,width,height){
             if(colorSpace === external.VideoColorSpaces.AUTOMATIC){
@@ -1414,6 +1434,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
         },
         /**
          * Updates the resolution (in CSS pixels) at which the subtitles are rendered (if the player is resized, for example).
+         * @public
          * @param {number} width the desired width of the resolution (in CSS pixels).
          * @param {number} height the desired height of the resolution (in CSS pixels).
          * @return {void}
@@ -1423,6 +1444,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
         },
         /**
          * Checks if the renderer is ready to render a frame.
+         * @public
          * @return {boolean} is the renderer ready?
          */
         "checkReadyToRender": function checkReadyToRender () {
@@ -1430,6 +1452,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
         },
         /**
          * Fetches a rendered frame of subtitles as an ImageBitmap, returns null if ImageBitmap is unsupported.
+         * @public
          * @param {number} time the time at which to draw subtitles.
          * @return {?ImageBitmap}
          */
@@ -1440,6 +1463,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
         },
         /**
          * Fetches a rendered frame of subtitles as an object uri.
+         * @public
          * @param {number} time the time at which to draw subtitles.
          * @param {function(string):void} callback a callback that provides the URI for the image generated.
          * @return {void}
@@ -1450,6 +1474,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
         },
         /**
          * Fetches a rendered frame of subtitles to a canvas.
+         * @public
          * @param {number} time the time at which to draw subtitles.
          * @param {HTMLCanvasElement|OffscreenCanvas} canvas the target canvas
          * @param {string=} contextType the context type to use (must be one of "bitmap" or "2d"), defaults to "bitmap" unless unsupported by the browser, in which case "2d" is the default.
@@ -1463,4 +1488,25 @@ external["SABRERenderer"] = function SABRERenderer (parseFont) {
             renderer.copyToCanvas(canvas, bitmapUsed);
         }
     });
+    if(options){
+        const fonts = options["fonts"];
+        const subtitles = options["subtitles"];
+        const colorSpace = options["colorSpace"];
+        const resolution = options["resolution"];
+        const nativeRes = options["nativeResolution"];
+        if(fonts && subtitles){
+            delegate["loadSubtitles"](subtitles,fonts);
+        }
+        if(resolution && resolution.length === 2){
+            delegate["setViewport"](resolution[0],resolution[1]);
+        }
+        if(typeof(colorSpace) === "number"){
+            if(nativeRes && resolution.length === 2){
+                delegate["setColorSpace"](colorSpace,nativeRes[0],nativeRes[1]);
+            }else{
+                delegate["setColorSpace"](colorSpace);
+            }
+        }
+    }
+    return delegate;
 };

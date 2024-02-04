@@ -57,10 +57,13 @@ window.addEventListener("load",() => {
     // load the fonts using opentype.js and put them in
     // the fonts array.
     // YOUR CODE HERE
-    // pass the font parsing function to the renderer
-    renderer = sabre.SABRERenderer(parseFont);
-    renderer.loadSubtitles(subs,fonts);
-    renderer.setViewport(1280,720); // use the video player's dimensions.
+    // initialize the renderer
+    renderer = sabre.SABRERenderer(parseFont,{fonts:fonts,subtitles:subs,colorSpace:sabre.VideoColorSpaces.AUTOMATIC,resolution:[1280,720],nativeResolution:[1280,720]});
+    // or you can do this:
+    //     renderer = new sabre.SABRERenderer(parseFont);
+    //     renderer.loadSubtitles(subs,fonts);
+    //     renderer.setColorSpace(sabre.VideoColorSpaces.AUTOMATIC,1280,720);
+    //     renderer.setViewport(1280,720);
     // schedule your frame callback using either requestAnimationFrame or requestVideoFrameCallback
 });
 ```
@@ -80,17 +83,20 @@ to render a frame of subtitles.
 
 ### API
 
+The documentation generator is a little buggy, anytime it says something is global, that means it's a property of the `sabre.SABRERenderer` object.
+
 #### Functions
 
 <dl>
-<dt><a href="#loadSubtitles">loadSubtitles(subsText, fonts)</a> ⇒ <code>void</code></dt>
+<dt><a href="#loadSubtitles">loadSubtitles(subtitles, fonts)</a> ⇒ <code>void</code></dt>
 <dd><p>Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.</p>
 </dd>
 <dt><a href="#setColorSpace">setColorSpace(colorSpace, [width], [height])</a></dt>
 <dd><p>Configures the output colorspace to the set value (or guesses when automatic is specified based on resolution).
-AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
+Note: AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
 that must be set by selecting AUTOMATIC_PC. AUTOMATIC and AUTOMATIC_PC are also incapable of determining if the
-video is HDR, so you need to manually set either BT.2100_PQ or BT.2100_HLG if it is.</p>
+video is HDR, so you need to manually set either BT.2100_PQ or BT.2100_HLG if it is.
+Note: HDR support is stubbed and unimplemented currently.</p>
 </dd>
 <dt><a href="#setViewport">setViewport(width, height)</a> ⇒ <code>void</code></dt>
 <dd><p>Updates the resolution (in CSS pixels) at which the subtitles are rendered (if the player is resized, for example).</p>
@@ -109,31 +115,36 @@ video is HDR, so you need to manually set either BT.2100_PQ or BT.2100_HLG if it
 </dd>
 </dl>
 
-#### loadSubtitles(subsText, fonts) ⇒ <code>void</code>
+<a name="loadSubtitles"></a>
+
+#### loadSubtitles(subtitles, fonts) ⇒ <code>void</code>
 Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
 
 **Kind**: global function  
+**Access**: public  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| subsText | <code>string</code> | the subtitle file's contents. |
+| subtitles | <code>string</code> | the subtitle file's contents. |
 | fonts | <code>Array.&lt;Font&gt;</code> | preloaded fonts necessary for this subtitle file (one of these MUST be Arial). |
 
 <a name="setColorSpace"></a>
 
 #### setColorSpace(colorSpace, [width], [height])
 Configures the output colorspace to the set value (or guesses when automatic is specified based on resolution).
-AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
+Note: AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
 that must be set by selecting AUTOMATIC_PC. AUTOMATIC and AUTOMATIC_PC are also incapable of determining if the
 video is HDR, so you need to manually set either BT.2100_PQ or BT.2100_HLG if it is.
+Note: HDR support is stubbed and unimplemented currently.
 
 **Kind**: global function  
+**Access**: public  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | colorSpace | <code>number</code> | the colorspace to use for output. |
-| [width] | <code>number</code> | the x component of the video's resolution (only required when colorSpace is AUTOMATIC). |
-| [height] | <code>number</code> | the y component of the video's resolution (only required when colorSpace is AUTOMATIC). |
+| [width] | <code>number</code> | the x component of the video's resolution in regular pixels (only required when colorSpace is AUTOMATIC). |
+| [height] | <code>number</code> | the y component of the video's resolution in regular pixels (only required when colorSpace is AUTOMATIC). |
 
 <a name="setViewport"></a>
 
@@ -141,6 +152,7 @@ video is HDR, so you need to manually set either BT.2100_PQ or BT.2100_HLG if it
 Updates the resolution (in CSS pixels) at which the subtitles are rendered (if the player is resized, for example).
 
 **Kind**: global function  
+**Access**: public  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -154,12 +166,14 @@ Checks if the renderer is ready to render a frame.
 
 **Kind**: global function  
 **Returns**: <code>boolean</code> - is the renderer ready?  
+**Access**: public  
 <a name="getFrame"></a>
 
 #### getFrame(time) ⇒ <code>ImageBitmap</code>
 Fetches a rendered frame of subtitles as an ImageBitmap, returns null if ImageBitmap is unsupported.
 
 **Kind**: global function  
+**Access**: public  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -171,6 +185,7 @@ Fetches a rendered frame of subtitles as an ImageBitmap, returns null if ImageBi
 Fetches a rendered frame of subtitles as an object uri.
 
 **Kind**: global function  
+**Access**: public  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -183,6 +198,7 @@ Fetches a rendered frame of subtitles as an object uri.
 Fetches a rendered frame of subtitles to a canvas.
 
 **Kind**: global function  
+**Access**: public  
 
 | Param | Type | Description |
 | --- | --- | --- |

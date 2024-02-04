@@ -7,6 +7,7 @@
 *              renderGlyph:function(number,SSASubtitleEvent,{prevGlyph:?Glyph,glyph:?Glyph,breakOut:boolean},number,boolean):boolean,
 *              setRequestFont:function(!function(string,number,boolean):!{font:Font,foundItalic:boolean,foundWeight:number}):void,
 *              setPixelScaleRatio:function(number,number):void,
+*              setScaledOutlineAndShadowEnabled:function(boolean):void,
 *              getOffset:function():Array<number>,
 *              getOffsetExternal:function():Array<number>,
 *              getDimensions:function():Array<number>,
