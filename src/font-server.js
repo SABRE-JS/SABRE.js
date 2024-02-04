@@ -10,6 +10,8 @@
  */
 /**
  * An enum of platforms.
+ * @private
+ * @enum {number}
  */
 const platforms = Object.freeze({
     UNICODE: 0,
@@ -19,6 +21,8 @@ const platforms = Object.freeze({
 
 /**
  * An enum of name types.
+ * @private
+ * @enum {number}
  */
 const nameTypes = Object.freeze({
     COPYRIGHT: 0,

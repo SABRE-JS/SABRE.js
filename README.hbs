@@ -57,10 +57,13 @@ window.addEventListener("load",() => {
     // load the fonts using opentype.js and put them in
     // the fonts array.
     // YOUR CODE HERE
-    // pass the font parsing function to the renderer
-    renderer = sabre.SABRERenderer(parseFont);
-    renderer.loadSubtitles(subs,fonts);
-    renderer.setViewport(1280,720); // use the video player's dimensions.
+    // initialize the renderer
+    renderer = sabre.SABRERenderer(parseFont,{fonts:fonts,subtitles:subs,colorSpace:sabre.VideoColorSpaces.AUTOMATIC,resolution:[1280,720],nativeResolution:[1280,720]});
+    // or you can do this:
+    //     renderer = new sabre.SABRERenderer(parseFont);
+    //     renderer.loadSubtitles(subs,fonts);
+    //     renderer.setColorSpace(sabre.VideoColorSpaces.AUTOMATIC,1280,720);
+    //     renderer.setViewport(1280,720);
     // schedule your frame callback using either requestAnimationFrame or requestVideoFrameCallback
 });
 ```
@@ -79,6 +82,8 @@ Each frame, before you call any of the rendering functions, first call `checkRea
 to render a frame of subtitles.
 
 ### API
+
+The documentation generator is a little buggy, anytime it says something is global, that means it's a property of the `sabre.SABRERenderer` object.
 
 {{>main}}
 

@@ -157,12 +157,14 @@ sabre["ColorSpaceConversionTypes"] = sabre.totalObjectFreeze({
 });
 /**
  * Defines a non-constant luminance color space conversion.
+ * @private
  * @typedef {!{type:number,offset:!Array<number>,toRGB:!Array<number>,toDisplayP3:!Array<number>,fromRGB:!Array<number>}}
  */
 let NonConstantLuminanceColorSpaceConversion;
 
 /**
  * Defines a constant luminance color space conversion.
+ * @private
  * @typedef {!{type:number,offset:!Array<number>,scale:!Array<number>,coefficients:!Array<number>,Nr:number,Nb:number,Pr:number,Pb:number}}
  */
 let ConstantLuminanceColorSpaceConversion;

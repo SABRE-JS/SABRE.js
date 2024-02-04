@@ -34,6 +34,15 @@ const text_renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _scaledOutlineAndShadow: {
+        /**
+         * If the outline is scaled.
+         * @type {boolean}
+         */
+        value: false,
+        writable: true
+    },
+
     _canvas: {
         /**
          * The canvas for the text renderer.
@@ -327,7 +336,7 @@ const text_renderer_prototype = global.Object.create(Object, {
         value: function _setOutline (time, style, overrides) {
             let outline = this._calcOutline(time, style, overrides);
 
-            this._ctx.lineWidth = Math.min(outline.x, outline.y) * 2;
+            this._ctx.lineWidth = Math.min((!this._scaledOutlineAndShadow?outline.x/this._pixelScaleRatio.xratio:outline.x), (!this._scaledOutlineAndShadow?outline.y/this._pixelScaleRatio.yratio:outline.y)) * 2;
         },
         writable: false
     },
@@ -823,9 +832,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                     }
 
                     this._eOffsetX +=
-                        shadow.x * this._scale.x * this._pixelScaleRatio.xratio;
+                        shadow.x * this._scale.x * (this._scaledOutlineAndShadow?this._pixelScaleRatio.xratio:1);
                     this._eOffsetY +=
-                        shadow.y * this._scale.y * this._pixelScaleRatio.yratio;
+                        shadow.y * this._scale.y * (this._scaledOutlineAndShadow?this._pixelScaleRatio.yratio:1);
                 } else if (borderStyle === sabre.BorderStyleModes.NONE) {
                     this._noDraw = true;
                 }
@@ -971,16 +980,17 @@ const text_renderer_prototype = global.Object.create(Object, {
                     outline.x *
                     2 *
                     this._scale.x *
-                    this._pixelScaleRatio.xratio;
+                    (this._scaledOutlineAndShadow?this._pixelScaleRatio.xratio:1);
                 this._height +=
                     outline.y *
                     2 *
                     this._scale.y *
-                    this._pixelScaleRatio.yratio;
-                this._offsetX += outline.x;
-                this._offsetY += outline.y;
-                outline_x = outline.x;
-                outline_y = outline.y;
+                    (this._scaledOutlineAndShadow?this._pixelScaleRatio.yratio:1);
+                outline_x = (!this._scaledOutlineAndShadow?outline.x/this._pixelScaleRatio.xratio:outline.x);
+                outline_y = (!this._scaledOutlineAndShadow?outline.y/this._pixelScaleRatio.yratio:outline.y);
+                this._offsetX += outline_x;
+                this._offsetY += outline_y;
+                
             }
 
             let offsetXUnscaled = this._offsetX;
@@ -1183,6 +1193,17 @@ const text_renderer_prototype = global.Object.create(Object, {
             }else{
                 this._pixelScaleRatio = { xratio: xratio, yratio: yratio, preFactoredBacking: false };
             }
+        },
+        writable: false
+    },
+
+    "setScaledOutlineAndShadowEnabled": {
+        /**
+         * Sets whether the outline should be scaled when we are rendering to a higher resolution than the video.
+         * @param {boolean} enabled if true, the outline will be scaled.
+         */
+        value: function setScaledOutlineEnabled (enabled) {
+            this._scaledOutlineAndShadow = enabled;
         },
         writable: false
     },

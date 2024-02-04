@@ -14,19 +14,42 @@ const shaderlog = {};
 let statetracker = {};
 let shadercounter = Number.MIN_SAFE_INTEGER;
 
-function isArrayish(a) {
-    return (
-        a instanceof Array ||
-        a instanceof Float32Array ||
-        a instanceof Float64Array ||
-        a instanceof Int8Array ||
-        a instanceof Int16Array ||
-        a instanceof Int32Array ||
-        a instanceof Uint8Array ||
-        a instanceof Uint16Array ||
-        a instanceof Uint32Array
-    );
-}
+/**
+ * Checks if an object is array-like.
+ * @private
+ * @param {(Object|Array<*>)} a the object to check.
+ * @return {boolean} true if the object is array-like.
+ */
+const isArrayish = (() => {
+    function isArrayLikeObject(a){
+        if(a === null || typeof(a) === "undefined") return false;
+        if(typeof(a.length) === "number"){
+            const keys = Object.getOwnPropertyNames(a);
+            let count = 0;
+            for (let i = 0; i < keys.length; i++){
+                if (isNaN(parseInt(keys[i],10))) continue;
+                else count++;
+            }
+            return count === a.length;
+        }
+        return false;
+    }
+    function isArrayish(a) {
+        return (
+            a instanceof Array ||
+            a instanceof Float32Array ||
+            a instanceof Float64Array ||
+            a instanceof Int8Array ||
+            a instanceof Int16Array ||
+            a instanceof Int32Array ||
+            a instanceof Uint8Array ||
+            a instanceof Uint16Array ||
+            a instanceof Uint32Array ||
+            isArrayLikeObject(a)
+        );
+    }
+    return isArrayish;
+})();
 
 const ShaderPrototype = Object.create(Object, {
     _shaderId: {
