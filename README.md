@@ -46,28 +46,49 @@ How to include the library (from the unpkg CDN, for the more privacy minded):
 <script src="https://unpkg.com/@sabre-js/sabre@latest/dist/sabre.min.js"></script>
 ```
 
-You can retrieve an instance of the library by calling `sabre.SABRERenderer` like so from a `load` event handler:
+You can retrieve an instance of the library by calling `sabre.SABRERenderer()` inside an event handler.
+
+Example:
 ```js
 let renderer;
-window.addEventListener("load",() => {
-    let subs = "";
-    let fonts = [];
-    // load the contents of the subtitle file into subs.
-    // YOUR CODE HERE
-    // load the fonts using opentype.js and put them in
-    // the fonts array.
-    // YOUR CODE HERE
-    // initialize the renderer
-    renderer = sabre.SABRERenderer(parseFont,{fonts:fonts,subtitles:subs,colorSpace:sabre.VideoColorSpaces.AUTOMATIC,resolution:[1280,720],nativeResolution:[1280,720]});
-    // or you can do this:
-    //     renderer = new sabre.SABRERenderer(parseFont);
-    //     renderer.loadSubtitles(subs,fonts);
-    //     renderer.setColorSpace(sabre.VideoColorSpaces.AUTOMATIC,1280,720);
-    //     renderer.setViewport(1280,720);
-    // schedule your frame callback using either requestAnimationFrame or requestVideoFrameCallback
+let fonts = [];
+// Load the contents of the subtitle file into subs.
+fetchSubtitles("subtitles.ass", (subs) => {
+    // Load the fonts using opentype.js and put them in the fonts array.
+    opentype.load("arial.ttf", (font) => {
+        fonts.push(font);
+        // Initialize the renderer
+        renderer = sabre.SABRERenderer(parseFont, {
+            fonts:fonts,
+            subtitles:subs,
+            colorSpace:sabre.VideoColorSpaces.AUTOMATIC,
+            resolution:[1280,720], // Display resolution of the video in CSS pixels.
+            nativeResolution:[1280,720] // Resolution of the video file in real pixels (only used if the color space is AUTOMATIC or AUTOMATIC_PC).
+        });
+        // Schedule your frame callback using either requestAnimationFrame or requestVideoFrameCallback
+    });
+});
+
+```
+or you can initialize using the return value's functions as shown below:
+```js
+let renderer;
+let fonts = [];
+// Load the contents of the subtitle file into subs.
+fetchSubtitles("subtitles.ass", (subs) => {
+    // Load the fonts using opentype.js and put them in the fonts array.
+    opentype.load("arial.ttf", (font) => {
+        fonts.push(font);
+        // Initialize the renderer
+        renderer = new sabre.SABRERenderer(parseFont);
+        renderer.loadSubtitles(subs,fonts);
+        renderer.setColorSpace(sabre.VideoColorSpaces.AUTOMATIC,1280,720); // Second and third parameters are the native resolution of the video file in real pixels (only used if the color space is AUTOMATIC or AUTOMATIC_PC).
+        renderer.setViewport(1280,720); // Display resolution of the video in CSS pixels.
+    });
 });
 ```
-and passing it a function that loads fonts using opentype.js as shown below:
+
+You must pass the constructor a function that loads fonts using opentype.js similar to the one below:
 ```js
 function parseFont(data) {
     return opentype.parse(data);
@@ -83,7 +104,7 @@ to render a frame of subtitles.
 
 ### API
 
-The documentation generator is a little buggy, anytime it says something is global, that means it's a property of the `sabre.SABRERenderer` object.
+The documentation generator is a little buggy, anytime it says something is global, that means it's a property of the `sabre.SABRERenderer()` function's returned object.
 
 #### Functions
 
@@ -91,7 +112,7 @@ The documentation generator is a little buggy, anytime it says something is glob
 <dt><a href="#loadSubtitles">loadSubtitles(subtitles, fonts)</a> ⇒ <code>void</code></dt>
 <dd><p>Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.</p>
 </dd>
-<dt><a href="#setColorSpace">setColorSpace(colorSpace, [width], [height])</a></dt>
+<dt><a href="#setColorSpace">setColorSpace(colorSpace, [width], [height])</a> ⇒ <code>void</code></dt>
 <dd><p>Configures the output colorspace to the set value (or guesses when automatic is specified based on resolution).
 Note: AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
 that must be set by selecting AUTOMATIC_PC. AUTOMATIC and AUTOMATIC_PC are also incapable of determining if the
@@ -130,7 +151,7 @@ Begins the process of parsing the passed subtitles in SSA/ASS format into subtit
 
 <a name="setColorSpace"></a>
 
-#### setColorSpace(colorSpace, [width], [height])
+#### setColorSpace(colorSpace, [width], [height]) ⇒ <code>void</code>
 Configures the output colorspace to the set value (or guesses when automatic is specified based on resolution).
 Note: AUTOMATIC always assumes studio-swing (color values between 16-240), if you need full-swing (color values between 0-255)
 that must be set by selecting AUTOMATIC_PC. AUTOMATIC and AUTOMATIC_PC are also incapable of determining if the
@@ -207,4 +228,4 @@ Fetches a rendered frame of subtitles to a canvas.
 | [contextType] | <code>string</code> | the context type to use (must be one of "bitmap" or "2d"), defaults to "bitmap" unless unsupported by the browser, in which case "2d" is the default. |
 
 
-&copy; 2012-2023 Patrick "ILOVEPIE" Rhodes Martin.
+&copy; 2012-2024 Patrick "ILOVEPIE" Rhodes Martin.
