@@ -6,7 +6,7 @@ RESULT_NEW=0
 RESULT_CODE=0
 LOG_FILE="$PROJECT_ROOT/packaging.log"
 rm -f $LOG_FILE
-echo "Creating NPM Package..." | tee -a $LOG_FILE
+printf '%s\n' "Creating NPM Package..." | tee -a $LOG_FILE
 rm -rf "$TEMP_DIR/sabre"
 RESULT_NEW=$?
 if [ $RESULT_CODE -ne 0 ]; then
@@ -47,5 +47,5 @@ RESULT_NEW=$?
 if [ $RESULT_CODE -ne 0 ]; then
     RESULT_CODE=$RESULT_NEW
 fi
-echo "Finished creating NPM Package..." | tee -a $LOG_FILE
+printf '%s\n' "Finished creating NPM Package..." | tee -a $LOG_FILE
 exit $RESULT_CODE 
