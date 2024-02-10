@@ -19,7 +19,7 @@ if [ "$1" = "test" ]; then
     fi
     for MODIFICATION_PAIR in $(cat "$TOOL_DATA_DIR/changes.cfg")
     do
-        set -- `echo $MODIFICATION_PAIR | tr '=' ' '`
+        set -- `printf '%s\n' $MODIFICATION_PAIR | tr '=' ' '`
         if [ "$1" = "/COUNT" ]; then
             if [ "$2" -ne "$FILE_COUNT" ]; then
                 exit 0
@@ -32,15 +32,15 @@ if [ "$1" = "test" ]; then
     exit 0
 elif [ "$1" = "init" ]; then
     FILES_TO_SCAN="$2"
-    FILE_COUNT=$(echo "$FILES_TO_SCAN" | wc -l | awk '{$1=$1};1')
+    FILE_COUNT=$(printf '%s\n' "$FILES_TO_SCAN" | wc -l | awk '{$1=$1};1')
     rm -f "$TOOL_DATA_DIR/changes.cfg"
     touch "$TOOL_DATA_DIR/changes.cfg"
     TEMPVAR_1="$PWD"
     cd "$PROJECT_SOURCE_DIR"
-    echo "/COUNT=$FILE_COUNT" >> "$TOOL_DATA_DIR/changes.cfg"
+    printf '%s\n' "/COUNT=$FILE_COUNT" >> "$TOOL_DATA_DIR/changes.cfg"
     for f in $FILES_TO_SCAN
     do
-        echo "$f=$(stat $FORMAT_OPTION $FORMAT_TYPE $f)" >> "$TOOL_DATA_DIR/changes.cfg"
+        printf '%s\n' "$f=$(stat $FORMAT_OPTION $FORMAT_TYPE $f)" >> "$TOOL_DATA_DIR/changes.cfg"
     done
     cd "$TEMPVAR_1"
     unset TEMPVAR_1

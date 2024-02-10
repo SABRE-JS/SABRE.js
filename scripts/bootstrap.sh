@@ -34,26 +34,26 @@ if [ "$NIX_TYPE" = "bsd" ]; then
     if [ "$NIX_SUBTYPE" = "darwin" ]; then
         which brew > /dev/null 2>&1
         if [ $? -ne 0 ]; then
-            echo "Please install the Homebrew package manager." >&2
+            printf '%s\n' "Please install the Homebrew package manager." >&2
             exit 1
         fi
         which gsed > /dev/null 2>&1
         if [ $? -ne 0 ]; then
-            echo "Installing GNU sed..."
+            printf '%s\n' "Installing GNU sed..."
             brew install gsed
         fi
         alias sed="gsed"
     elif [ "$NIX_SUBTYPE" = "bsd" ]; then
         which gsed > /dev/null 2>&1
         if [ $? -ne 0 ]; then
-            echo "Installing GNU sed..."
+            printf '%s\n' "Installing GNU sed..."
             pkg install gsed
         fi
         alias sed="gsed"
     else
         which gsed > /dev/null 2>&1
         if [ $? -ne 0 ]; then
-            echo "Please install GNU sed." >&2
+            printf '%s\n' "Please install GNU sed." >&2
             exit 1
         fi
         alias sed="gsed"

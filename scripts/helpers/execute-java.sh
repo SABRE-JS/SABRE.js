@@ -29,14 +29,14 @@ elif [ ! -x "$(command -v java)" -a -x "$(command -v mono)" ]; then
     mv -f ./ikvm "$TOOL_BIN_DIR/ikvm_files"
     cd "$TEMPVAR_1"
     unset TEMPVAR_1
-    echo "#!/bin/sh" > "$TOOL_BIN_DIR/ikvm"
-    echo "mono --gc=sgen \"\$(dirname \"\$(readlink -f \"\$0\")\")/ikvm_files/bin/ikvm.exe\" \$@" >> "$TOOL_BIN_DIR/ikvm"
+    printf '%s\n' "#!/bin/sh" > "$TOOL_BIN_DIR/ikvm"
+    printf '%s\n' "mono --gc=sgen \"\$(dirname \"\$(readlink -f \"\$0\")\")/ikvm_files/bin/ikvm.exe\" \$@" >> "$TOOL_BIN_DIR/ikvm"
     chmod +x "$TOOL_BIN_DIR/ikvm"
 elif ! [ -x "$(command -v java)" ]; then
-    echo "JVM not present and mono-runtime is not installed, please install one or the other."
+    printf '%s\n' "JVM not present and mono-runtime is not installed, please install one or the other."
     exit 3
 fi
-#echo "Compile Command: \"$USED_JVM $JVM_SETTINGS $@\""
+#printf '%s\n' "Compile Command: \"$USED_JVM $JVM_SETTINGS $@\""
 eval "$USED_JVM $JVM_SETTINGS $@"
 RESULT_CODE=$?
 

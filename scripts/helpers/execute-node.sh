@@ -4,7 +4,7 @@
 
 if [ ! -d "$TOOL_BIN_DIR/node_tools" ]; then 
     mkdir "$TOOL_BIN_DIR/node_tools" > /dev/null 2>&1
-    echo $NPM_PACKAGES | xargs npm install --prefix "$TOOL_BIN_DIR/node_tools" --save-dev --save-exact
+    printf '%s\n' $NPM_PACKAGES | xargs npm install --prefix "$TOOL_BIN_DIR/node_tools" --save-dev --save-exact
 fi
 
 NODE_TOOLS_BINDIR="$TOOL_BIN_DIR/node_tools/node_modules/.bin"
