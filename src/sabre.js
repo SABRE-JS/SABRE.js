@@ -166,6 +166,7 @@ if (typeof require !== "function") {
 
     /**
      * returns the root directory for included ecmascript files.
+     * @private
      * @return {string} the path.
      */
     sabre["getScriptPath"] = function getScriptPath () {
@@ -187,6 +188,7 @@ if (typeof require !== "function") {
     require("./renderer-main.min.js");
     /**
      * returns the root directory for included ecmascript files.
+     * @private
      * @return {string} the path.
      */
     sabre["getScriptPath"] = function getScriptPath () {

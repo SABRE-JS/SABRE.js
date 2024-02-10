@@ -1,4 +1,4 @@
-![SABRE.js](sabre.svg)
+<span style="text-align:center; width:100%; display: inline-block;">![SABRE.js](sabre.svg)</span>
 # SABRE.js: Substation Alpha suBtitles REnderer
 A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer. 
 
@@ -35,6 +35,9 @@ To view the gallery click [here](/gallery/gallery.md) if you're using a decent b
 * test/ -- Directory used when running the debug server. 
 
 ### Documentation
+
+Note: Version 2.0.0 of opentype.js is not yet released, in order to use this library currently you must build opentype.js from source.
+
 How to include the library (from the jsdelivr CDN, this cdn is recommended as they publish usage statistics for each package):
 ```html
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@^2.0.0/dist/opentype.min.js"></script>
@@ -52,9 +55,9 @@ Example:
 ```js
 let renderer;
 let fonts = [];
-// Load the contents of the subtitle file into subs.
-fetchSubtitles("subtitles.ass", (subs) => {
-    // Load the fonts using opentype.js and put them in the fonts array.
+// Load the contents of the subtitle file.
+fetch("subtitles.ass").then((response) => response.text()).then((subs) => {
+    // Load the fonts using opentype.js and put them in the fonts array. (this function also returns a promise)
     opentype.load("arial.ttf", (font) => {
         fonts.push(font);
         // Initialize the renderer
@@ -74,9 +77,9 @@ or you can initialize using the return value's functions as shown below:
 ```js
 let renderer;
 let fonts = [];
-// Load the contents of the subtitle file into subs.
-fetchSubtitles("subtitles.ass", (subs) => {
-    // Load the fonts using opentype.js and put them in the fonts array.
+// Load the contents of the subtitle file.
+fetch("subtitles.ass").then((response) => response.text()).then((subs) => {
+    // Load the fonts using opentype.js and put them in the fonts array. (this function also returns a promise)
     opentype.load("arial.ttf", (font) => {
         fonts.push(font);
         // Initialize the renderer
