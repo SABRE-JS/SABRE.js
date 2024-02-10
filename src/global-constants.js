@@ -142,6 +142,7 @@ external["VideoColorSpaces"] = sabre.totalObjectFreeze({
     "SMPTE240M_PC": sabre["ColorSpaces"]["SMPTE240M_PC"],
     "FCC_TV": sabre["ColorSpaces"]["FCC_TV"],
     "FCC_PC": sabre["ColorSpaces"]["FCC_PC"]
+     //Skip 36 as it is Display-P3 which video can't use.
 });
 
 /**

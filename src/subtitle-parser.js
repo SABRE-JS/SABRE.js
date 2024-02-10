@@ -1390,6 +1390,7 @@ external["SABRERenderer"] = function SABRERenderer (parseFont,options) {
          * @param {number} colorSpace the colorspace to use for output.
          * @param {number=} width the x component of the video's resolution in regular pixels (only required when colorSpace is AUTOMATIC).
          * @param {number=} height the y component of the video's resolution in regular pixels (only required when colorSpace is AUTOMATIC).
+         * @return {void}
          */
         "setColorSpace": function setColorSpace (colorSpace,width,height){
             if(colorSpace === external.VideoColorSpaces.AUTOMATIC){
