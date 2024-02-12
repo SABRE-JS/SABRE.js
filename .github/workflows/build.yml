@@ -1,0 +1,98 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+      - stable
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: '21'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4.0.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Get next version
+        uses: reecetech/version-increment@2023.10.2
+        id: version
+        with:
+          scheme: semver
+          release_branch: stable
+          increment: patch
+
+      - name: Tag Commit
+        if: github.ref == 'refs/heads/stable'
+        uses: CrabMatrix/github-tagger@v1.0.16
+        with:
+          tag: ${{ steps.version.outputs.version }}
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Build package
+        run: |
+          echo "Building package"
+          make pkg
+
+      - name: Update package version
+        run: |
+          echo "Updating package version to ${{ steps.version.outputs.version }}"
+          sed -i "s/\"version\": \".*\"/\"version\": \"${{ steps.version.outputs.version }}\"/" temp_files/sabre/package.json
+
+      - name: Publish package
+        run: |
+          echo "Publishing package"
+          pushd temp_files/sabre && npm config set _authToken=$NODE_AUTH_TOKEN && npm config fix && npm publish && popd
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+
+      - name: Create release
+        if: github.ref == 'refs/heads/stable'
+        id: create_release
+        uses: release-drafter/release-drafter@v6.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-file: .github/release-drafter.yml
+          tag: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          version: ${{ steps.version.outputs.version }}
+
+      - name: Zip Release
+        if: github.ref == 'refs/heads/stable'
+        run: zip -r -9 SABRE,js-${{ steps.version.outputs.version }}.zip ./bin ./debugbin ./LICENSE.md
+      
+      - name: Upload Release
+        if: github.ref == 'refs/heads/stable'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./SABRE,js-${{ steps.version.outputs.version }}.zip
+          asset_name: SABRE,js-${{ steps.version.outputs.version }}.zip
+          asset_content_type: application/zip
+
+      - name: Publish Release
+        if: github.ref == 'refs/heads/stable'
+        uses: eregon/publish-release@v1.0.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}
+
+
+
+            
+      

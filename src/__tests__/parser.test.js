@@ -1,6 +1,6 @@
 global = globalThis;
-require('../global-constants.js')
 require('../util.js')
+require('../global-constants.js')
 require('../color.js');
 require('../style.js');
 require('../style-override.js');
