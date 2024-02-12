@@ -13,18 +13,18 @@
  * @private
  * @enum {number}
  */
-const platforms = Object.freeze({
+const platforms = {
     UNICODE: 0,
     APPLE: 1,
     MICROSOFT: 3
-});
+};
 
 /**
  * An enum of name types.
  * @private
  * @enum {number}
  */
-const nameTypes = Object.freeze({
+const nameTypes = {
     COPYRIGHT: 0,
     FONT_FAMILY: 1,
     FONT_SUBFAMILY: 2,
@@ -33,7 +33,7 @@ const nameTypes = Object.freeze({
     VERSION_STRING: 5,
     PS_NAME: 6,
     TRADEMARK: 7
-});
+};
 
 const font_server_prototype = Object.create(Object, {
     _fonts: {

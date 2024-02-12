@@ -1,6 +1,6 @@
 {
     "name": "@sabre-js/sabre",
-    "version": "0.2.0-git",
+    "version": "git",
     "description": "A gpu accelerated ecmascript renderer for Advanced Substation Alpha (ASS) subtitles. Renders .ass and .ssa files over video in the browser.",
     "main": "dist/sabre.min.js",
     "types": "types/sabre.d.ts",
