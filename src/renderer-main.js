@@ -150,6 +150,24 @@ const renderer_prototype = global.Object.create(Object, {
         writable: true
     },
 
+    _outputCanvasCounter: {
+        /** @type {number} */
+        value: global.Number.MIN_SAFE_INTEGER,
+        writable: true
+    },
+
+    _outputCanvasContexts: {
+        /** @type {Object<string,CanvasRenderingContext2D|ImageBitmapRenderingContext>} */
+        value: null,
+        writable: true
+    },
+
+    _lastImageBitmap: {
+        /** @type {?ImageBitmap} */
+        value: null,
+        writable: true
+    },
+
     //BEGIN WEBGL VARIABLES
 
     _renderData: {
@@ -649,7 +667,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {number} the factor
          */
         value: function _calcGaussianBlur (time, style, overrides) {
-            const blurConstant = 1; //1.17741002251547469;
+            const blurConstant = 1;//1.17741002251547469;
             let transitionOverrides = overrides.getTransitions();
             let factor = overrides.getGaussianEdgeBlur() ?? 0;
             for (let i = 0; i < transitionOverrides.length; i++)
@@ -2434,6 +2452,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
             this._gaussEdgeBlurPass1Shader.addOption("u_texture", 0, "1i");
             this._gaussEdgeBlurPass1Shader.addOption("u_sigma", 0, "1f");
+            this._gaussEdgeBlurPass1Shader.addOption("u_width", 0, "1f");
 
             this._gaussEdgeBlurPass2Shader = new sabre.Shader();
             this._gaussEdgeBlurPass2Shader.load(
@@ -2449,6 +2468,7 @@ const renderer_prototype = global.Object.create(Object, {
             );
             this._gaussEdgeBlurPass2Shader.addOption("u_texture", 0, "1i");
             this._gaussEdgeBlurPass2Shader.addOption("u_sigma", 0, "1f");
+            this._gaussEdgeBlurPass2Shader.addOption("u_width", 0, "1f");
 
             this._clipShader = new sabre.Shader();
             this._clipShader.load(
@@ -4107,97 +4127,6 @@ const renderer_prototype = global.Object.create(Object, {
                 let sourceTexture = this._fbTextureA;
                 let swap;
                 if (blurInfo !== null) {
-                    if (blurInfo.blur > 0) {
-                        this._convEdgeBlurShader.updateOption(
-                            "u_resolution_x",
-                            this._compositingCanvas.width
-                        );
-                        this._convEdgeBlurShader.updateOption(
-                            "u_resolution_y",
-                            this._compositingCanvas.height
-                        );
-                        this._convEdgeBlurShader.updateOption("u_texture", 0);
-                        this._convEdgeBlurShader.bindShader(this._gl);
-                        //Draw framebuffer to destination
-
-                        for (let i = 0; i < blurInfo.blur - 1; i++) {
-                            this._gl.bindFramebuffer(
-                                this._gl.FRAMEBUFFER,
-                                backFramebuffer
-                            );
-                            this._gl.clear(
-                                this._gl.DEPTH_BUFFER_BIT |
-                                    this._gl.COLOR_BUFFER_BIT
-                            );
-                            this._gl.activeTexture(this._gl.TEXTURE0);
-                            this._gl.bindTexture(
-                                this._gl.TEXTURE_2D,
-                                sourceTexture
-                            );
-                            this._gl.bindBuffer(
-                                this._gl.ARRAY_BUFFER,
-                                this._fullscreenPositioningBuffer
-                            );
-                            this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
-                            swap = backTexture;
-                            backTexture = sourceTexture;
-                            sourceTexture = swap;
-                            swap = backFramebuffer;
-                            backFramebuffer = sourceFramebuffer;
-                            sourceFramebuffer = swap;
-                        }
-                        if (blurInfo.gaussBlur > 0 || clip_coords !== null) {
-                            this._gl.bindFramebuffer(
-                                this._gl.FRAMEBUFFER,
-                                backFramebuffer
-                            );
-                            this._gl.clear(
-                                this._gl.DEPTH_BUFFER_BIT |
-                                    this._gl.COLOR_BUFFER_BIT
-                            );
-                        } else {
-                            this._gl.bindFramebuffer(
-                                this._gl.FRAMEBUFFER,
-                                null
-                            );
-                        }
-
-                        this._gl.activeTexture(this._gl.TEXTURE0);
-                        this._gl.bindTexture(
-                            this._gl.TEXTURE_2D,
-                            sourceTexture
-                        );
-
-                        {
-                            let positionAttrib =
-                                this._convEdgeBlurShader.getAttribute(
-                                    this._gl,
-                                    "a_position"
-                                );
-                            this._gl.bindBuffer(
-                                this._gl.ARRAY_BUFFER,
-                                this._fullscreenPositioningBuffer
-                            );
-                            this._gl.enableVertexAttribArray(positionAttrib);
-                            this._gl.vertexAttribPointer(
-                                positionAttrib,
-                                3,
-                                this._gl.FLOAT,
-                                false,
-                                0,
-                                0
-                            );
-                            this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
-                        }
-
-                        swap = backTexture;
-                        backTexture = sourceTexture;
-                        sourceTexture = swap;
-                        swap = backFramebuffer;
-                        backFramebuffer = sourceFramebuffer;
-                        sourceFramebuffer = swap;
-                    }
-
                     if (blurInfo.gaussBlur > 0) {
                         this._gl.bindFramebuffer(
                             this._gl.FRAMEBUFFER,
@@ -4212,6 +4141,8 @@ const renderer_prototype = global.Object.create(Object, {
                             this._gl.TEXTURE_2D,
                             sourceTexture
                         );
+                        let gausswidth = (blurInfo.gaussBlur * 3.0 + 0.5) | 1;
+                        if(gausswidth < 3) gausswidth = 3;
                         //Apply gaussian filter 1
                         this._gaussEdgeBlurPass1Shader.updateOption(
                             "u_resolution_x",
@@ -4220,6 +4151,10 @@ const renderer_prototype = global.Object.create(Object, {
                         this._gaussEdgeBlurPass1Shader.updateOption(
                             "u_sigma",
                             blurInfo.gaussBlur
+                        );
+                        this._gaussEdgeBlurPass1Shader.updateOption(
+                            "u_width",
+                            gausswidth
                         );
                         this._gaussEdgeBlurPass1Shader.updateOption(
                             "u_texture",
@@ -4256,7 +4191,7 @@ const renderer_prototype = global.Object.create(Object, {
                         backFramebuffer = sourceFramebuffer;
                         sourceFramebuffer = swap;
 
-                        if (clip_coords !== null) {
+                        if (blurInfo.blur > 0 || clip_coords !== null) {
                             this._gl.bindFramebuffer(
                                 this._gl.FRAMEBUFFER,
                                 backFramebuffer
@@ -4285,6 +4220,10 @@ const renderer_prototype = global.Object.create(Object, {
                             blurInfo.gaussBlur
                         );
                         this._gaussEdgeBlurPass2Shader.updateOption(
+                            "u_width",
+                            gausswidth
+                        );
+                        this._gaussEdgeBlurPass2Shader.updateOption(
                             "u_texture",
                             0
                         );
@@ -4292,7 +4231,7 @@ const renderer_prototype = global.Object.create(Object, {
                         //Draw framebuffer Y to screen
                         {
                             let positionAttrib =
-                                this._gaussEdgeBlurPass1Shader.getAttribute(
+                                this._gaussEdgeBlurPass2Shader.getAttribute(
                                     this._gl,
                                     "a_position"
                                 );
@@ -4312,6 +4251,97 @@ const renderer_prototype = global.Object.create(Object, {
                             this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
                         }
 
+                        swap = backTexture;
+                        backTexture = sourceTexture;
+                        sourceTexture = swap;
+                        swap = backFramebuffer;
+                        backFramebuffer = sourceFramebuffer;
+                        sourceFramebuffer = swap;
+                    }
+
+                    if (blurInfo.blur > 0) {
+                        this._convEdgeBlurShader.updateOption(
+                            "u_resolution_x",
+                            this._compositingCanvas.width
+                        );
+                        this._convEdgeBlurShader.updateOption(
+                            "u_resolution_y",
+                            this._compositingCanvas.height
+                        );
+                        this._convEdgeBlurShader.updateOption("u_texture", 0);
+                        this._convEdgeBlurShader.bindShader(this._gl);
+                        //Draw framebuffer to destination
+    
+                        for (let i = 0; i < blurInfo.blur - 1; i++) {
+                            this._gl.bindFramebuffer(
+                                this._gl.FRAMEBUFFER,
+                                backFramebuffer
+                            );
+                            this._gl.clear(
+                                this._gl.DEPTH_BUFFER_BIT |
+                                    this._gl.COLOR_BUFFER_BIT
+                            );
+                            this._gl.activeTexture(this._gl.TEXTURE0);
+                            this._gl.bindTexture(
+                                this._gl.TEXTURE_2D,
+                                sourceTexture
+                            );
+                            this._gl.bindBuffer(
+                                this._gl.ARRAY_BUFFER,
+                                this._fullscreenPositioningBuffer
+                            );
+                            this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                            swap = backTexture;
+                            backTexture = sourceTexture;
+                            sourceTexture = swap;
+                            swap = backFramebuffer;
+                            backFramebuffer = sourceFramebuffer;
+                            sourceFramebuffer = swap;
+                        }
+                        if (clip_coords !== null) {
+                            this._gl.bindFramebuffer(
+                                this._gl.FRAMEBUFFER,
+                                backFramebuffer
+                            );
+                            this._gl.clear(
+                                this._gl.DEPTH_BUFFER_BIT |
+                                    this._gl.COLOR_BUFFER_BIT
+                            );
+                        } else {
+                            this._gl.bindFramebuffer(
+                                this._gl.FRAMEBUFFER,
+                                null
+                            );
+                        }
+    
+                        this._gl.activeTexture(this._gl.TEXTURE0);
+                        this._gl.bindTexture(
+                            this._gl.TEXTURE_2D,
+                            sourceTexture
+                        );
+    
+                        {
+                            let positionAttrib =
+                                this._convEdgeBlurShader.getAttribute(
+                                    this._gl,
+                                    "a_position"
+                                );
+                            this._gl.bindBuffer(
+                                this._gl.ARRAY_BUFFER,
+                                this._fullscreenPositioningBuffer
+                            );
+                            this._gl.enableVertexAttribArray(positionAttrib);
+                            this._gl.vertexAttribPointer(
+                                positionAttrib,
+                                3,
+                                this._gl.FLOAT,
+                                false,
+                                0,
+                                0
+                            );
+                            this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+                        }
+    
                         swap = backTexture;
                         backTexture = sourceTexture;
                         sourceTexture = swap;
@@ -4478,6 +4508,7 @@ const renderer_prototype = global.Object.create(Object, {
                     */
                 }
             }else{
+                console.info("Color space support is not available for canvas, falling back to sRGB.");
                 this._nativeColorSpace = sabre.NativeColorSpaces.RGB;
             }
 
@@ -4650,6 +4681,11 @@ const renderer_prototype = global.Object.create(Object, {
                 this._lastAnimating = true;
             }
 
+            if(this._lastImageBitmap !== null) {
+                this._lastImageBitmap.close();
+                this._lastImageBitmap = null;
+            }
+
             this._gl.clear(
                 this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
             );
@@ -4773,6 +4809,27 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    
+
+    _getOutputCanvasContext: {
+        /**
+         * Get a canvas context for the output canvas.
+         * @param {HTMLCanvasElement|OffscreenCanvas} canvas the canvas to get the context for.
+         * @param {string} type the type of context to get.
+         * @return {CanvasRenderingContext2D|ImageBitmapRenderingContext} the context.
+         */
+        value: function _getOutputCanvasContext (canvas, type) {
+            this._outputCanvasContexts = this._outputCanvasContexts ?? {};
+            if(typeof(canvas._sabreID) === "undefined"){
+                canvas._sabreID = (this._outputCanvasCounter++)+"";
+                return this._outputCanvasContexts[canvas._sabreID] = canvas.getContext(type);
+            }else{
+                return this._outputCanvasContexts[canvas._sabreID];
+            }
+        },
+        writable: false
+    },
+
     "getDisplayBitmap": {
         /**
          * Get an ImageBitmap containing the frame or null if ImageBitmap is unsupported.
@@ -4781,7 +4838,7 @@ const renderer_prototype = global.Object.create(Object, {
         value: function getDisplayBitmap () {
             if (!isImageBitmapSupported) return null;
             if (this._compositingCanvas instanceof global.OffscreenCanvas) {
-                return this._compositingCanvas.transferToImageBitmap();
+                return /** @type {ImageBitmap} */ (global.structuredClone(this._lastImageBitmap = this._lastImageBitmap ?? this._compositingCanvas.transferToImageBitmap()));
             } else return null;
         },
         writable: false
@@ -4797,12 +4854,13 @@ const renderer_prototype = global.Object.create(Object, {
         value: function copyToCanvas (canvas, bitmap) {
             let context;
             if (bitmap) {
-                context = canvas.getContext("bitmaprenderer");
-                context.transferFromImageBitmap(this["getDisplayBitmap"]());
+                const bmp = this["getDisplayBitmap"]();
+                context = this._getOutputCanvasContext(canvas,"bitmaprenderer");
+                context.transferFromImageBitmap(bmp);
             } else {
                 let width = canvas.width | 0;
                 let height = canvas.height | 0;
-                context = canvas.getContext("2d");
+                context = this._getOutputCanvasContext(canvas,"2d");
                 context.clearRect(0, 0, width, height);
                 context.drawImage(this._compositingCanvas, 0, 0, width, height);
             }
