@@ -686,6 +686,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             path.draw(this._ctx);
             if (stroke) {
                 this._ctx.stroke();
+                //this._ctx.fill();
             } else {
                 this._ctx.fill();
             }

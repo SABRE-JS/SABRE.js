@@ -166,7 +166,7 @@ const ShaderPrototype = Object.create(Object, {
                     global.localStorage.setItem(storageNameVertex, response);
                     global.localStorage.setItem(
                         storageNameVertexTime,
-                        (expire * 86400000 + global.Date.now()).toString(16)
+                        (Math.trunc(expire * 86400000 + global.Date.now())).toString(16)
                     );
                     shaderlog[vertexUrl] = response;
                     this.vertSrc = response;
@@ -194,7 +194,7 @@ const ShaderPrototype = Object.create(Object, {
                     global.localStorage.setItem(storageNameFragment, response);
                     global.localStorage.setItem(
                         storageNameVertexTime,
-                        (expire * 86400000 + global.Date.now()).toString(16)
+                        (Math.trunc(expire * 86400000 + global.Date.now())).toString(16)
                     );
                     shaderlog[fragmentUrl] = response;
                     this.fragSrc = response;
@@ -469,7 +469,7 @@ const ShaderPrototype = Object.create(Object, {
                 } catch (e) {
                     console.warn("Error deleting fragment shader.");
                 }
-                err();
+                if(err) err();
                 return;
             }
         },

@@ -5,7 +5,6 @@ uniform float u_sigma;
 uniform float u_width;
 uniform float u_resolution_x;
 
-
 float normpdf(float n,float sigma)
 {
     return 0.39894*exp(-0.5*n*n/(sigma*sigma))/sigma;
