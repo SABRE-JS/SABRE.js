@@ -528,6 +528,32 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
+    _matrixMultiply4x4WithArray: {
+        /**
+         * Multiply a 4x4 matrix with an array.
+         * @private
+         * @param {Matrix4x4} a the matrix
+         * @param {Array<number>} b the array
+         * @param {boolean=} scale should we scale the result?
+         * @return {Array<number>} the resulting array.
+         */
+        value: function _matrixMultiply4x4WithArray (a, b, scale) {
+            let result = [];
+            result[0] = a.m00 * b[0] + a.m01 * b[1] + a.m02 * b[2] + a.m03 * b[3];
+            result[1] = a.m10 * b[0] + a.m11 * b[1] + a.m12 * b[2] + a.m13 * b[3];
+            result[2] = a.m20 * b[0] + a.m21 * b[1] + a.m22 * b[2] + a.m23 * b[3];
+            result[3] = a.m30 * b[0] + a.m31 * b[1] + a.m32 * b[2] + a.m33 * b[3];
+            if(scale??true){
+                result[0] /= result[3];
+                result[1] /= result[3];
+                result[2] /= result[3];
+                result[3] = 1;
+            }
+            return result;
+        },
+        writable: false
+    },
+
     _matrixMultiply4x4: {
         /**
          * Matrix multiplication for 4x4 matrix.
@@ -2171,72 +2197,6 @@ const renderer_prototype = global.Object.create(Object, {
                 1
             );
             this._positioningShader.compile(this._gl);
-            this._positioningShader.addOption("u_aspectscale", [1, 1], "2f");
-            const pre_rotation_matrix = this._getFloat32Array(
-                "pre_rotation_matrix",
-                16
-            );
-            pre_rotation_matrix.set(
-                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-                0
-            );
-            this._positioningShader.addOption(
-                "u_pre_rotation_matrix",
-                pre_rotation_matrix,
-                "Matrix4fv"
-            );
-            const rotation_matrix_x = this._getFloat32Array(
-                "rotation_matrix_x",
-                16
-            );
-            rotation_matrix_x.set(
-                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-                0
-            );
-            this._positioningShader.addOption(
-                "u_rotation_matrix_x",
-                rotation_matrix_x,
-                "Matrix4fv"
-            );
-            const rotation_matrix_y = this._getFloat32Array(
-                "rotation_matrix_y",
-                16
-            );
-            rotation_matrix_y.set(
-                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-                0
-            );
-            this._positioningShader.addOption(
-                "u_rotation_matrix_y",
-                rotation_matrix_y,
-                "Matrix4fv"
-            );
-            const rotation_matrix_z = this._getFloat32Array(
-                "rotation_matrix_z",
-                16
-            );
-            rotation_matrix_z.set(
-                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-                0
-            );
-            this._positioningShader.addOption(
-                "u_rotation_matrix_z",
-                rotation_matrix_z,
-                "Matrix4fv"
-            );
-            const post_rotation_matrix = this._getFloat32Array(
-                "post_rotation_matrix",
-                16
-            );
-            post_rotation_matrix.set(
-                [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-                0
-            );
-            this._positioningShader.addOption(
-                "u_post_rotation_matrix",
-                post_rotation_matrix,
-                "Matrix4fv"
-            );
             this._positioningShader.addOption("u_texture", 0, "1i");
             this._positioningShader.addOption("u_mask", 1, "1i");
             this._positioningShader.addOption("u_hasmask", 0, "1i");
@@ -2559,7 +2519,7 @@ const renderer_prototype = global.Object.create(Object, {
         writable: false
     },
 
-    _calcPositioningMatrices: {
+    _calcPositioningMatrix: {
         /**
          * Calculates the matrix used to position the subtitle
          * @private
@@ -2568,9 +2528,9 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {CollisionInfo} position the collision and positiong info of the event.
          * @param {SSASubtitleEvent} event the event we're working on.
          * @param {?GlyphCacheInfo} cachedGlyphInfo the info for the cached glyph.
-         * @return {Array<Matrix4x4>} the resulting matrix.
+         * @return {Matrix4x4} the resulting matrix.
          */
-        value: function _calcPositioningMatrices (time, source, position, event, cachedGlyphInfo) {
+        value: function _calcPositioningMatrix (time, source, position, event, cachedGlyphInfo) {
             const toRad = Math.PI / 180;
 
             let rotation = this._calcRotation(
@@ -2750,13 +2710,19 @@ const renderer_prototype = global.Object.create(Object, {
                 );
             }
 
-            return [
-                preRotationMatrix,
-                rotationMatrixX,
-                rotationMatrixY,
-                rotationMatrixZ,
-                postRotationMatrix
-            ];
+            return this._matrixMultiply4x4(
+                postRotationMatrix,
+                this._matrixMultiply4x4(
+                    rotationMatrixZ,
+                    this._matrixMultiply4x4(
+                        rotationMatrixY,
+                        this._matrixMultiply4x4(
+                            rotationMatrixX,
+                            preRotationMatrix
+                        )
+                    )
+                )
+            );
         },
         writable: false
     },
@@ -2941,25 +2907,25 @@ const renderer_prototype = global.Object.create(Object, {
             let minY = Math.min(clip[1], clip[3]);
             let maxX = Math.max(clip[0], clip[2]);
             let maxY = Math.max(clip[1], clip[3]);
-            let upperLeft = {
-                m00: minX,
-                m01: this._config.renderer["resolution_y"] - minY
-            };
+            let upperLeft = [
+                minX,
+                this._config.renderer["resolution_y"] - minY
+            ];
 
-            let lowerLeft = {
-                m00: minX,
-                m01: this._config.renderer["resolution_y"] - maxY
-            };
+            let lowerLeft = [
+                minX,
+                this._config.renderer["resolution_y"] - maxY
+            ];
 
-            let upperRight = {
-                m00: maxX,
-                m01: this._config.renderer["resolution_y"] - minY
-            };
+            let upperRight = [
+                maxX,
+                this._config.renderer["resolution_y"] - minY
+            ];
 
-            let lowerRight = {
-                m00: maxX,
-                m01: this._config.renderer["resolution_y"] - maxY
-            };
+            let lowerRight = [
+                maxX,
+                this._config.renderer["resolution_y"] - maxY
+            ];
 
             if (!inverse) {
                 const rectangular_clip_coords = this._getFloat32Array(
@@ -2968,12 +2934,12 @@ const renderer_prototype = global.Object.create(Object, {
                 );
                 // prettier-ignore
                 rectangular_clip_coords.set([
-                    upperLeft.m00,  upperLeft.m01, 
-                    upperRight.m00, upperRight.m01,
-                    lowerLeft.m00,  lowerLeft.m01, 
-                    lowerLeft.m00,  lowerLeft.m01, 
-                    upperRight.m00, upperRight.m01,
-                    lowerRight.m00, lowerRight.m01,
+                    upperLeft[0],  upperLeft[1], 
+                    upperRight[0], upperRight[1],
+                    lowerLeft[0],  lowerLeft[1], 
+                    lowerLeft[0],  lowerLeft[1], 
+                    upperRight[0], upperRight[1],
+                    lowerRight[0], lowerRight[1],
                 ],0);
                 return rectangular_clip_coords;
             } else {
@@ -2989,12 +2955,12 @@ const renderer_prototype = global.Object.create(Object, {
                     this._config.renderer["resolution_x"],  this._config.renderer["resolution_y"],
                     0,                                      this._config.renderer["resolution_y"],
                     0,                                      0,                                    
-                    upperLeft.m00,                          upperLeft.m01, 
-                    upperRight.m00,                         upperRight.m01,
-                    lowerLeft.m00,                          lowerLeft.m01, 
-                    lowerLeft.m00,                          lowerLeft.m01, 
-                    upperRight.m00,                         upperRight.m01,
-                    lowerRight.m00,                         lowerRight.m01,
+                    upperLeft[0],                          upperLeft[1], 
+                    upperRight[0],                         upperRight[1],
+                    lowerLeft[0],                          lowerLeft[1], 
+                    lowerLeft[0],                          lowerLeft[1], 
+                    upperRight[0],                         upperRight[1],
+                    lowerRight[0],                         lowerRight[1],
                 ],0);
                 return rectangular_clip_coords_inverse;
             }
@@ -3325,6 +3291,7 @@ const renderer_prototype = global.Object.create(Object, {
             let source = !isShape ? this._textRenderer : this._shapeRenderer;
 
             let clip_coords = null;
+            let blurBoundsInfo = {};
             {
                 let line_overrides = currentEvent.getLineOverrides();
                 let line_transition_overrides =
@@ -3455,7 +3422,8 @@ const renderer_prototype = global.Object.create(Object, {
             let xScale = 2 / this._config.renderer["resolution_x"];
             let yScale = 2 / this._config.renderer["resolution_y"];
 
-            let positioningMatrices = this._calcPositioningMatrices(
+
+            const positioningMatrix = this._calcPositioningMatrix(
                 time,
                 source,
                 position,
@@ -3470,44 +3438,81 @@ const renderer_prototype = global.Object.create(Object, {
             {
                 let dimensions = (cachedGlyphInfo ? cachedGlyphInfo.dimensions : source.getDimensions());
 
-                upperLeft = {
-                    m00: 0,
-                    m10: 0,
-                    m20: 0,
-                    m30: 1
-                };
+                upperLeft = [
+                    0,
+                    0,
+                    0,
+                    1
+                ];
 
-                lowerLeft = {
-                    m00: 0,
-                    m10: -dimensions[1],
-                    m20: 0,
-                    m30: 1
-                };
+                lowerLeft = [
+                    0,
+                    -dimensions[1],
+                    0,
+                    1
+                ];
 
-                upperRight = {
-                    m00: dimensions[0],
-                    m10: 0,
-                    m20: 0,
-                    m30: 1
-                };
+                upperRight = [
+                    dimensions[0],
+                    0,
+                    0,
+                    1
+                ];
 
-                lowerRight = {
-                    m00: dimensions[0],
-                    m10: -dimensions[1],
-                    m20: 0,
-                    m30: 1
-                };
+                lowerRight = [
+                    dimensions[0],
+                    -dimensions[1],
+                    0,
+                    1
+                ];
+
+                upperLeft = this._matrixMultiply4x4WithArray(positioningMatrix,upperLeft);
+                upperRight = this._matrixMultiply4x4WithArray(positioningMatrix,upperRight);
+                lowerLeft = this._matrixMultiply4x4WithArray(positioningMatrix,lowerLeft);
+                lowerRight = this._matrixMultiply4x4WithArray(positioningMatrix,lowerRight);
             }
+
+            if(blurInfo !== null && blurInfo.gaussBlur > 0){
+                blurBoundsInfo.upperLeft = upperLeft.slice();
+                blurBoundsInfo.upperRight = upperRight.slice();
+                blurBoundsInfo.lowerRight = lowerRight.slice();
+                blurBoundsInfo.lowerLeft = lowerLeft.slice();
+                blurBoundsInfo.xScale = xScale;
+                blurBoundsInfo.yScale = yScale;
+            }
+
+            {
+                const zScale = Math.min(xScale,yScale);
+                upperLeft[0] *= xScale;
+                upperLeft[1] *= yScale;
+                upperLeft[2] *= zScale; 
+                upperRight[0] *= xScale;
+                upperRight[1] *= yScale;
+                upperRight[2] *= zScale;
+                lowerLeft[0] *= xScale;
+                lowerLeft[1] *= yScale;
+                lowerLeft[2] *= zScale;
+                lowerRight[0] *= xScale;
+                lowerRight[1] *= yScale;
+                lowerRight[2] *= zScale;
+
+                upperLeft[0] -= 1;
+                upperLeft[1] -= 1;
+                upperRight[0] -= 1;
+                upperRight[1] -= 1;
+                lowerLeft[0] -= 1;
+                lowerLeft[1] -= 1;
+                lowerRight[0] -= 1;
+                lowerRight[1] -= 1;
+            }
+
             let coordinates = this._getFloat32Array("coordinates", 18);
-            // prettier-ignore
-            coordinates.set([
-                upperLeft.m00,  upperLeft.m10,  upperLeft.m20,
-                upperRight.m00, upperRight.m10, upperRight.m20,
-                lowerLeft.m00,  lowerLeft.m10,  lowerLeft.m20,
-                lowerLeft.m00,  lowerLeft.m10,  lowerLeft.m20,
-                upperRight.m00, upperRight.m10, upperRight.m20,
-                lowerRight.m00, lowerRight.m10, lowerRight.m20
-            ],0);
+            coordinates.set(upperLeft.slice(0,3),0);
+            coordinates.set(upperRight.slice(0,3),3);
+            coordinates.set(lowerLeft.slice(0,3),6);
+            coordinates.set(lowerLeft.slice(0,3),9);
+            coordinates.set(upperRight.slice(0,3),12);
+            coordinates.set(lowerRight.slice(0,3),15);
 
             let tex_coords;
             if (texHash === null || !this._checkGlyphCache(texHash,texIndex)) {
@@ -3996,66 +4001,6 @@ const renderer_prototype = global.Object.create(Object, {
                     );
                 }
 
-                let matrix = this._getFloat32Array("pre_rotation_matrix", 16);
-                matrix.set(
-                    this._matrixToArrayRepresentation4x4(
-                        positioningMatrices[0]
-                    ),
-                    0
-                );
-                this._positioningShader.updateOption(
-                    "u_pre_rotation_matrix",
-                    matrix
-                );
-                matrix = this._getFloat32Array("rotation_matrix_x", 16);
-                matrix.set(
-                    this._matrixToArrayRepresentation4x4(
-                        positioningMatrices[1]
-                    ),
-                    0
-                );
-                this._positioningShader.updateOption(
-                    "u_rotation_matrix_x",
-                    matrix
-                );
-                matrix = this._getFloat32Array("rotation_matrix_y", 16);
-                matrix.set(
-                    this._matrixToArrayRepresentation4x4(
-                        positioningMatrices[2]
-                    ),
-                    0
-                );
-                this._positioningShader.updateOption(
-                    "u_rotation_matrix_y",
-                    matrix
-                );
-                matrix = this._getFloat32Array("rotation_matrix_z", 16);
-                matrix.set(
-                    this._matrixToArrayRepresentation4x4(
-                        positioningMatrices[3]
-                    ),
-                    0
-                );
-                this._positioningShader.updateOption(
-                    "u_rotation_matrix_z",
-                    matrix
-                );
-                matrix = this._getFloat32Array("post_rotation_matrix", 16);
-                matrix.set(
-                    this._matrixToArrayRepresentation4x4(
-                        positioningMatrices[4]
-                    ),
-                    0
-                );
-                this._positioningShader.updateOption(
-                    "u_post_rotation_matrix",
-                    matrix
-                );
-                this._positioningShader.updateOption("u_aspectscale", [
-                    xScale,
-                    yScale
-                ]);
-
                 this._positioningShader.updateOption("u_texture", 0);
                 this._positioningShader.bindShader(this._gl);
 
@@ -4128,6 +4073,54 @@ const renderer_prototype = global.Object.create(Object, {
                 let swap;
                 if (blurInfo !== null) {
                     if (blurInfo.gaussBlur > 0) {
+                        let gauss_width = ((blurInfo.gaussBlur * 3) + 0.5) | 1;
+                        if(gauss_width < 3) gauss_width = 3;
+                        const gauss_coords = this._getFloat32Array("coordinates", 18);
+                        {
+                            const upperLeft = blurBoundsInfo.upperLeft;
+                            const upperRight = blurBoundsInfo.upperRight;
+                            const lowerLeft = blurBoundsInfo.lowerLeft;
+                            const lowerRight = blurBoundsInfo.lowerRight;
+
+                            upperLeft[0] -= gauss_width/2;
+                            upperLeft[1] += gauss_width/2;
+                            upperRight[0] += gauss_width/2;
+                            upperRight[1] += gauss_width/2;
+                            lowerLeft[0] -= gauss_width/2;
+                            lowerLeft[1] -= gauss_width/2;
+                            lowerRight[0] += gauss_width/2;
+                            lowerRight[1] -= gauss_width/2;
+
+                            const zScale = Math.min(blurBoundsInfo.xScale,blurBoundsInfo.yScale);
+                            upperLeft[0] *= blurBoundsInfo.xScale;
+                            upperLeft[1] *= blurBoundsInfo.yScale;
+                            upperLeft[2] *= zScale; 
+                            upperRight[0] *= blurBoundsInfo.xScale;
+                            upperRight[1] *= blurBoundsInfo.yScale;
+                            upperRight[2] *= zScale;
+                            lowerLeft[0] *= blurBoundsInfo.xScale;
+                            lowerLeft[1] *= blurBoundsInfo.yScale;
+                            lowerLeft[2] *= zScale;
+                            lowerRight[0] *= blurBoundsInfo.xScale;
+                            lowerRight[1] *= blurBoundsInfo.yScale;
+                            lowerRight[2] *= zScale;
+
+                            upperLeft[0] -= 1;
+                            upperLeft[1] -= 1;
+                            upperRight[0] -= 1;
+                            upperRight[1] -= 1;
+                            lowerLeft[0] -= 1;
+                            lowerLeft[1] -= 1;
+                            lowerRight[0] -= 1;
+                            lowerRight[1] -= 1;
+
+                            gauss_coords.set(upperLeft.slice(0,3),0);
+                            gauss_coords.set(upperRight.slice(0,3),3);
+                            gauss_coords.set(lowerLeft.slice(0,3),6);
+                            gauss_coords.set(lowerLeft.slice(0,3),9);
+                            gauss_coords.set(upperRight.slice(0,3),12);
+                            gauss_coords.set(lowerRight.slice(0,3),15);
+                        }
                         this._gl.bindFramebuffer(
                             this._gl.FRAMEBUFFER,
                             backFramebuffer
@@ -4141,8 +4134,6 @@ const renderer_prototype = global.Object.create(Object, {
                             this._gl.TEXTURE_2D,
                             sourceTexture
                         );
-                        let gausswidth = (blurInfo.gaussBlur * 3.0 + 0.5) | 1;
-                        if(gausswidth < 3) gausswidth = 3;
                         //Apply gaussian filter 1
                         this._gaussEdgeBlurPass1Shader.updateOption(
                             "u_resolution_x",
@@ -4154,7 +4145,7 @@ const renderer_prototype = global.Object.create(Object, {
                         );
                         this._gaussEdgeBlurPass1Shader.updateOption(
                             "u_width",
-                            gausswidth
+                            gauss_width
                         );
                         this._gaussEdgeBlurPass1Shader.updateOption(
                             "u_texture",
@@ -4170,7 +4161,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 );
                             this._gl.bindBuffer(
                                 this._gl.ARRAY_BUFFER,
-                                this._fullscreenPositioningBuffer
+                                this._subtitlePositioningBuffer
                             );
                             this._gl.enableVertexAttribArray(positionAttrib);
                             this._gl.vertexAttribPointer(
@@ -4181,6 +4172,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 0,
                                 0
                             );
+                            this._gl.bufferData(this._gl.ARRAY_BUFFER, gauss_coords, this._gl.DYNAMIC_DRAW);
                             this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
                         }
 
@@ -4221,7 +4213,7 @@ const renderer_prototype = global.Object.create(Object, {
                         );
                         this._gaussEdgeBlurPass2Shader.updateOption(
                             "u_width",
-                            gausswidth
+                            gauss_width
                         );
                         this._gaussEdgeBlurPass2Shader.updateOption(
                             "u_texture",
@@ -4237,7 +4229,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 );
                             this._gl.bindBuffer(
                                 this._gl.ARRAY_BUFFER,
-                                this._fullscreenPositioningBuffer
+                                this._subtitlePositioningBuffer
                             );
                             this._gl.enableVertexAttribArray(positionAttrib);
                             this._gl.vertexAttribPointer(
@@ -4248,6 +4240,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 0,
                                 0
                             );
+                            this._gl.bufferData(this._gl.ARRAY_BUFFER, gauss_coords, this._gl.DYNAMIC_DRAW);
                             this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
                         }
 
