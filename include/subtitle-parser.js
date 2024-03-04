@@ -1,14 +1,14 @@
 /**
  * @typedef {!{info:Object,parser:Object,fontserver:Array<Font>,renderer:{events:Array<SSASubtitleEvent>}}}
  */
-var RendererData;
+let RendererData;
 
 /**
- * @typedef {{
+ * @typedef {!{
  *      load:function(string,function(RendererData):void):void
  * }}
  */
-var SSAParser;
+let SSAParser;
 
 /**
  * @type {function(new:SSAParser)}

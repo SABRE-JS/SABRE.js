@@ -11,7 +11,7 @@
  *              selection:number
  *          }>}}
  */
-var FontServer;
+let FontServer;
 /**
  * @type {function(new:FontServer,RendererData)}
  */

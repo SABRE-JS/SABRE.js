@@ -244,7 +244,7 @@ const ShaderPrototype = Object.create(Object, {
 
     /*'getTexture':{
 		value: function(gl,name){
-			var getTexture = function(ctx){
+			let getTexture = function(ctx){
 				return gl.createTexture();
 			};
 			if(!textures[name]){

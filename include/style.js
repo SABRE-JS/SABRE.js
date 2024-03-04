@@ -52,7 +52,7 @@
  *              setEncoding:function(number):void
  *          }}
  */
-var SSAStyleDefinition;
+let SSAStyleDefinition;
 
 /**
  * @type {function(new:SSAStyleDefinition)}

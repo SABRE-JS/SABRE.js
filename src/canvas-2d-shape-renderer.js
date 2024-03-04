@@ -8,8 +8,8 @@
 /**
  * @fileoverview advance stubstation alpha subtitle text renderer.
  */
-//@include [util]
 //@include [global-constants]
+//@include [util]
 //@include [color]
 //@include [style]
 //@include [style-override]

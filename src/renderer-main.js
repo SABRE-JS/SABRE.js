@@ -5,8 +5,8 @@
  |
  |-
  */
-//@include [util]
 //@include [global-constants]
+//@include [util]
 //@include [color]
 //@include [style]
 //@include [style-override]
@@ -1394,7 +1394,7 @@ const renderer_prototype = global.Object.create(Object, {
                             ) {
                                 posInfosForMatchingId2[i].y +=
                                     posInfosForMatchingId1[i].height;
-                                posInfosForMatchingId2[i].y += overlap[1];
+                                posInfosForMatchingId2[i].y -= overlap[1];
                             }
                         } else {
                             for (
@@ -1402,7 +1402,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId1.length;
                                 i++
                             ) {
-                                posInfosForMatchingId1[i].y -= overlap[1];
+                                posInfosForMatchingId1[i].y += overlap[1];
                             }
                         }
                     } else if (overlap[1] > 0) {
@@ -1454,7 +1454,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
-                                posInfosForMatchingId2[i].y -= overlap[1];
+                                posInfosForMatchingId2[i].y += overlap[1];
                             }
                         } else {
                             for (
@@ -1464,7 +1464,7 @@ const renderer_prototype = global.Object.create(Object, {
                             ) {
                                 posInfosForMatchingId1[i].y +=
                                     positionInfo2.height;
-                                posInfosForMatchingId1[i].y += overlap[1];
+                                posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
                     }
@@ -4863,6 +4863,25 @@ const renderer_prototype = global.Object.create(Object, {
     //END PUBLIC FUNCTIONS
 });
 
+/**
+ * @typedef {{
+ *      load:function(RendererData):void,
+ *      setColorSpace:function(number):void,
+ *      updateViewport:function(number,number):void,
+ *      canRender:function():boolean,
+ *      frame:function(number):void,
+ *      getDisplayUri:function(function(string):void):void,
+ *      getDisplayBitmap:function():?ImageBitmap,
+ *      copyToCanvas:function((HTMLCanvasElement|OffscreenCanvas),boolean):void
+ * }}
+ * @private
+ */
+let SSARenderer;
+
+/**
+ * Returns a renderer object.
+ * @type {function(new:SSARenderer)}
+ */
 sabre["Renderer"] = function Renderer () {
     let renderer = global.Object.create(renderer_prototype);
     renderer.init();

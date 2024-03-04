@@ -1,5 +1,5 @@
-//@include [util]
 //@include [global-constants]
+//@include [util]
 //@include [color]
 //@include [style]
 //@include [style-override]
@@ -60,7 +60,7 @@ const font_server_prototype = Object.create(Object, {
          */
         value: function _wcharByteArrayToString (arr) {
             let array = [];
-            for (var i = 0; i < arr.length; i += 2) {
+            for (let i = 0; i < arr.length; i += 2) {
                 array.push(parseInt((arr[i] << 8) | arr[i + 1], 10));
             }
             return String.fromCharCode.apply(null, array);

@@ -8,8 +8,8 @@
 /**
  * @fileoverview advanced stubstation alpha subtitles text renderer.
  */
-//@include [util]
 //@include [global-constants]
+//@include [util]
 //@include [color]
 //@include [style]
 //@include [style-override]
@@ -556,7 +556,7 @@ const text_renderer_prototype = global.Object.create(Object, {
             const shadowComponent =
             Math.sign(style.getShadow()) *
             Math.sqrt(Math.pow(style.getShadow(), 2) / 2);
-
+            
             return {x: overrides.getShadowX() ?? shadowComponent, y: overrides.getShadowY() ?? shadowComponent};
         },
         writable: false
@@ -1062,6 +1062,85 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     this._strikethrough,
                                     this._underline
                                 );
+                                if (outline_x !== 0 || outline_y !== 0){
+                                    this._ctx.strokeStyle = this._ctx.fillStyle;
+                                    const outline_x_bigger = outline_x > outline_y;
+                                    const outline_gt_zero = outline_x > 0 && outline_y > 0;
+                                    // Smear shadow outline
+                                    if (outline_x_bigger) {
+                                        if (outline_gt_zero) {
+                                            for (
+                                                let i = -outline_x / outline_y;
+                                                i <= outline_x / outline_y;
+                                                i += outline_y / outline_x
+                                            ) {
+                                                this._drawGlyph(
+                                                    glyph,
+                                                    offsetXUnscaled + i,
+                                                    offsetYUnscaled,
+                                                    true,
+                                                    this._strikethrough,
+                                                    this._underline
+                                                );
+                                            }
+                                            this._drawGlyph(
+                                                glyph,
+                                                offsetXUnscaled,
+                                                offsetYUnscaled,
+                                                false,
+                                                this._strikethrough,
+                                                this._underline
+                                            );
+                                        } else {
+                                            for (let i = -outline_x; i <= outline_x; i++) {
+                                                this._drawGlyph(
+                                                    glyph,
+                                                    offsetXUnscaled + i,
+                                                    offsetYUnscaled,
+                                                    false,
+                                                    this._strikethrough,
+                                                    this._underline
+                                                );
+                                            }
+                                        }
+                                    } else {
+                                        if (outline_gt_zero) {
+                                            for (
+                                                let i = -outline_y / outline_x;
+                                                i <= outline_y / outline_x;
+                                                i += outline_x / outline_y
+                                            ) {
+                                                this._drawGlyph(
+                                                    glyph,
+                                                    offsetXUnscaled,
+                                                    offsetYUnscaled + i,
+                                                    true,
+                                                    this._strikethrough,
+                                                    this._underline
+                                                );
+                                            }
+                                            this._drawGlyph(
+                                                glyph,
+                                                offsetXUnscaled,
+                                                offsetYUnscaled,
+                                                false,
+                                                this._strikethrough,
+                                                this._underline
+                                            );
+                                        } else {
+                                            for (let i = -outline_y; i <= outline_y; i++) {
+                                                this._drawGlyph(
+                                                    glyph,
+                                                    offsetXUnscaled,
+                                                    offsetYUnscaled + i,
+                                                    false,
+                                                    this._strikethrough,
+                                                    this._underline
+                                                );
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             break;
                         case sabre.BorderStyleModes.SRT_STYLE:
@@ -1077,9 +1156,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                         (outline_x === 0 && outline_y === 0)
                     )
                         return false;
+                    this._ctx.fillStyle = this._ctx.strokeStyle;
                     const outline_x_bigger = outline_x > outline_y;
                     const outline_gt_zero = outline_x > 0 && outline_y > 0;
-                    this._ctx.fillStyle = this._ctx.strokeStyle;
                     // Smear outline
                     if (outline_x_bigger) {
                         if (outline_gt_zero) {
