@@ -5,7 +5,7 @@ Thank you for your interest in contributing to SABRE.js. This document will help
 ## Useful links
 
 -   [Aegisub Documentation](https://yukisubs.files.wordpress.com/2017/05/aegisub-3-2-manual.pdf)
--   [Advanced Substation Alpha Subtitles Unofficial Specification](http://www.cccp-project.net/stuff/ass-specs.pdf) (not fully accurate)
+-   [Advanced Substation Alpha Subtitles Unofficial Specification](http://web.archive.org/web/20210328204514/http://www.cccp-project.net/stuff/ass-specs.pdf) (not fully accurate)
 -   [libass project](https://github.com/libass/libass)
 -   [xy-VSFilter project](https://github.com/Cyberbeing/xy-VSFilter)
 -   [WebGL 2.0 Tutorial](https://webgl2fundamentals.org/)
@@ -16,7 +16,7 @@ Thank you for your interest in contributing to SABRE.js. This document will help
 
 In order to work on SABRE.js you will need to install the following utilities:
 
--   Java Runtime Environment (version >= 8) or Mono Runtime Environment (preferably latest)
+-   Java Runtime Environment
 -   curl
 -   nodeJS
 -   make
@@ -39,10 +39,28 @@ To run all tests run the following command:
 make test
 ```
 
+To run a visual feature test run the following command:
+
+```sh
+make run
+```
+
 ### Additional Info
 
 Source files are in `./src/` "header" files are in `./include/`.
 The "header" files list the internal shared APIs the different files use to communicate with each other. See [here](https://github.com/google/closure-compiler/wiki/Annotating-JavaScript-for-the-Closure-Compiler) and [here](https://developers.google.com/closure/compiler/docs/externs-and-exports).
+
+#### Folder Structure
+
+* src/ -- Main sourcecode for the project (excluding src/\_\_tests\_\_)
+* src/\_\_tests\_\_/ -- Test code for test driven development.
+* include/ -- Browser API definitions and internal API definitions for the Closure Compiler (Files in this folder aren't compiled).
+* bin/ -- Output directory for production code.
+* debugbin/ -- Output directory for debug code.
+* scripts/ -- Contains scripts that are run by the makefile.
+* tbin/ -- Contains the Closure Compiler and other build tools.
+* temp_files/ -- Temporary files.
+* test/ -- Directory used when running the debug server.
 
 ## Pull Requests
 

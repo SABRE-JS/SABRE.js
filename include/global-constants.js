@@ -57,6 +57,60 @@ sabre.WrapStyleModes = {
 };
 
 /**
+ * Defines the code pages supported by the renderer.
+ * @private
+ * @enum {number}
+ */
+sabre.CodePages = {
+    ANSI: 1252,
+    UTF8: 65001,
+    CUSTOM: -1,
+    MAC: 10000,
+    SHIFT_JIS: 932,
+    HANGUL: 949,
+    JOHAB: 1361,
+    GB2312: 936,
+    BIG5: 950,
+    GREEK: 1253,
+    TURKISH: 1254,
+    VIETNAMESE: 1258,
+    HEBREW: 1255,
+    ARABIC: 1256,
+    BALTIC: 1257,
+    RUSSIAN: 1251,
+    THAI: 874,
+    EASTERN_EUROPE: 1250,
+    OEM: 850
+};
+
+/**
+ * Defines the substation alpha IDs of the code pages supported by the renderer.
+ * @private
+ * @enum {number}
+ */
+sabre.CodePageIds = {
+    ANSI: 0,
+    UTF8: 1,
+    CUSTOM: 2,
+    MAC: 77,
+    SHIFT_JIS: 128,
+    HANGUL: 129,
+    JOHAB: 130,
+    GB2312: 134,
+    BIG5: 136,
+    GREEK: 161,
+    TURKISH: 162,
+    VIETNAMESE: 163,
+    HEBREW: 177,
+    ARABIC: 178,
+    BALTIC: 186,
+    RUSSIAN: 204,
+    THAI: 222,
+    EASTERN_EUROPE: 238,
+    OEM: 255
+};
+
+/**
  * Defines the different color spaces internally.
  * @private
  * @enum {number}

@@ -12,7 +12,7 @@
  *              getImage:function():(HTMLCanvasElement|OffscreenCanvas)
  *          }}
  */
-var Canvas2DShapeRenderer;
+let Canvas2DShapeRenderer;
 
 /**
  * @type {function(new:Canvas2DShapeRenderer)}

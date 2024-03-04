@@ -1,18 +1,16 @@
 /**
  * @type {Window}
  */
-var global;
+let global;
 
 global.sabre = {};
 
-var sabre = global.sabre;
-
-var external = global.sabre;
+let external = global.sabre;
 
 /**
  * @type {(undefined|function(string):Object)}
  */
-var require = function (a) {
+let require = function (a) {
     return {};
 };
 
@@ -20,10 +18,10 @@ global.module = {};
 
 global.module.exports = {};
 
-var module = global.module;
+let module = global.module;
 
 //This is internal to the wrapper that is applied to the compiled output.
-var sabre = {};
+let sabre = {};
 sabre.$ = null;
 
 //These are definitions for APIs the closure compiler doesn't know by default.
@@ -75,19 +73,41 @@ global.OffscreenCanvas.prototype.toBlobHD = function () {};
 /**
  * @typedef{{x1:number,y1:number,x2:number,y2:number}}
  */
-var BoundingBox;
+let BoundingBox;
 
 /**
  * @typedef {{fill:?string,stroke:?string,draw:function(CanvasRenderingContext2D):void}}
  */
-var Path;
+let Path;
 
 /**
  * @typedef {{advanceWidth:number,getBoundingBox:function():BoundingBox,getPath:function(number, number, number):Path}}
  */
-var Glyph;
+let Glyph;
 
 /**
  * @typedef {{unitsPerEm:number,ascender:number,descender:number,tables:{post:{underlineThickness:number,underlinePosition:number},os2:{yStrikeoutSize:number,yStrikeoutPosition:number,usWeightClass:number,fsSelection:number,usWinAscent:number,usWinDescent:number,sTypoAscent:number,sTypoDescent:number},name:{unicode:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string},preferredFamily:{en:string},preferredSubfamily:{en:string}},macintosh:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string},preferredFamily:{en:string},preferredSubfamily:{en:string}},windows:?{fullName:{en:string},fontFamily:{en:string},fontSubfamily:{en:string},preferredFamily:{en:string},preferredSubfamily:{en:string}}}},stringToGlyphs:function(string):Array<Glyph>,getKerningValue:function(Glyph,Glyph):number}}
  */
-var Font;
+let Font;
+
+
+global.opentype = {};
+
+let opentype = global.opentype;
+
+/**
+ * @type {function(ArrayBuffer):Font}
+ */
+opentype.parse = function () {};
+
+/**
+ * @typedef {Array<number>|Uint8Array}
+ */
+let ByteArray;
+
+/**
+ * @type {{utils:{encode:function(number,string):Array<number>,decode:function(number,ByteArray):string}}}
+ */
+global.cptable = {utils: {encode: function () {},decode: function () {}}};
+
+let cptable = global.cptable;

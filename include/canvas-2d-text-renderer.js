@@ -17,7 +17,7 @@
 *              getImage:function():(HTMLCanvasElement|OffscreenCanvas)
 *          }}
 */
-var Canvas2DTextRenderer;
+let Canvas2DTextRenderer;
 
 /**
  * @type {function(new:Canvas2DTextRenderer)}

@@ -45,7 +45,7 @@
  *      setSpacing:function(number):void
  *  }}
  */
-var SSATransitionTargetOverride;
+let SSATransitionTargetOverride;
 
 /**
  * @typedef {!{
@@ -57,7 +57,8 @@ var SSATransitionTargetOverride;
  *      setClip:function(number,number,number,number):void,
  *  }}
  */
-var SSALineTransitionTargetOverride;
+let SSALineTransitionTargetOverride;
+
 /**
  * @typedef {!{
  *      toJSON:function():string,
@@ -141,7 +142,7 @@ var SSALineTransitionTargetOverride;
  *      clone:function():SSAStyleOverride
  * }}
  */
-var SSAStyleOverride;
+let SSAStyleOverride;
 
 /**
  * @typedef {!{
@@ -162,7 +163,7 @@ var SSAStyleOverride;
  *      setRotationOrigin:function(number,number):void
  * }}
  */
-var SSALineStyleOverride;
+let SSALineStyleOverride;
 
 /**
  * @type {function(new:SSAStyleOverride)}

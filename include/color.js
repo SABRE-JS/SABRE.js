@@ -18,7 +18,7 @@ sabre.cleanRawColor = function(raw){return "";};
  *              getYCbCr:function():Array<number>
  * }}
  */
-var SSAColor;
+let SSAColor;
 
 /**
  * @type {function(new:SSAColor,number=,number=,number=,number=)}
@@ -40,7 +40,7 @@ sabre.SSAColor = function (r, g, b, a) {};
  *              setA:function(?number):void,
  * }}
  */
-var SSAOverrideColor;
+let SSAOverrideColor;
 
 /**
  * @type {function(new:SSAOverrideColor,?number=,?number=,?number=,?number=)}

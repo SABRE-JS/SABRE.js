@@ -10,7 +10,7 @@
  *      copyToCanvas:function((HTMLCanvasElement|OffscreenCanvas),boolean):void
  * }}
  */
-var SSARenderer;
+let SSARenderer;
 
 /**
  * @type {function(new:SSARenderer)}

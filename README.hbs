@@ -6,62 +6,53 @@ A Gpu Accelerated Javascript Advanced Substation Alpha Subtitles Renderer.
 
 ## What is SABRE.js?
 
+SABRE.js adds stylish subtitles to web videos.
+
+## What formats does SABRE.js support?
+
 SABRE.js is a full renderer for Substation Alpha Subtitles and Advanced Substation Alpha Subtitles.
 It allows you to draw styled/stylized subtitles over web video with multiple fonts, colors, animations and effects.
 
 <span style="text-align:center; width:100%; display: inline-block;"></span>[![karaoke demo loop](gallery/images/demo_loop.gif)](gallery/video/demo_loop.mp4)</video></span>
 
-#### Other Similar software.
-
-- Javascript-Subtitles-Octopus
-- Libass
-- XY-VSFilter
-
-### Gallery
+## Gallery
 A gallery of major milestones in the development process.
 
-To view the gallery click [here](/gallery/gallery.md) if you're using a decent browser or [here](/gallery/but_i_use_safari.md) if you like safari or internet explorer.
+To view the gallery click [here](/gallery/gallery.md) if you're using a decent browser or [here](/gallery/but_i_use_safari.md) if you like safari or internet explorer. 
 
-### Folder Structure
-
-* src/ -- Main sourcecode for the project (excluding src/\_\_tests\_\_)
-* src/\_\_tests\_\_/ -- Test code for test driven development.
-* include/ -- Browser API definitions and internal API definitions for the Closure Compiler (Files in this folder aren't compiled).
-* bin/ -- Output directory for production code.
-* debugbin/ -- Output directory for debug code.
-* scripts/ -- Contains scripts that are run by the makefile.
-* tbin/ -- Contains the Closure Compiler and other build tools.
-* temp_files/ -- Temporary files.
-* test/ -- Directory used when running the debug server. 
-
-### Documentation
+## Getting Started
 
 Note: Version 2.0.0 of opentype.js is not yet released, in order to use this library currently you must build opentype.js from source.
 
 How to include the library (from the jsdelivr CDN, this cdn is recommended as they publish usage statistics for each package):
 ```html
+<script src="https://cdn.jsdelivr.net/npm/codepage@1.15.0/cptable.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codepage@1.15.0/cputils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@^2.0.0/dist/opentype.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@sabre-js/sabre@latest/dist/sabre.min.js"></script>
 ```
 How to include the library (from the unpkg CDN, for the more privacy minded):
 ```html
+<script src="https://unpkg.com/codepage@1.15.0/cptable.js"></script>
+<script src="https://unpkg.com/codepage@1.15.0/cputils.js"></script>
 <script src="https://unpkg.com/opentype.js@^2.0.0/dist/opentype.min.js"></script>
 <script src="https://unpkg.com/@sabre-js/sabre@latest/dist/sabre.min.js"></script>
 ```
 
-You can retrieve an instance of the library by calling `sabre.SABRERenderer()` inside an event handler.
+You can retrieve an instance of the library by calling `sabre.SABRERenderer()`.
 
 Example:
 ```js
 let renderer;
 let fonts = [];
+
 // Load the contents of the subtitle file.
-fetch("subtitles.ass").then((response) => response.text()).then((subs) => {
+fetch("subtitles.ass").then((response) => response.arrayBuffer()).then((subs) => {
     // Load the fonts using opentype.js and put them in the fonts array. (this function also returns a promise)
     opentype.load("arial.ttf", (font) => {
         fonts.push(font);
         // Initialize the renderer
-        renderer = sabre.SABRERenderer(parseFont, {
+        renderer = sabre.SABRERenderer({
             fonts:fonts,
             subtitles:subs,
             colorSpace:sabre.VideoColorSpaces.AUTOMATIC,
@@ -77,13 +68,14 @@ or you can initialize using the return value's functions as shown below:
 ```js
 let renderer;
 let fonts = [];
+
 // Load the contents of the subtitle file.
-fetch("subtitles.ass").then((response) => response.text()).then((subs) => {
+fetch("subtitles.ass").then((response) => response.arrayBuffer()).then((subs) => {
     // Load the fonts using opentype.js and put them in the fonts array. (this function also returns a promise)
     opentype.load("arial.ttf", (font) => {
         fonts.push(font);
         // Initialize the renderer
-        renderer = new sabre.SABRERenderer(parseFont);
+        renderer = new sabre.SABRERenderer();
         renderer.loadSubtitles(subs,fonts);
         renderer.setColorSpace(sabre.VideoColorSpaces.AUTOMATIC,1280,720); // Second and third parameters are the native resolution of the video file in real pixels (only used if the color space is AUTOMATIC or AUTOMATIC_PC).
         renderer.setViewport(1280,720); // Display resolution of the video in CSS pixels.
@@ -91,24 +83,21 @@ fetch("subtitles.ass").then((response) => response.text()).then((subs) => {
 });
 ```
 
-You must pass the constructor a function that loads fonts using opentype.js similar to the one below:
-```js
-function parseFont(data) {
-    return opentype.parse(data);
-}
-```
-
-You may then call `loadSubtitles` passing in a string containing the contents of the subtitle file and set the
+You may then call `loadSubtitles` passing in an ArrayBuffer containing the contents of the subtitle file and set the
 viewport with `setViewport` as shown in the example above. Anytime the video or player is resized you should call
 `setViewport` with the new dimensions of the player.
 
 Each frame, before you call any of the rendering functions, first call `checkReadyToRender` to see if the library is ready
 to render a frame of subtitles.
 
-### API
+## API Documentation
 
 The documentation generator is a little buggy, anytime it says something is global, that means it's a property of the `sabre.SABRERenderer()` function's returned object.
 
 {{>main}}
+
+## Contributing
+
+Looking to contribute? Check out the [contributing guide](CONTRIBUTING.md)!
 
 &copy; 2012-2024 Patrick "ILOVEPIE" Rhodes Martin.

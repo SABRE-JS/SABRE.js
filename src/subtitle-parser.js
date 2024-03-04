@@ -5,14 +5,15 @@
  |
  |-
  */
-//@include [util]
 //@include [global-constants]
+//@include [util]
 //@include [color]
 //@include [style]
 //@include [style-override]
 //@include [subtitle-tags]
 //@include [subtitle-event]
 //@include [renderer-main]
+//@include [text-server]
 
 /**
  * @fileoverview subtitle parser code for Substation Alpha and Advanced Substation Alpha.
@@ -22,7 +23,7 @@
  * @private
  * @typedef {!{info:Object,parser:Object,fontserver:Array<Font>,renderer:{events:Array<SSASubtitleEvent>}}}
  */
-var RendererData;
+let RendererData;
 
 /**
  * Assert using grumbles.
@@ -136,16 +137,6 @@ const parser_prototype = global.Object.create(global.Object, {
         writable: true
     },
 
-    _parseFont: {
-        /**
-         * Function to parse fonts.
-         * @type {?function(ArrayBuffer):Font}
-         * @private
-         */
-        value: null,
-        writable: true
-    },
-
     _styles: {
         /**
          * Map of styles.
@@ -164,17 +155,88 @@ const parser_prototype = global.Object.create(global.Object, {
         writable: true
     },
 
-    _splitOnce: {
+    _fileLineCounter: {
         /**
-         * Splits a string once.
-         * @param {string} string the string to split.
-         * @param {string} separator the separator to split on.
+         * Counts the current line of the file.
          * @private
          */
-        value: function _splitOnce (string, separator) {
-            let j = string.indexOf(separator);
-            if (j === -1) return [string.trim()];
-            return [string.slice(0, j), string.slice(j + 1).trim()];
+        value: 1,
+        writable: true
+    },
+
+    _fileEncoding: {
+        /**
+         * The encoding of the file.
+         * @private
+         */
+        value: sabre.CodePages.ANSI,
+        writable: true
+    },
+
+    // _splitOnce: {
+    //     /**
+    //      * Splits a string once.
+    //      * @param {string} string the string to split.
+    //      * @param {string} separator the separator to split on.
+    //      * @private
+    //      */
+    //     value: function _splitOnce (string, separator) {
+    //         let j = string.indexOf(separator);
+    //         if (j === -1) return [string.trim()];
+    //         return [string.slice(0, j), string.slice(j + 1).trim()];
+    //     },
+    //     writable: false
+    // },
+
+    _mapEncoding: {
+        /**
+         * Maps an encoding constant to the codepage number.
+         * @param {number} encoding the encoding constant.
+         * @return {number} the codepage number.
+         */
+        value: function _mapEncoding (encoding) {
+            switch(encoding){
+                case sabre.CodePageIds.ANSI:
+                    return sabre.CodePages.ANSI;
+                case sabre.CodePageIds.UTF8:
+                    return sabre.CodePages.UTF8;
+                case sabre.CodePageIds.CUSTOM:
+                    return sabre.CodePages.CUSTOM;
+                case sabre.CodePageIds.MAC:
+                    return sabre.CodePages.MAC;
+                case sabre.CodePageIds.SHIFT_JIS:
+                    return sabre.CodePages.SHIFT_JIS;
+                case sabre.CodePageIds.HANGUL:
+                    return sabre.CodePages.HANGUL;
+                case sabre.CodePageIds.JOHAB:
+                    return sabre.CodePages.JOHAB;
+                case sabre.CodePageIds.GB2312:
+                    return sabre.CodePages.GB2312;
+                case sabre.CodePageIds.BIG5:
+                    return sabre.CodePages.BIG5;
+                case sabre.CodePageIds.GREEK:
+                    return sabre.CodePages.GREEK;
+                case sabre.CodePageIds.TURKISH:
+                    return sabre.CodePages.TURKISH;
+                case sabre.CodePageIds.VIETNAMESE:
+                    return sabre.CodePages.VIETNAMESE;
+                case sabre.CodePageIds.HEBREW:
+                    return sabre.CodePages.HEBREW;
+                case sabre.CodePageIds.ARABIC:
+                    return sabre.CodePages.ARABIC;
+                case sabre.CodePageIds.BALTIC:
+                    return sabre.CodePages.BALTIC;
+                case sabre.CodePageIds.RUSSIAN:
+                    return sabre.CodePages.RUSSIAN;
+                case sabre.CodePageIds.THAI:
+                    return sabre.CodePages.THAI;
+                case sabre.CodePageIds.EASTERN_EUROPE:
+                    return sabre.CodePages.EASTERN_EUROPE;
+                case sabre.CodePageIds.OEM:
+                    return sabre.CodePages.OEM;
+                default:
+                    throw "Unrecognized code page.";
+            }
         },
         writable: false
     },
@@ -184,43 +246,45 @@ const parser_prototype = global.Object.create(global.Object, {
          * Contains parsing methods for root entries.
          * @private
          * @dict
-         * @type {Object<string,function(Array<string>,Object):void>}
+         * @type {Object<string,function(string,TextServer,Object):void>}
          */
         value: Object.freeze({
             "Script Info": function (
-                /** Array<string> */ keypair,
+                /** string */ key,
+                /** TextServer */ file,
                 /** Object */ config
             ) {
-                switch (keypair[0]) {
+                const value = file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]).trim();
+                switch (key) {
                     case "Title":
-                        config["info"]["title"] = keypair[1];
+                        config["info"]["title"] = value;
                         return;
                     case "Original Script":
-                        config["info"]["author"] = keypair[1];
+                        config["info"]["author"] = value;
                         return;
                     case "Original Translation":
-                        config["info"]["translator"] = keypair[1];
+                        config["info"]["translator"] = value;
                         return;
                     case "Original Editing":
-                        config["info"]["editor"] = keypair[1];
+                        config["info"]["editor"] = value;
                         return;
                     case "Original Timing":
-                        config["info"]["timing"] = keypair[1];
+                        config["info"]["timing"] = value;
                         return;
                     case "Synch Point":
                         config["renderer"]["sync_offset"] = this._parseTime(
-                            keypair[1]
+                            value
                         );
                         return;
                     case "Script Updated By":
-                        config["info"]["updater"] = keypair[1];
+                        config["info"]["updater"] = value;
                         return;
                     case "Update Details":
-                        config["info"]["update_description"] = keypair[1];
+                        config["info"]["update_description"] = value;
                         return;
                     case "ScriptType": {
-                        let version = keypair[1].match(
-                            /v([0-9]+(?:\.[0-9]+)?)(\+)?/
+                        let version = value.match(
+                            /v([0-9]+(?:\.[0-9]+)?)(\++)?/
                         );
                         if (version === null) throw "Malformed SSA version";
                         console.info(
@@ -237,15 +301,16 @@ const parser_prototype = global.Object.create(global.Object, {
                             console.warn(
                                 "Warning: Some subtitle features may not be supported"
                             );
-                        config["info"]["is_ass"] = version[2] === "+";
+                        config["info"]["is_ass"] = !!version[2];
+                        config["info"]["ass_version"] = version[2].length;
                         console.info(
                             "Advanced Sub Station Alpha: " +
-                                config["info"]["is_ass"]
+                                config["info"]["is_ass"] + "\tVersion:" + config["info"]["ass_version"]
                         );
                         return;
                     }
                     case "Collisions": {
-                        let collisionMode = keypair[1].toLowerCase();
+                        let collisionMode = value.toLowerCase();
                         if (collisionMode === "normal") {
                             config["renderer"]["default_collision_mode"] =
                                 sabre.CollisionModes.NORMAL;
@@ -265,19 +330,19 @@ const parser_prototype = global.Object.create(global.Object, {
                     }
                     case "PlayResY":
                         config["renderer"]["resolution_y"] = global.parseInt(
-                            keypair[1],
+                            value,
                             10
                         );
                         return;
                     case "PlayResX":
                         config["renderer"]["resolution_x"] = global.parseInt(
-                            keypair[1],
+                            value,
                             10
                         );
                         return;
                     case "YCbCr Matrix":
                         {
-                            let colorspace_name = keypair[1].toLowerCase();
+                            let colorspace_name = value.toLowerCase();
                             switch (colorspace_name) {
                                 case "none":
                                     config["renderer"]["color_mangling_mode"] = sabre.ColorManglingModes.NONE;
@@ -334,17 +399,17 @@ const parser_prototype = global.Object.create(global.Object, {
                         return;
                     case "PlayDepth":
                         config["renderer"]["bit_depth"] = global.parseInt(
-                            keypair[1],
+                            value,
                             10
                         );
                         return;
                     case "Timer":
                         config["renderer"]["playback_speed"] =
-                            global.parseFloat(keypair[1]);
+                            global.parseFloat(value);
                         return;
                     case "WrapStyle":
                         {
-                            let wrap_style = global.parseInt(keypair[1], 10);
+                            let wrap_style = global.parseInt(value, 10);
                             if (
                                 !gassert(
                                     INVALID_WRAP_STYLE,
@@ -361,8 +426,8 @@ const parser_prototype = global.Object.create(global.Object, {
                         return;
                     case "ScaledBorderAndShadow":
                         {
-                            const value = keypair[1].toLowerCase();
-                            if(value === "yes"){
+                            const scaledBorderAndShadow = value.toLowerCase();
+                            if(scaledBorderAndShadow === "yes"){
                                 config["renderer"]["scaled_border_and_shadow"] = true;
                             }else{
                                 config["renderer"]["scaled_border_and_shadow"] = false;
@@ -372,21 +437,20 @@ const parser_prototype = global.Object.create(global.Object, {
                     default:
                         console.warn(
                             'Warning: Unrecognized key "' +
-                                keypair[0] +
+                                key +
                                 '" for heading "Script Info"; Ignoring.'
                         );
                         return;
                 }
             },
             "v4 Styles": function (
-                /** Array<string> */ keypair,
+                /** string */ key,
+                /** TextServer */ file,
                 /** Object */ config
             ) {
                 if (config["info"]["version"] < 4) {
                     console.warn(
-                        'Warning: The "v4 Styles" heading is only available in SSA v4 and Higher and will be ignored as the script version is: ' +
-                            (config["info"]["is_ass"] ? "ASS" : "SSA") +
-                            " v" +
+                        'Warning: The "v4 Styles" heading is only available in SSA v4 and Higher and will be ignored as the script version is: SSA v' +
                             Math.floor(config["info"]["version"])
                     );
                     return;
@@ -394,12 +458,12 @@ const parser_prototype = global.Object.create(global.Object, {
                 if (config["info"]["is_ass"])
                     throw 'Depricated: The "v4 Styles" heading is unsupported in Advanced Substation Alpha Subtitles.';
                 config["parser"]["style_format"] =
-                    config["parser"]["style_format"] ||
+                    config["parser"]["style_format"] ??
                     default_ssa_style_format;
-                let arr = keypair[1].split(",").map(function (a) {
+                let arr = file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]).split(",").map(function (a) {
                     return a.trim();
                 });
-                switch (keypair[0]) {
+                switch (key) {
                     case "Format":
                         config["parser"]["style_format"] = arr;
                         return;
@@ -409,21 +473,20 @@ const parser_prototype = global.Object.create(global.Object, {
                     default:
                         console.warn(
                             'Warning: Unrecognized key "' +
-                                keypair[0] +
+                                key +
                                 '" for heading "v4 Styles"; Ignoring.'
                         );
                         return;
                 }
             },
             "v4+ Styles": function (
-                /** Array<string> */ keypair,
+                /** string */ key,
+                /** TextServer */ file,
                 /** Object */ config
             ) {
                 if (config["info"]["version"] < 4) {
                     console.warn(
-                        'Warning: The "v4+ Styles" heading is only available in ASS v4 and Higher and will be ignored as the script version is: ' +
-                            (config["info"]["is_ass"] ? "ASS" : "SSA") +
-                            " v" +
+                        'Warning: The "v4+ Styles" heading is only available in ASS v1 and Higher and will be ignored as the script version is: SSA v' +
                             Math.floor(config["info"]["version"])
                     );
                     return;
@@ -433,10 +496,10 @@ const parser_prototype = global.Object.create(global.Object, {
                 config["parser"]["style_format"] =
                     config["parser"]["style_format"] ||
                     default_ass_style_format;
-                let arr = keypair[1].split(",").map(function (a) {
+                let arr = file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]).split(",").map(function (a) {
                     return a.trim();
                 });
-                switch (keypair[0]) {
+                switch (key) {
                     case "Format":
                         config["parser"]["style_format"] = arr;
                         return;
@@ -446,14 +509,15 @@ const parser_prototype = global.Object.create(global.Object, {
                     default:
                         console.warn(
                             'Warning: Unrecognized key "' +
-                                keypair[0] +
+                                key +
                                 '" for heading "v4+ Styles"; Ignoring.'
                         );
                         return;
                 }
             },
             "Events": function (
-                /** Array<string> */ keypair,
+                /** string */ key,
+                /** TextServer */ file,
                 /** Object */ config
             ) {
                 if (config["info"]["is_ass"])
@@ -464,34 +528,29 @@ const parser_prototype = global.Object.create(global.Object, {
                     config["parser"]["event_format"] =
                         config["parser"]["event_format"] ||
                         default_ssa_event_format;
-                let arr = keypair[1].split(",");
-                let str = "";
-                if (arr.length > config["parser"]["event_format"].length) {
-                    str = arr.pop() + str;
-                    while (
-                        arr.length > config["parser"]["event_format"].length
-                    ) {
-                        str = arr.pop() + "," + str;
-                    }
-                    arr[arr.length - 1] = arr[arr.length - 1] + "," + str;
+                const arr = [];
+                while(arr.length < config["parser"]["event_format"].length-1){
+                    arr.push(file.next(this._fileEncoding,[",","\r\n","\n\r","\n","\r"]));
                 }
                 for (let i = 0; i < arr.length; i++) arr[i] = arr[i].trim();
-                switch (keypair[0]) {
+                switch (key) {
                     case "Format":
+                        arr.push(file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]).trim());
                         if (arr[arr.length - 1] !== "Text") {
                             throw "Invalid event tag format";
                         } else config["parser"]["event_format"] = arr;
                         return;
                     case "Dialogue":
-                        this._parseDialogue(arr, config);
+                        this._parseDialogue(arr, file, config);
                         return;
                     default:
                         console.warn(
                             'Warning: Unrecognized key "' +
-                                keypair[0] +
+                                key +
                                 '" for heading "Events"; Ignoring.'
                         );
                     case "Comment":
+                        file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]);
                         return;
                 }
             }
@@ -845,15 +904,31 @@ const parser_prototype = global.Object.create(global.Object, {
          * Handles parsing of override tags and other things in the actual text of the subtitle.
          * @private
          * @param {Array<SSASubtitleEvent>} events
+         * @param {TextServer} file
          * @return {Array<SSASubtitleEvent>}
          */
-        value: function _parseDialogueText (events) {
+        value: function _parseDialogueText (events, file) {
             let event;
             let match;
             for (let i = 0; i < events.length; i++) {
                 event = events[i];
                 event.setOrder(i);
-                match = /^([^{}]*?)\\([nN])(.*)$/.exec(event.getText());
+                const encoding = this._mapEncoding(event.getOverrides().getEncoding()??event.getStyle().getEncoding());
+                let text = event.getText();
+                let override = false;
+                if (!text){
+                    text = file.next(encoding,["\r\n","\n\r","\n","\r"]).replace(/\\h/g, "\u00A0");
+                    const first = text.indexOf("{");
+                    const second = text.indexOf("}");
+                    if(first !== -1 && second !== -1 && first < second){
+                        file.rewind();
+                        text = file.next(encoding,["}"]).replace(/\\h/g, "\u00A0");
+                        override = true;
+                    }
+                    event.setText(text);
+                }
+                
+                match = /^([^{}]*?)\\([nN])(.*)$/.exec(text);
                 if (match !== null) {
                     let new_event = sabre.cloneEventWithoutText(event);
                     event.setText(match[1]);
@@ -861,36 +936,38 @@ const parser_prototype = global.Object.create(global.Object, {
                     new_event.setNewLine(match[2] === "N");
                     events.splice(i + 1, 0, new_event);
                 }
-                match = /^([^{}]*?)\{(.*?)\}(.*)$/.exec(event.getText());
-                if (match !== null) {
-                    let new_event = sabre.cloneEventWithoutText(event);
-                    event.setText(match[1]);
-                    const _this = this;
-                    new_event.setOverrides(
-                        this._parseOverrides(
-                            {
-                                start: event.getStart(),
-                                end: event.getEnd()
-                            },
-                            function (style_name) {
-                                return _this._styles[style_name];
-                            },
-                            function (new_style) {
-                                new_event.setStyle(new_style);
-                            },
-                            event.getOverrides(),
-                            event.getLineOverrides(),
-                            function (lineTransitionTargetOverrides) {
-                                event.addLineTransitionTargetOverrides(
-                                    lineTransitionTargetOverrides
-                                );
-                            },
-                            match[2],
-                            this._config["info"]["is_ass"]
-                        )
-                    );
-                    new_event.setText(match[3]);
-                    events.splice(i + 1, 0, new_event);
+                if(override){
+                    match = /^([^{}]*?)\{(.*?)$/.exec(text); //\}(.*?)$
+                    if (match !== null) {
+                        let new_event = sabre.cloneEventWithoutText(event);
+                        event.setText(match[1]);
+                        //new_event.setText(match[3]);
+                        const _this = this;
+                        new_event.setOverrides(
+                            this._parseOverrides(
+                                {
+                                    start: event.getStart(),
+                                    end: event.getEnd()
+                                },
+                                function (style_name) {
+                                    return _this._styles[style_name];
+                                },
+                                function (new_style) {
+                                    new_event.setStyle(new_style);
+                                },
+                                event.getOverrides(),
+                                event.getLineOverrides(),
+                                function (lineTransitionTargetOverrides) {
+                                    event.addLineTransitionTargetOverrides(
+                                        lineTransitionTargetOverrides
+                                    );
+                                },
+                                match[2],
+                                this._config["info"]["is_ass"]
+                            )
+                        );
+                        events.splice(i + 1, 0, new_event);
+                    }
                 }
             }
             return events;
@@ -1010,10 +1087,11 @@ const parser_prototype = global.Object.create(global.Object, {
         /**
          * Parse dialog lines.
          * @private
-         * @param {string} values
+         * @param {Array<string>} values
+         * @param {TextServer} file
          * @param {Object} config
          */
-        value: function _parseDialogue (values, config) {
+        value: function _parseDialogue (values, file, config) {
             //Create a new event for the line.
             let event = new sabre.SSASubtitleEvent();
             event.setId(this._lineCounter++);
@@ -1046,9 +1124,6 @@ const parser_prototype = global.Object.create(global.Object, {
                     case "End":
                         event.setEnd(this._parseTime(value));
                         break;
-                    case "Text":
-                        event.setText(value.replace(/\\h/g, "\u00A0"));
-                        break;
                     case "Effect":
                         //event_overrides.setEffect(value); //TODO: How does this get handled...
                         break;
@@ -1079,9 +1154,7 @@ const parser_prototype = global.Object.create(global.Object, {
             event.setStyle(style);
             event.setOverrides(event_overrides);
             event.setLineOverrides(line_overrides);
-            let events = [event];
-            //Split the event into sub-events for the various style override tags.
-            events = this._parseDialogueText(events);
+            let events = this._parseDialogueText([event], file);
             //concatinate the resulting events.
             config["renderer"]["events"] =
                 typeof config["renderer"]["events"] === "undefined" ||
@@ -1148,7 +1221,7 @@ const parser_prototype = global.Object.create(global.Object, {
                 ) {
                     if (!foundFontname || !foundHeading) data += line;
                     this._config["renderer"]["fontserver"].push(
-                        this._parseFont(this._decodeEmbeddedFile(data))
+                        opentype.parse(this._decodeEmbeddedFile(data))
                     );
                     data = "";
                     if (foundHeading) return false;
@@ -1207,39 +1280,43 @@ const parser_prototype = global.Object.create(global.Object, {
     _parse: {
         /**
          * Performs parsing of each line of text, delegating to the specific parsers for each type of line.
-         * @param {string} line
+         * @param {TextServer} file
          * @private
          */
-        value: function _parse (line) {
+        value: function _parse (file) {
+            let line = file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]).trim();
             if (this._heading === "Fonts") {
-                if (this._handleEmbeddedFont(line)) return;
+                if (this._handleEmbeddedFont(line)) return line;
             }
             /*if (this._heading === "Graphics"){
                 if(this._handleEmbeddedGraphics(line))
-                    return;
+                    return line;
             }*/
             if (line[0] === "[" && line[line.length - 1] === "]") {
                 //If it's a heading line.
                 this._heading = line.slice(1, line.length - 1); //Set the current heading.
-                return;
             }
-            if (line[0] === ";") return; // this means the current line is just a comment so we just ignore it.
-            let keypair = this._splitOnce(line, ":"); //Split line into it's key and value.
-            if (keypair.length > 1) {
-                // ignore keys with no value.
-                if (!gassert(FOUND_DEPRICATED_COMMENT, keypair[0] !== "!"))
-                    //Check for the depricated comment style.
-                    return; //Ignore depricated comments.
-                try {
+            if (line[0] === ";") return line; // this means the current line is just a comment so we just ignore it.
+            let bytes = file.rewind();
+            let key = file.next(this._fileEncoding,[":","\r\n","\n\r","\n","\r"]); //Get the key of the line.
+            // ignore keys with no value.
+            if (key.length < line.length-1) {
+                //Check for the depricated comment style.
+                if (!gassert(FOUND_DEPRICATED_COMMENT, key !== "!")){
+                    file.fastforward(bytes);
+                    return line; //Ignore depricated comments.
+                }try {
                     //Check to see if we can parse this heading.
-                    if (typeof this._parser[this._heading] !== "undefined")
+                    if (typeof this._parser[this._heading] !== "undefined"){
                         this._parser[this._heading].call(
                             // Parse the heading.
                             this,
-                            keypair,
+                            key,
+                            file,
                             this._config
                         );
-                    else {
+                        return "";
+                    } else {
                         //try to fix the heading case
                         let headings = Object.keys(this._parser);
                         let i = 0;
@@ -1255,13 +1332,17 @@ const parser_prototype = global.Object.create(global.Object, {
                                 this._parser[this._heading].call(
                                     // Parse the heading.
                                     this,
-                                    keypair,
+                                    key,
+                                    file,
                                     this._config
                                 );
-                                break;
+                                return "";
                             }
                         }
-                        gassert(UNKNOWN_HEADING, i !== headings.length);
+                        if(gassert(UNKNOWN_HEADING, i !== headings.length)){
+                            file.fastforward(bytes);
+                            return line;
+                        }
                     }
                 } catch (e) {
                     throw (
@@ -1271,10 +1352,12 @@ const parser_prototype = global.Object.create(global.Object, {
                         e +
                         "\n\t" +
                         "On Line: " +
-                        line
+                        this._fileLineCounter
                     );
                 }
             }
+            file.fastforward(bytes);
+            return line;
         },
         writable: false
     },
@@ -1282,10 +1365,8 @@ const parser_prototype = global.Object.create(global.Object, {
     init: {
         /**
          * Perform initialization of the library and all it's components.
-         * @param {function(ArrayBuffer):Font} parseFont
          */
-        value: function init (parseFont) {
-            this._parseFont = parseFont;
+        value: function init () {
             this._overrideTags = sabre.getOverrideTags();
         },
         writable: false
@@ -1294,12 +1375,12 @@ const parser_prototype = global.Object.create(global.Object, {
     "load": {
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
-         * @param {string} subsText the passed subtitle file contents.
+         * @param {ArrayBuffer} subs the passed subtitle file contents.
          * @param {Array<Font>} fonts fonts necessary for this subtitle file.
          * @param {function(RendererData):void} callback what we pass the results of the parsing to.
          * @return {void}
          */
-        value: function load (subsText, fonts, callback) {
+        value: function load (subs, fonts, callback) {
             //Create new default style.
             let defaultStyle = new sabre.SSAStyleDefinition();
             defaultStyle.setName("Default");
@@ -1317,19 +1398,24 @@ const parser_prototype = global.Object.create(global.Object, {
                     "scaled_border_and_shadow": false
                 }
             });
-            if (subsText.indexOf("\xEF\xBB\xBF") === 0) {
-                //check for BOM
-                subsText = subsText.replace("\xEF\xBB\xBF", ""); //ignore BOM, we're on the web, everything is big endian.
-            }
-            let subs = subsText.split(/(?:\r?\n)|(?:\n\r?)/); //Split up all lines.
+            let text = new sabre.TextServer(subs);
+            let bomtest = text.getBytes(3);
+            if (bomtest[0] !== 0xEF || bomtest[1] !== 0xBB || bomtest[2] !== 0xBF) {
+                text.rewind();
+                this._fileEncoding = sabre.CodePages.ANSI;
+            } else this._fileEncoding = sabre.CodePages.UTF8; 
             console.info("Parsing Sub Station Alpha subtitle file...");
-            if (subs[0].trim() !== "[Script Info]") {
-                throw "Invalid Sub Station Alpha script";
-            }
+            let started = false;
             this._lineCounter = 0;
-            for (let i = 0; i < subs.length; i++) {
-                this._parse(subs[i]); //Parse individual lines of the file.
-            }
+            this._fileLineCounter = 1;
+            do{
+                const line = this._parse(text);
+                if(line.trim() === "[Script Info]"){
+                    started = true;
+                }else if (!started && !text.hasNext()) {
+                    throw "Invalid Sub Station Alpha script";
+                }
+            }while (text.hasNext());
             callback(this._config); //pass the config to the renderer
         },
         writable: false
@@ -1337,11 +1423,12 @@ const parser_prototype = global.Object.create(global.Object, {
 });
 
 /**
- * @param {function(ArrayBuffer):Font} parseFont
+ * Constructor for the parser
+ * @param {ArrayBuffer} buff the subtitle file's contents.
  */
-sabre["Parser"] = function Parser (parseFont) {
+sabre["Parser"] = function Parser (buff) {
     let parser = global.Object.create(parser_prototype);
-    parser.init(parseFont);
+    parser.init(buff);
     return parser;
 };
 
@@ -1362,18 +1449,17 @@ const bitmapSupported =
  * Note: if you use the options parameter is recommended you set colorSpace to either AUTOMATIC (for studio-swing)
  * or AUTOMATIC_PC (for full-swing) and set the nativeResolution option unless you know the video's colorspace.
  * @public
- * @param {!function(ArrayBuffer):Font} parseFont a function that returns an opentype.js Font object when passed an ArrayBuffer.
  * @param {!{fonts:(!Array<Font>|undefined),subtitles:(!string|undefined),colorSpace:(!number|undefined),resolution:(!Array<number>|undefined),nativeResolution:(!Array<number>|undefined)}=} options Initialization options as a shortcut to using the configuration functions (the functions still need to be used if the viewport changes, the subtitle file needs to be changed, the colorspace need to be changed or to request a frame).
  */
 
-external["SABRERenderer"] = function SABRERenderer (parseFont,options) {
-    const parser = new sabre["Parser"](parseFont);
+external["SABRERenderer"] = function SABRERenderer (options) {
+    const parser = new sabre["Parser"]();
     const renderer = new sabre.Renderer();
     const delegate = Object.freeze({
         /**
          * Begins the process of parsing the passed subtitles in SSA/ASS format into subtitle events.
          * @public
-         * @param {string} subtitles the subtitle file's contents.
+         * @param {ArrayBuffer} subtitles the subtitle file's contents.
          * @param {Array<Font>} fonts preloaded fonts necessary for this subtitle file (one of these MUST be Arial).
          * @return {void}
          */

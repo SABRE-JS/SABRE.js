@@ -9,7 +9,7 @@
  *              compile:function((!WebGLRenderingContext|!WebGL2RenderingContext),Object=,function(),string=),
  *          }}
  */
-var Shader;
+let Shader;
 
 /**
  * @type {function(new:Shader)}

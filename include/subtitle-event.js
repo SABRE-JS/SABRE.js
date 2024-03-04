@@ -26,7 +26,7 @@
  *              getLineTransitionTargetOverrides:function():Array<SSALineTransitionTargetOverride>
  *          }}
  */
-var SSASubtitleEvent;
+let SSASubtitleEvent;
 
 /**
  * @type {function(new:SSASubtitleEvent)}

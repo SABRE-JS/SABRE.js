@@ -4,7 +4,7 @@
  *              setEvents:function(!Array<SSASubtitleEvent>):void
  *          }}
  */
-var SubtitleScheduler;
+let SubtitleScheduler;
 
 /**
  * @type {function(new:SubtitleScheduler)}

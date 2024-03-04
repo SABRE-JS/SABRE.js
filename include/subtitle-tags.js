@@ -21,7 +21,7 @@
  *  )
  * }}
  */
-var OverrideTag;
+let OverrideTag;
 
 /**
  * @type {function():Array<OverrideTag>}

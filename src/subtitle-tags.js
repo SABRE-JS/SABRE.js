@@ -5,8 +5,8 @@
  |
  |-
  */
-//@include [util]
 //@include [global-constants]
+//@include [util]
 //@include [color]
 //@include [style]
 //@include [style-override]
@@ -54,7 +54,7 @@ const INVALID_T_FUNCTION_TAG = new sabre.Complaint(
  * }}
  */
 
-var OverrideTag;
+let OverrideTag;
 
 /**
  * @type {?Array<OverrideTag>}
@@ -861,24 +861,24 @@ sabre["getOverrideTags"] = function(){
                     lineGlobalTransitionTargetOverrides
                 ) {
                     if (parameters.length === 0) return;
-                    var p1 = global.parseInt(parameters[0], 10);
-                    var p2 = global.parseInt(parameters[1], 10);
+                    let p1 = global.parseInt(parameters[0], 10);
+                    let p2 = global.parseInt(parameters[1], 10);
                     if (global.isNaN(p1) || global.isNaN(p2)) {
-                        var scale = 1;
+                        let scale = 1;
                         if (!global.isNaN(p1)) {
                             scale = p1;
                         }
-                        var drawString = parameters[1] ?? parameters[0];
+                        let drawString = parameters[1] ?? parameters[0];
                         if (drawString === null) return;
                         lineGlobalOverrides.setClip(
                             scale,
                             /** @type {string} */ (drawString)
                         );
                     } else {
-                        var x1 = p1;
-                        var y1 = p2;
-                        var x2 = global.parseInt(parameters[2], 10);
-                        var y2 = global.parseInt(parameters[3], 10);
+                        let x1 = p1;
+                        let y1 = p2;
+                        let x2 = global.parseInt(parameters[2], 10);
+                        let y2 = global.parseInt(parameters[3], 10);
 
                         if (!isInTransition) {
                             lineGlobalOverrides.setClip(x1, y1, x2, y2);
@@ -1384,24 +1384,24 @@ sabre["getOverrideTags"] = function(){
                 ) {
                     lineGlobalOverrides.setClipInverted(true);
                     if (parameters.length === 0) return;
-                    var p1 = global.parseInt(parameters[0], 10);
-                    var p2 = global.parseInt(parameters[1], 10);
+                    let p1 = global.parseInt(parameters[0], 10);
+                    let p2 = global.parseInt(parameters[1], 10);
                     if (global.isNaN(p1) || global.isNaN(p2)) {
-                        var scale = 1;
+                        let scale = 1;
                         if (!global.isNaN(p1)) {
                             scale = p1;
                         }
-                        var drawString = parameters[1] ?? parameters[0];
+                        let drawString = parameters[1] ?? parameters[0];
                         if (drawString === null) return;
                         lineGlobalOverrides.setClip(
                             scale,
                             /** @type {string} */ (drawString)
                         );
                     } else {
-                        var x1 = p1;
-                        var y1 = p2;
-                        var x2 = global.parseInt(parameters[2], 10);
-                        var y2 = global.parseInt(parameters[3], 10);
+                        let x1 = p1;
+                        let y1 = p2;
+                        let x2 = global.parseInt(parameters[2], 10);
+                        let y2 = global.parseInt(parameters[3], 10);
 
                         if (!isInTransition) {
                             lineGlobalOverrides.setClip(x1, y1, x2, y2);

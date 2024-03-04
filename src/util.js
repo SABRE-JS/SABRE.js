@@ -39,7 +39,7 @@
      */
     const Complaint = function Complaint (warning) {
         warning = warning.trim().replace(/\.+$/, "").trim() + ".";
-        var newComplaint = global.Object.seal(
+        let newComplaint = global.Object.seal(
             global.Object.create(
                 { _issue: warning, _grumbled: false },
                 ComplaintPrototype
@@ -248,7 +248,7 @@ sabre["performTransition"] = function performTransition (
 ) {
     if (transitionValue === null || curtime < start) return originalValue;
     if (curtime >= end || end <= start) return transitionValue;
-    var percent = Math.max(
+    let percent = Math.max(
         0,
         Math.min(Math.pow((curtime - start) / (end - start), acceleration), 1)
     );
@@ -277,8 +277,8 @@ sabre["cloneEventWithoutText"] = function cloneEventWithoutText (event) {
 };
 
 const lehex = function (value) {
-    var result = [];
-    for (var bytes = 4; bytes > 0; bytes--) {
+    let result = [];
+    for (let bytes = 4; bytes > 0; bytes--) {
         result.push(String.fromCharCode(value & 255));
         value >>= 8;
     }
@@ -287,7 +287,7 @@ const lehex = function (value) {
 
 //implement toBlob on systems that don't support it in a manner that avoids using costly dataurls
 const canvasToBlobPolyfill = function canvasToBlobPolyfill(callback /*, type, quality*/) {
-    var tempCanvas = null;
+    let tempCanvas = null;
     if (typeof global.OffscreenCanvas === "undefined") {
         tempCanvas = global.document.createElement("canvas");
         tempCanvas.width = this.width;
@@ -295,10 +295,10 @@ const canvasToBlobPolyfill = function canvasToBlobPolyfill(callback /*, type, qu
     } else {
         tempCanvas = new global.OffscreenCanvas(this.width, this.height);
     }
-    var ctx = tempCanvas.getContext("2d");
+    let ctx = tempCanvas.getContext("2d");
     ctx.drawImage(this, 0, 0);
-    var imgdata = ctx.getImageData(0, 0, this.width, this.height);
-    var header =
+    let imgdata = ctx.getImageData(0, 0, this.width, this.height);
+    let header =
         "BM" +
         lehex(
             (imgdata.data.length || 4 * this.width * this.height) + 14 + 108
@@ -322,25 +322,25 @@ const canvasToBlobPolyfill = function canvasToBlobPolyfill(callback /*, type, qu
         "\xFF\x00\x00\x00" +
         "\x00\x00\x00\xFF" +
         "\x42\x47\x52\x73";
-    var i;
+    let i;
     for (i = 0; i < 0x24; i++) header += "\x00";
     header += "\x00\x00\x00\x00" + "\x00\x00\x00\x00" + "\x00\x00\x00\x00";
-    var arr = new ArrayBuffer(
+    let arr = new ArrayBuffer(
         (imgdata.data.length || 4 * this.width * this.height) +
             header.length +
             4 -
             (header.length % 4)
     );
-    var bytes = new Uint8Array(arr);
-    var longs = new Uint32Array(arr);
+    let bytes = new Uint8Array(arr);
+    let longs = new Uint32Array(arr);
     for (i = 0; i < header.length; i++) {
         bytes[i] = header.charCodeAt(i);
     }
-    var k = Math.ceil(header.length / 4);
-    for (var j = 0; j < (imgdata.width || this.width); j++) {
-        for (var l = 0; l < (imgdata.height || this.height); l++) {
+    let k = Math.ceil(header.length / 4);
+    for (let j = 0; j < (imgdata.width || this.width); j++) {
+        for (let l = 0; l < (imgdata.height || this.height); l++) {
             i = (imgdata.width || this.width) * l + j;
-            var n =
+            let n =
                 (imgdata.width || this.width) *
                     ((imgdata.height || this.height) - l) -
                 ((imgdata.width || this.width) - j) +
@@ -466,9 +466,9 @@ sabre["stringEqualsCaseInsensitive"] = function stringEqualsCaseInsensitive (a, 
  * @return {number} Rounded result.
  */
 sabre["roundTo"] = function roundTo (n, p) {
-    var value = +n.toFixed(p);
-    var q = +(n - value + this.pow(10, -(p + 2))).toFixed(p + 1);
-    var test = q >= this.pow(10, -(p + 1)) * 5;
+    let value = +n.toFixed(p);
+    let q = +(n - value + this.pow(10, -(p + 2))).toFixed(p + 1);
+    let test = q >= this.pow(10, -(p + 1)) * 5;
     value += test ? this.pow(10, -p) : 0;
     return value;
 };
