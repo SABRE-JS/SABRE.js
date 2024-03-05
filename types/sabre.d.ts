@@ -1,7 +1,7 @@
 type CanvasDrawable = HTMLCanvasElement | OffscreenCanvas;
 type SABREOptions = {
     fonts?: Array<Font>,
-    subtitles?: string,
+    subtitles?: ArrayBuffer,
     colorSpace?:number,
     resolution?:number[],
     nativeResolution?:number[]
@@ -28,9 +28,9 @@ declare namespace sabre {
         const FCC_PC: number;
     }
     class SABRERenderer {
-        constructor(loadFont: (name: string) => void, options?: SABREOptions);
+        constructor(options?: SABREOptions);
 
-        loadSubtitles(subsText: string, fonts: Array<Font>): void;
+        loadSubtitles(subs: ArrayBuffer, fonts: Array<Font>): void;
         
         setColorSpace(colorSpace: number, width?: number, height?: number): void;
 

@@ -4,11 +4,9 @@
     "description": "A gpu accelerated ecmascript renderer for Advanced Substation Alpha (ASS) subtitles. Renders .ass and .ssa files over video in the browser.",
     "main": "dist/sabre.min.js",
     "types": "types/sabre.d.ts",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
     "dependencies": {
         "opentype.js": "^1.3.4",
+        "codepage": "^1.15.0",
         "@types/offscreencanvas": "^2019.3.0"
     },
     "repository": {
@@ -38,7 +36,7 @@
         "browser"
     ],
     "author": "Patrick \"ILOVEPIE\" Rhodes Martin & Contributors",
-    "license": "SEE LICENSE IN LICENCE.md",
+    "license": "See licence in LICENCE.md",
     "bugs": {
         "url": "https://github.com/SABRE-JS/SABRE.js/issues"
     },
