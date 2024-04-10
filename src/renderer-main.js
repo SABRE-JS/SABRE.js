@@ -108,6 +108,22 @@ const renderer_prototype = global.Object.create(Object, {
     //END MODULE VARIABLES
     //BEGIN LOCAL VARIABLES
 
+    _loaded: {
+        /**
+         * @type {boolean}
+         */
+        value: false,
+        writable: true
+    },
+
+    _config: {
+        /**
+         * @type {?RendererData}
+         */
+        value: null,
+        writable: true
+    },
+
     _nativeColorSpace: {
         /** @type {number} */
         value: sabre.ColorSpaces.RGB,
@@ -1386,15 +1402,15 @@ const renderer_prototype = global.Object.create(Object, {
                     sabre.CollisionModes.NORMAL
                 ) {
                     if (overlap[1] < 0) {
-                        if (positionInfo1.index < positionInfo2.index) {
+                        if (positionInfo1.index > positionInfo2.index) {
                             for (
                                 let i = 0;
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
                                 posInfosForMatchingId2[i].y +=
-                                    posInfosForMatchingId1[i].height;
-                                posInfosForMatchingId2[i].y -= overlap[1];
+                                    positionInfo1.height;
+                                posInfosForMatchingId2[i].y += overlap[1];
                             }
                         } else {
                             for (
@@ -1402,11 +1418,11 @@ const renderer_prototype = global.Object.create(Object, {
                                 i < posInfosForMatchingId1.length;
                                 i++
                             ) {
-                                posInfosForMatchingId1[i].y += overlap[1];
+                                posInfosForMatchingId1[i].y -= overlap[1];
                             }
                         }
                     } else if (overlap[1] > 0) {
-                        if (positionInfo1.index < positionInfo2.index) {
+                        if (positionInfo1.index > positionInfo2.index) {
                             for (
                                 let i = 0;
                                 i < posInfosForMatchingId2.length;
@@ -1428,14 +1444,14 @@ const renderer_prototype = global.Object.create(Object, {
                     }
                 } else {
                     if (overlap[1] > 0) {
-                        if (positionInfo1.index > positionInfo2.index) {
+                        if (positionInfo1.index < positionInfo2.index) {
                             for (
                                 let i = 0;
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
                                 posInfosForMatchingId2[i].y +=
-                                    posInfosForMatchingId1[i].height;
+                                    positionInfo1.height;
                                 posInfosForMatchingId2[i].y += overlap[1];
                             }
                         } else {
@@ -1448,13 +1464,13 @@ const renderer_prototype = global.Object.create(Object, {
                             }
                         }
                     } else if (overlap[1] < 0) {
-                        if (positionInfo1.index > positionInfo2.index) {
+                        if (positionInfo1.index < positionInfo2.index) {
                             for (
                                 let i = 0;
                                 i < posInfosForMatchingId2.length;
                                 i++
                             ) {
-                                posInfosForMatchingId2[i].y += overlap[1];
+                                posInfosForMatchingId2[i].y -= overlap[1];
                             }
                         } else {
                             for (
@@ -1464,7 +1480,7 @@ const renderer_prototype = global.Object.create(Object, {
                             ) {
                                 posInfosForMatchingId1[i].y +=
                                     positionInfo2.height;
-                                posInfosForMatchingId1[i].y -= overlap[1];
+                                posInfosForMatchingId1[i].y += overlap[1];
                             }
                         }
                     }
@@ -3118,11 +3134,11 @@ const renderer_prototype = global.Object.create(Object, {
          * @param {boolean} extraSpace Check for extra space.
          */
         value: function _cacheGlyph (stateHash, glyphIndex, source, extraSpace) {
-            let positionAttrib = this._cacheShader.getAttribute(
+            const positionAttrib = this._cacheShader.getAttribute(
                 this._gl,
                 "a_position"
             );
-            let textureAttrib = this._cacheShader.getAttribute(
+            const textureAttrib = this._cacheShader.getAttribute(
                 this._gl,
                 "a_texcoord"
             );
@@ -3382,10 +3398,10 @@ const renderer_prototype = global.Object.create(Object, {
                     this._gl.FRAMEBUFFER,
                     this._frameBufferA
                 );
-                this._gl.clear(
+                            this._gl.clear(
                     this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
                 );
-            }
+}
             //TODO: Render from cache.
             let cachedGlyphInfo = null;
             let cachedMaskGlyphInfo = null;
@@ -3578,15 +3594,15 @@ const renderer_prototype = global.Object.create(Object, {
             }
             //Draw background or outline or text depending on pass to destination
             {
-                let positionAttrib = this._positioningShader.getAttribute(
+                const positionAttrib = this._positioningShader.getAttribute(
                     this._gl,
                     "a_position"
                 );
-                let textureAttrib = this._positioningShader.getAttribute(
+                const textureAttrib = this._positioningShader.getAttribute(
                     this._gl,
                     "a_texcoord"
                 );
-                let maskAttrib = this._positioningShader.getAttribute(
+                const maskAttrib = this._positioningShader.getAttribute(
                     this._gl,
                     "a_maskcoord"
                 );
@@ -4154,7 +4170,7 @@ const renderer_prototype = global.Object.create(Object, {
                         this._gaussEdgeBlurPass1Shader.bindShader(this._gl);
                         //Draw framebuffer X to framebuffer Y
                         {
-                            let positionAttrib =
+                            const positionAttrib =
                                 this._gaussEdgeBlurPass1Shader.getAttribute(
                                     this._gl,
                                     "a_position"
@@ -4253,6 +4269,11 @@ const renderer_prototype = global.Object.create(Object, {
                     }
 
                     if (blurInfo.blur > 0) {
+                        const positionAttrib =
+                                this._convEdgeBlurShader.getAttribute(
+                                    this._gl,
+                                    "a_position"
+                                );
                         this._convEdgeBlurShader.updateOption(
                             "u_resolution_x",
                             this._compositingCanvas.width
@@ -4264,6 +4285,20 @@ const renderer_prototype = global.Object.create(Object, {
                         this._convEdgeBlurShader.updateOption("u_texture", 0);
                         this._convEdgeBlurShader.bindShader(this._gl);
                         //Draw framebuffer to destination
+    
+                        this._gl.bindBuffer(
+                            this._gl.ARRAY_BUFFER,
+                            this._fullscreenPositioningBuffer
+                        );
+                        this._gl.enableVertexAttribArray(positionAttrib);
+                        this._gl.vertexAttribPointer(
+                            positionAttrib,
+                            3,
+                            this._gl.FLOAT,
+                            false,
+                            0,
+                            0
+                        );
     
                         for (let i = 0; i < blurInfo.blur - 1; i++) {
                             this._gl.bindFramebuffer(
@@ -4278,10 +4313,6 @@ const renderer_prototype = global.Object.create(Object, {
                             this._gl.bindTexture(
                                 this._gl.TEXTURE_2D,
                                 sourceTexture
-                            );
-                            this._gl.bindBuffer(
-                                this._gl.ARRAY_BUFFER,
-                                this._fullscreenPositioningBuffer
                             );
                             this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
                             swap = backTexture;
@@ -4313,27 +4344,7 @@ const renderer_prototype = global.Object.create(Object, {
                             sourceTexture
                         );
     
-                        {
-                            let positionAttrib =
-                                this._convEdgeBlurShader.getAttribute(
-                                    this._gl,
-                                    "a_position"
-                                );
-                            this._gl.bindBuffer(
-                                this._gl.ARRAY_BUFFER,
-                                this._fullscreenPositioningBuffer
-                            );
-                            this._gl.enableVertexAttribArray(positionAttrib);
-                            this._gl.vertexAttribPointer(
-                                positionAttrib,
-                                3,
-                                this._gl.FLOAT,
-                                false,
-                                0,
-                                0
-                            );
                             this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
-                        }
     
                         swap = backTexture;
                         backTexture = sourceTexture;
@@ -4354,7 +4365,7 @@ const renderer_prototype = global.Object.create(Object, {
                         yScale
                     ]);
                     this._clipShader.bindShader(this._gl);
-                    let positionAttrib =
+                    const positionAttrib =
                         this._gaussEdgeBlurPass1Shader.getAttribute(
                             this._gl,
                             "a_position"
@@ -4386,7 +4397,7 @@ const renderer_prototype = global.Object.create(Object, {
             }
             if (blendDisabled) {
                 this._gl.enable(this._gl.BLEND);
-                this._gl.blendFunc(
+            this._gl.blendFunc(
                     this._gl.SRC_ALPHA,
                     this._gl.ONE_MINUS_SRC_ALPHA
                 );
@@ -4530,6 +4541,7 @@ const renderer_prototype = global.Object.create(Object, {
                 false
             );
             this._glSetup();
+            this._loaded = true;
         },
         writable: false
     },
@@ -4629,7 +4641,7 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {boolean}
          */
         value: function canRender() {
-            return !this._contextLost;
+            return this._loaded && !this._contextLost;
         },
         writable: false
     },
@@ -4682,6 +4694,7 @@ const renderer_prototype = global.Object.create(Object, {
             this._gl.clear(
                 this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
             );
+            
             let positions = this._organizeEvents(time, events);
             for (let i = 0; i < events.length; ) {
                 for (let pass = 0; pass < 3; pass++) {
@@ -4813,8 +4826,8 @@ const renderer_prototype = global.Object.create(Object, {
          */
         value: function _getOutputCanvasContext (canvas, type) {
             this._outputCanvasContexts = this._outputCanvasContexts ?? {};
-            if(typeof(canvas._sabreID) === "undefined"){
-                canvas._sabreID = (this._outputCanvasCounter++)+"";
+            if(typeof(canvas._sabreID) === "undefined" || canvas._sabreID >= this._outputCanvasCounter){
+                canvas._sabreID = (this._outputCanvasCounter++);
                 return this._outputCanvasContexts[canvas._sabreID] = canvas.getContext(type);
             }else{
                 return this._outputCanvasContexts[canvas._sabreID];

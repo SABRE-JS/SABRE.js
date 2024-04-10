@@ -315,6 +315,8 @@ const shape_renderer_prototype = global.Object.create(Object, {
             lineTransitionTargetOverrides,
             pass
         ) {
+            this._ctx.lineCap = "round";
+            this._ctx.lineJoin = "round";
             this._setOutline(
                 time,
                 style,
