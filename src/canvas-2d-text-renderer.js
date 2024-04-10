@@ -1184,6 +1184,15 @@ const text_renderer_prototype = global.Object.create(Object, {
                                 this._strikethrough,
                                 this._underline
                             );
+                            this._ctx.globalCompositeOperation = "xor";
+                            this._drawGlyph(
+                                glyph,
+                                offsetXUnscaled,
+                                offsetYUnscaled,
+                                false,
+                                this._strikethrough,
+                                this._underline
+                            );
                         } else {
                             for (let i = -outline_x; i <= outline_x; i++) {
                                 this._drawGlyph(
@@ -1195,6 +1204,15 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     this._underline
                                 );
                             }
+                            this._ctx.globalCompositeOperation = "xor";
+                            this._drawGlyph(
+                                glyph,
+                                offsetXUnscaled,
+                                offsetYUnscaled,
+                                false,
+                                this._strikethrough,
+                                this._underline
+                            );
                         }
                     } else {
                         if (outline_gt_zero) {
@@ -1220,6 +1238,15 @@ const text_renderer_prototype = global.Object.create(Object, {
                                 this._strikethrough,
                                 this._underline
                             );
+                            this._ctx.globalCompositeOperation = "xor";
+                            this._drawGlyph(
+                                glyph,
+                                offsetXUnscaled,
+                                offsetYUnscaled,
+                                false,
+                                this._strikethrough,
+                                this._underline
+                            );
                         } else {
                             for (let i = -outline_y; i <= outline_y; i++) {
                                 this._drawGlyph(
@@ -1231,6 +1258,15 @@ const text_renderer_prototype = global.Object.create(Object, {
                                     this._underline
                                 );
                             }
+                            this._ctx.globalCompositeOperation = "xor";
+                            this._drawGlyph(
+                                glyph,
+                                offsetXUnscaled,
+                                offsetYUnscaled,
+                                false,
+                                this._strikethrough,
+                                this._underline
+                            );
                         }
                     }
                 } else {

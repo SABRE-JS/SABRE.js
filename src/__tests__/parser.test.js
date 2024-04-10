@@ -1,8 +1,10 @@
 global = globalThis;
+global.cptable = require('codepage');
 require('../util.js')
 require('../global-constants.js')
 require('../color.js');
 require('../style.js');
+require('../text-server.js');
 require('../style-override.js');
 require('../subtitle-event.js');
 require("../subtitle-tags.js");
@@ -83,13 +85,13 @@ const ssaEventKeys = [
 
 const loadFile = (file) => {
     const { readFileSync } = require('fs');
-    return readFileSync(__dirname+"/testfiles/" + file,"utf8");
+    return readFileSync(__dirname+"/testfiles/" + file,null);
 }
 
 describe("Parser", () => {
     describe("#load",() => {
         test("Does basic Advanced SubStation Alpha Subtitles parsing work?", () => {
-            const parser = new sabre.Parser(() => {});
+            const parser = new sabre.Parser();
             const testFile = loadFile('test1.ass');
             parser.load(testFile, [], (config) => {
                 expect(config).not.toBeNull();
@@ -124,7 +126,7 @@ describe("Parser", () => {
             });
         });
         test("Does Advanced SubStation Alpha Subtitles parsing work with arbitrary format ordering?", () => {
-            const parser = new sabre.Parser(() => {});
+            const parser = new sabre.Parser();
             const testFile = loadFile('test2.ass');
             parser.load(testFile, [], (config) => {
                 expect(config).not.toBeNull();
@@ -160,7 +162,7 @@ describe("Parser", () => {
             });
         });
         test("Does basic SubStation Alpha Subtitles parsing work?", () => {
-            const parser = new sabre.Parser(() => {});
+            const parser = new sabre.Parser();
             const testFile = loadFile('test1.ssa');
             parser.load(testFile, [], (config) => {
                 expect(config).not.toBeNull();
@@ -196,7 +198,7 @@ describe("Parser", () => {
             });
         });
         test("Does SubStation Alpha Subtitles parsing work with arbitrary format ordering?", () => {
-            const parser = new sabre.Parser(() => {});
+            const parser = new sabre.Parser();
             const testFile = loadFile('test2.ssa');
             parser.load(testFile, [], (config) => {
                 expect(config).not.toBeNull();

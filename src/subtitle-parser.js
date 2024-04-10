@@ -195,6 +195,7 @@ const parser_prototype = global.Object.create(global.Object, {
          * @return {number} the codepage number.
          */
         value: function _mapEncoding (encoding) {
+            if(typeof(encoding) === "undefined" || encoding === null) return this._fileEncoding;
             switch(encoding){
                 case sabre.CodePageIds.ANSI:
                     return sabre.CodePages.ANSI;
@@ -529,10 +530,22 @@ const parser_prototype = global.Object.create(global.Object, {
                         config["parser"]["event_format"] ||
                         default_ssa_event_format;
                 const arr = [];
-                while(arr.length < config["parser"]["event_format"].length-1){
-                    arr.push(file.next(this._fileEncoding,[",","\r\n","\n\r","\n","\r"]));
+                if(key === "Comment"){
+                    file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]);
+                    return;
                 }
-                for (let i = 0; i < arr.length; i++) arr[i] = arr[i].trim();
+                if(key !== "Dialogue" && key !== "Format"){
+                    console.warn(
+                        'Warning: Unrecognized key "' +
+                            key +
+                            '" for heading "Events"; Ignoring.'
+                    );
+                    file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]);
+                    return;
+                }
+                while(arr.length < config["parser"]["event_format"].length-1){
+                    arr.push(file.next(this._fileEncoding,[",","\r\n","\n\r","\n","\r"]).trim());
+                }
                 switch (key) {
                     case "Format":
                         arr.push(file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]).trim());
@@ -542,15 +555,6 @@ const parser_prototype = global.Object.create(global.Object, {
                         return;
                     case "Dialogue":
                         this._parseDialogue(arr, file, config);
-                        return;
-                    default:
-                        console.warn(
-                            'Warning: Unrecognized key "' +
-                                key +
-                                '" for heading "Events"; Ignoring.'
-                        );
-                    case "Comment":
-                        file.next(this._fileEncoding,["\r\n","\n\r","\n","\r"]);
                         return;
                 }
             }
@@ -1154,13 +1158,9 @@ const parser_prototype = global.Object.create(global.Object, {
             event.setStyle(style);
             event.setOverrides(event_overrides);
             event.setLineOverrides(line_overrides);
-            let events = this._parseDialogueText([event], file);
+            let events_parsed = this._parseDialogueText([event], file);
             //concatinate the resulting events.
-            config["renderer"]["events"] =
-                typeof config["renderer"]["events"] === "undefined" ||
-                config["renderer"]["events"] === null
-                    ? events
-                    : config["renderer"]["events"].concat(events);
+            config["renderer"]["events"] = config["renderer"]["events"].concat(events_parsed);
         },
         writable: false
     },
@@ -1299,15 +1299,18 @@ const parser_prototype = global.Object.create(global.Object, {
             if (line[0] === ";") return line; // this means the current line is just a comment so we just ignore it.
             let bytes = file.rewind();
             let key = file.next(this._fileEncoding,[":","\r\n","\n\r","\n","\r"]); //Get the key of the line.
-            // ignore keys with no value.
+            let keybytes = file.rewind();
+            // ignore empty keys.
             if (key.length < line.length-1) {
                 //Check for the depricated comment style.
                 if (!gassert(FOUND_DEPRICATED_COMMENT, key !== "!")){
                     file.fastforward(bytes);
                     return line; //Ignore depricated comments.
-                }try {
+                }
+                try {
                     //Check to see if we can parse this heading.
                     if (typeof this._parser[this._heading] !== "undefined"){
+                        file.fastforward(keybytes);
                         this._parser[this._heading].call(
                             // Parse the heading.
                             this,
@@ -1329,6 +1332,7 @@ const parser_prototype = global.Object.create(global.Object, {
                             ) {
                                 this._heading = headings[i];
                                 WRONG_CASE_IN_HEADING.grumble();
+                                file.fastforward(keybytes);
                                 this._parser[this._heading].call(
                                     // Parse the heading.
                                     this,
@@ -1395,7 +1399,8 @@ const parser_prototype = global.Object.create(global.Object, {
                     "default_wrap_style": sabre.WrapStyleModes.SMART,
                     "default_collision_mode": sabre.CollisionModes.NORMAL,
                     "color_mangling_mode": sabre.ColorManglingModes.DEFAULT,
-                    "scaled_border_and_shadow": false
+                    "scaled_border_and_shadow": false,
+                    "events": []
                 }
             });
             let text = new sabre.TextServer(subs);
