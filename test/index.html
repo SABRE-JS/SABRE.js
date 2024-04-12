@@ -5,6 +5,8 @@
 		<title>Sabre.js Debug Page</title>
 		<meta name="description" content="Sabre.js Debug Page">
         <meta name="author" content="Patrick 'ILOVEPIE' Rhodes Martin">
+        <script src="https://unpkg.com/codepage@latest/cptable.js"></script>
+        <script src="https://unpkg.com/codepage@latest/cputils.js"></script>
         <script src="https://spectorcdn.babylonjs.com/spector.bundle.js"></script>
         <script src="/opentype.min.js"></script>
         <script async src="/sabre.min.js"></script>
@@ -100,13 +102,9 @@ Dialogue: 0,0:01:02.00,0:01:04.00,Default,,0000,0000,0000,,{\an5\t()\clip(69,215
                 playing = false;
                 startTime = 0;
             }
-
-            function parseFont(data){
-                return opentype.parse(data);
-            }
-
+            
             window.onload = function(){
-                renderer = new sabre.SABRERenderer(parseFont);
+                renderer = new sabre.SABRERenderer();
                 let counter = 2;
                 const fonts = [];
                 const callback = (err,font) => {
@@ -116,7 +114,8 @@ Dialogue: 0,0:01:02.00,0:01:04.00,Default,,0000,0000,0000,,{\an5\t()\clip(69,215
                         fonts.push(font);
                     }
                     if(--counter === 0){
-                        renderer.loadSubtitles(subs.innerText,fonts);
+                        subs = new TextEncoder().encode(subs.innerText)
+                        renderer.loadSubtitles(subs.buffer,fonts);
                         renderer.setViewport(640,480);
                         playbutton.onclick = play;
                         stopbutton.onclick = stop;
