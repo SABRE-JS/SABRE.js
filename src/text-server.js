@@ -111,7 +111,7 @@ const text_server_prototype = Object.create(Object, {
             }
             this._lastPosition = this._position;
             this._position = this._buffer.length;
-            return global.cptable.utils.decode(codepage, this._buffer.subarray(this._position));
+            return global.cptable.utils.decode(codepage, this._buffer.subarray(this._lastPosition));
         },
         writable: false
     },
