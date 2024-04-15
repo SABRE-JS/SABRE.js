@@ -1,9 +1,9 @@
 global = globalThis;
-global.cptable = require('codepage');
 require('../util.js')
 require('../global-constants.js')
 require('../color.js');
 require('../style.js');
+require('../lib/codepage.js');
 require('../text-server.js');
 require('../style-override.js');
 require('../subtitle-event.js');
