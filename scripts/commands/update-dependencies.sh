@@ -6,7 +6,8 @@ if [ ! -d "$TEMP_DIR/codepage" ]; then
     rm -rf "$TEMP_DIR/codepage"
     git clone "https://git.sheetjs.com/sheetjs/js-codepage.git" "$TEMP_DIR/codepage"
 fi
-pushd "$TEMP_DIR/codepage"
+CUR_DIR ="$PWD"
+cd "$TEMP_DIR/codepage"
 printf '%s\n' "Building codepage dependency..." | tee -a $LOG_FILE
 git pull 2>&1 | tee -a $LOG_FILE
 make 2>&1 | tee -a $LOG_FILE
@@ -16,4 +17,4 @@ cat "$TEMP_DIR/codepage.js" "$TEMP_DIR/codepage/cputils.js" | sed "s#require\('.
 printf '%s\n' '}).call(sabre);' >> "$PROJECT_SOURCE_DIR/lib/codepage.js"
 rm -f "$TEMP_DIR/codepage.js"
 printf '%s\n' "Finished building codepage dependency." | tee -a $LOG_FILE
-popd
+cd "$CUR_DIR"
