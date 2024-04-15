@@ -300,14 +300,16 @@ const parser_prototype = global.Object.create(global.Object, {
                             );
                         } else if (config["info"]["version"] > 4)
                             console.warn(
-                                "Warning: Some subtitle features may not be supported"
+                                "Warning: Some subtitle features may not be supported."
                             );
                         config["info"]["is_ass"] = !!version[2];
-                        config["info"]["ass_version"] = version[2].length;
-                        console.info(
-                            "Advanced Sub Station Alpha: " +
-                                config["info"]["is_ass"] + "\tVersion:" + config["info"]["ass_version"]
-                        );
+                        if(config["info"]["is_ass"]){
+                            config["info"]["ass_version"] = version[2].length;
+                            console.info(
+                                "Advanced Sub Station Alpha: " +
+                                    config["info"]["is_ass"] + "\tVersion:" + config["info"]["ass_version"]
+                            );
+                        }
                         return;
                     }
                     case "Collisions": {
@@ -926,8 +928,7 @@ const parser_prototype = global.Object.create(global.Object, {
                     const second = text.indexOf("}");
                     if(first !== -1 && second !== -1 && first < second){
                         file.rewind();
-                        text = file.next(encoding,["}"]).replace(/\\h/g, "\u00A0");
-                        override = true;
+                        text = file.next(encoding,["}"]).replace(/\\h/g, "\u00A0")+"}";
                     }
                     event.setText(text);
                 }
@@ -935,43 +936,41 @@ const parser_prototype = global.Object.create(global.Object, {
                 match = /^([^{}]*?)\\([nN])(.*)$/.exec(text);
                 if (match !== null) {
                     let new_event = sabre.cloneEventWithoutText(event);
+                    text = match[1];
                     event.setText(match[1]);
                     new_event.setText(match[3]);
                     new_event.setNewLine(match[2] === "N");
                     events.splice(i + 1, 0, new_event);
                 }
-                if(override){
-                    match = /^([^{}]*?)\{(.*?)$/.exec(text); //\}(.*?)$
-                    if (match !== null) {
-                        let new_event = sabre.cloneEventWithoutText(event);
-                        event.setText(match[1]);
-                        //new_event.setText(match[3]);
-                        const _this = this;
-                        new_event.setOverrides(
-                            this._parseOverrides(
-                                {
-                                    start: event.getStart(),
-                                    end: event.getEnd()
-                                },
-                                function (style_name) {
-                                    return _this._styles[style_name];
-                                },
-                                function (new_style) {
-                                    new_event.setStyle(new_style);
-                                },
-                                event.getOverrides(),
-                                event.getLineOverrides(),
-                                function (lineTransitionTargetOverrides) {
-                                    event.addLineTransitionTargetOverrides(
-                                        lineTransitionTargetOverrides
-                                    );
-                                },
-                                match[2],
-                                this._config["info"]["is_ass"]
-                            )
-                        );
-                        events.splice(i + 1, 0, new_event);
-                    }
+                match = /^([^{}]*?)\{(.*?)\}$/.exec(text); //\}(.*?)$
+                if (match !== null) {
+                    let new_event = sabre.cloneEventWithoutText(event);
+                    event.setText(match[1]);
+                    const _this = this;
+                    new_event.setOverrides(
+                        this._parseOverrides(
+                            {
+                                start: event.getStart(),
+                                end: event.getEnd()
+                            },
+                            function (style_name) {
+                                return _this._styles[style_name];
+                            },
+                            function (new_style) {
+                                new_event.setStyle(new_style);
+                            },
+                            event.getOverrides(),
+                            event.getLineOverrides(),
+                            function (lineTransitionTargetOverrides) {
+                                event.addLineTransitionTargetOverrides(
+                                    lineTransitionTargetOverrides
+                                );
+                            },
+                            match[2],
+                            this._config["info"]["is_ass"]
+                        )
+                    );
+                    events.splice(i + 1, 0, new_event);
                 }
             }
             return events;

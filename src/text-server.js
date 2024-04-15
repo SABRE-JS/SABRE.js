@@ -7,6 +7,7 @@
  */
 //@include [global-constants]
 //@include [util]
+//@include [lib/codepage]
 //@include [color]
 //@include [style]
 //@include [style-override]
@@ -82,7 +83,7 @@ const text_server_prototype = Object.create(Object, {
                 passthrough = true;
             }
             const delimiter_buffers = delimiters.map((delimiter) => {
-                return global.cptable.utils.encode(codepage,delimiter);
+                return sabre.cptable.utils.encode(codepage,delimiter);
             });
 
             for(let i = this._position; i < this._buffer.length; i++) {
@@ -99,7 +100,7 @@ const text_server_prototype = Object.create(Object, {
                         let subarr = this._buffer.subarray(this._position, i);
                         let result;
                         if(!passthrough){
-                            result = global.cptable.utils.decode(codepage, subarr);
+                            result = sabre.cptable.utils.decode(codepage, subarr);
                         } else {
                             result = global.String.fromCharCode.apply(String, subarr);
                         }
@@ -111,7 +112,7 @@ const text_server_prototype = Object.create(Object, {
             }
             this._lastPosition = this._position;
             this._position = this._buffer.length;
-            return global.cptable.utils.decode(codepage, this._buffer.subarray(this._lastPosition));
+            return sabre.cptable.utils.decode(codepage, this._buffer.subarray(this._lastPosition));
         },
         writable: false
     },

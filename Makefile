@@ -9,7 +9,11 @@ help:
 	@echo "Valid Targets:"
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#._]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs
 
-test:
+deps:
+	@echo "Update dependencies..."
+	@sh ./scripts/commands/update-dependencies.sh
+
+test: deps
 	@echo "Testing..."
 	@sh ./scripts/commands/test.sh
 	
@@ -33,7 +37,7 @@ clean:
 	@echo "Cleaning build directorys."
 	@sh ./scripts/commands/clean.sh
 	
-rebuild: clean local
+rebuild: clean deps local
 
 cleanup:
 	@echo "Cleaning up build tools."
