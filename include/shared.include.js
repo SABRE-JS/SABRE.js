@@ -104,10 +104,3 @@ opentype.parse = function () {};
  * @typedef {Array<number>|Uint8Array}
  */
 let ByteArray;
-
-/**
- * @type {{utils:{encode:function(number,string):Array<number>,decode:function(number,ByteArray):string}}}
- */
-global.cptable = {utils: {encode: function () {},decode: function () {}}};
-
-let cptable = global.cptable;
