@@ -3033,8 +3033,12 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {?Array<number>} Results of allocation attempt.
          */
         value: function _allocateCacheSpace (requiredWidth, requiredHeight, extraSpace) {
+            const spacing = 10;
+            let spacingX, spacingY;
             requiredWidth = requiredWidth / this._getCacheWidth();
             requiredHeight = requiredHeight / this._getCacheHeight();
+            requiredWidth += (spacingX = spacing / this._getCacheWidth());
+            requiredHeight += (spacingY = spacing / this._getCacheHeight());
             let result = null;
             for(let i = 0; i < this._cacheAvailability.length; i++) {
                 const area = this._cacheAvailability[i];
@@ -3056,7 +3060,7 @@ const renderer_prototype = global.Object.create(Object, {
                         params.push({x:minx,y:miny,x2:maxx,y2:maxy});
                     }
                     this._cacheAvailability.splice.apply(this._cacheAvailability,params);
-                    result = [area.x,area.y,requiredWidth,requiredHeight];
+                    result = [area.x+spacingX/2,area.y+spacingY/2,requiredWidth-spacingX,requiredHeight-spacingY];
                     break;
                 }
             }
