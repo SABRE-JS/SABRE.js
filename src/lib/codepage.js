@@ -1088,7 +1088,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
       return EE;
     };
     var sbcs_encode = function make_sbcs_encode(cp) {
-      var EE = make_EE(cpt[cp].enc);
+      var EE = make_EE(cpt[cp]["enc"]);
       return function sbcs_e(data, ofmt) {
         var len = data.length;
         var out, i=0, j=0, D=0, w=0;
@@ -1120,7 +1120,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
       };
     };
     var sbcs_decode = function make_sbcs_decode(cp) {
-      var D = cpt[cp].dec;
+      var D = cpt[cp]["dec"];
       var DD = Buffer.allocUnsafe(131072), d=0, c="";
       for(d=0;d<D.length;++d) {
         if(!(c=D[d])) continue;
@@ -1150,7 +1150,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
       };
     };
     var dbcs_encode = function make_dbcs_encode(cp) {
-      var E = cpt[cp].enc;
+      var E = cpt[cp]["enc"];
       var EE = Buffer.allocUnsafe(131072);
       for(var i = 0; i < 131072; ++i) EE[i] = 0;
       var keys = Object.keys(E);
@@ -1193,7 +1193,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
       };
     };
     var dbcs_decode = function make_dbcs_decode(cp) {
-      var D = cpt[cp].dec;
+      var D = cpt[cp]["dec"];
       var DD = Buffer.allocUnsafe(131072), d=0, c, w=0, j=0, i=0;
       for(i = 0; i < 65536; ++i) { DD[2*i] = 0xFF; DD[2*i+1] = 0xFD;}
       for(d = 0; d < D.length; ++d) {
@@ -1339,7 +1339,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
     var out = has_buf ? Buffer.allocUnsafe(4*len) : [], w=0, i=0, j = 0, ww=0;
     var C = cpt[cp], E, M = "";
     var isstr = typeof data === 'string';
-    if(C && (E=C.enc)) for(i = 0; i < len; ++i, ++j) {
+    if(C && (E=C["enc"])) for(i = 0; i < len; ++i, ++j) {
       w = E[isstr? data.charAt(i) : data[i]];
       if(w > 255) {
         out[j] = w>>8;
@@ -1440,7 +1440,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
     if(typeof data === "string") return decode(cp, data.split("").map(cca));
     var len = data.length, out = new Array(len), s="", w=0, i=0, j=1, k=0, ww=0;
     var C = cpt[cp], D, M="";
-    if(C && (D=C.dec)) {
+    if(C && (D=C["dec"])) {
       for(i = 0; i < len; i+=j) {
         j = 2;
         s = D[(data[i]<<8)+ data[i+1]];

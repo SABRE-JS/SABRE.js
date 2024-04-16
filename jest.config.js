@@ -2,6 +2,7 @@
 // Sync object
 const config = {
     verbose: true,
+    testMatch: ["**/__tests__/**/*.test.js"],
     globals: {
         "sabre": {
             "include": function () {},
