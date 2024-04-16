@@ -26,15 +26,11 @@ Note: Version 2.0.0 of opentype.js is not yet released, in order to use this lib
 
 How to include the library (from the jsdelivr CDN, this cdn is recommended as they publish usage statistics for each package):
 ```html
-<script src="https://cdn.jsdelivr.net/npm/codepage@1.15.0/cptable.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/codepage@1.15.0/cputils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/opentype.js@^2.0.0/dist/opentype.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@sabre-js/sabre@latest/dist/sabre.min.js"></script>
 ```
 How to include the library (from the unpkg CDN, for the more privacy minded):
 ```html
-<script src="https://unpkg.com/codepage@1.15.0/cptable.js"></script>
-<script src="https://unpkg.com/codepage@1.15.0/cputils.js"></script>
 <script src="https://unpkg.com/opentype.js@^2.0.0/dist/opentype.min.js"></script>
 <script src="https://unpkg.com/@sabre-js/sabre@latest/dist/sabre.min.js"></script>
 ```
