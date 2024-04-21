@@ -109,7 +109,16 @@ const ShaderPrototype = Object.create(Object, {
             this._textures = {};
             this._attributes = {};
             let xmlhttp = null;
-            if (
+            if (typeof module !== 'undefined' && module.exports) {
+                const fs = require('fs');
+                let response = fs.readFileSync(vertexUrl, "utf8");
+                shaderlog[vertexUrl] = response;
+                this.vertSrc = response;
+                response = fs.readFileSync(fragmentUrl, "utf8");
+                shaderlog[fragmentUrl] = response;
+                this.fragSrc = response;
+                return;
+            }else if (
                 typeof global.localStorage === "undefined" ||
                 typeof expire === "undefined" ||
                 expire <= 0

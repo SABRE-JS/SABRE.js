@@ -83,10 +83,12 @@ const ssaEventKeys = [
     "Text"
 ];
 
-const loadFile = (file) => {
+const loadFile = (function(){
     const { readFileSync } = require('fs');
-    return readFileSync(__dirname+"/testfiles/" + file,null);
-}
+    return function(file){
+        return readFileSync(__dirname+"/testfiles/" + file,null);
+    }
+})();
 
 describe("Parser", () => {
     describe("#load",() => {

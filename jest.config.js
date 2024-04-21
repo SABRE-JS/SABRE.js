@@ -11,6 +11,9 @@ const config = {
         "external": {}
     },
     testEnvironment: "jsdom",
+    testEnvironmentOptions: {
+        url: "https://localhost/src/__tests__/"
+    },
     testPathIgnorePatterns: ["includes", "test-constants", "test-utils"],
     sandboxInjectedGlobals: [
         "Math",
