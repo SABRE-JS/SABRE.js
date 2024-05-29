@@ -373,7 +373,7 @@ const renderer_prototype = global.Object.create(Object, {
          */
         value: function _getCacheWidth () {
             const pixelRatio = sabre.getPixelRatio();
-            return Math.min(this._compositingCanvas.width*2,global.screen.width*pixelRatio);
+            return Math.min(this._compositingCanvas.width*2,Math.max(this._compositingCanvas.width*2,global.screen.width*pixelRatio));
         },
         writable: false
     },
@@ -386,7 +386,7 @@ const renderer_prototype = global.Object.create(Object, {
          */
         value: function _getCacheHeight () {
             const pixelRatio = sabre.getPixelRatio();
-            return Math.min(this._compositingCanvas.height*2,global.screen.height*pixelRatio);
+            return Math.min(this._compositingCanvas.height*2,Math.max(this._compositingCanvas.height*2,global.screen.height*pixelRatio));
         },
         writable: false
     },
@@ -3168,7 +3168,10 @@ const renderer_prototype = global.Object.create(Object, {
                 this._clearCache();
                 allocationInfo = this._allocateCacheSpace(cacheInfo.textureDimensions[0],cacheInfo.textureDimensions[1],extraSpace);
             }
-            [cacheInfo.x,cacheInfo.y,cacheInfo.width,cacheInfo.height] = allocationInfo;
+            cacheInfo.x = allocationInfo[0];
+            cacheInfo.y = allocationInfo[1];
+            cacheInfo.width = allocationInfo[2];
+            cacheInfo.height = allocationInfo[3];
             this._loadGlyphToVram(source, this._textureSubtitleBounds);
             this._gl.bindBuffer(
                 this._gl.ARRAY_BUFFER,
@@ -4401,10 +4404,10 @@ const renderer_prototype = global.Object.create(Object, {
             }
             if (blendDisabled) {
                 this._gl.enable(this._gl.BLEND);
-            this._gl.blendFunc(
-                    this._gl.SRC_ALPHA,
-                    this._gl.ONE_MINUS_SRC_ALPHA
-                );
+                this._gl.blendFunc(
+                        this._gl.SRC_ALPHA,
+                        this._gl.ONE_MINUS_SRC_ALPHA
+                    );
             }
         },
         writable: false
@@ -4444,9 +4447,9 @@ const renderer_prototype = global.Object.create(Object, {
                 return _this._findFont(name, weight, italic);
             };
             this._textRenderer.setRequestFont(requestFont);
-            this._textRenderer.setScaledOutlineAndShadowEnabled(config.renderer["scaled_border_and_shadow"]);
+            this._textRenderer.setScaledOutlineAndShadowEnabled(config.renderer["scaled_border_and_shadow"]??false);
             this._textMaskRenderer.setRequestFont(requestFont);
-            this._textMaskRenderer.setScaledOutlineAndShadowEnabled(config.renderer["scaled_border_and_shadow"]);
+            this._textMaskRenderer.setScaledOutlineAndShadowEnabled(config.renderer["scaled_border_and_shadow"]??false);
             this._config = config;
             this._scheduler.setEvents(
                 /** @type {Array<SSASubtitleEvent>} */ (
@@ -4508,10 +4511,10 @@ const renderer_prototype = global.Object.create(Object, {
                         break;
                     /*
                     case <BT.2100's PQ string here>:
-                        this._nativeColorSpace = sabre.ColorSpaces.BT2100_PQ;
+                        this._nativeColorSpace = sabre.NativeColorSpaces.BT2100_PQ;
                         break;
                     case <BT.2100's HLG string here>:
-                        this._nativeColorSpace = sabre.ColorSpaces.BT2100_HLG;
+                        this._nativeColorSpace = sabre.NativeColorSpaces.BT2100_HLG;
                         break;
                     */
                 }

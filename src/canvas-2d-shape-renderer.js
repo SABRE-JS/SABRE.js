@@ -120,6 +120,7 @@ const shape_renderer_prototype = global.Object.create(Object, {
         value: function _init () {
             const options = Object.freeze({
                 "alpha": true,
+                "colorSpace": "srgb",
                 "desynchronized": true
             });
             if (typeof global.OffscreenCanvas === "undefined") {
@@ -770,6 +771,13 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                     offsetYUnscaled,
                                     false
                                 );
+                                this._ctx.globalCompositeOperation = "xor";
+                                this._drawShape(
+                                    cmds,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled,
+                                    false
+                                );
                             } else {
                                 for (let i = -outline_x; i <= outline_x; i++) {
                                     this._drawShape(
@@ -779,6 +787,14 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                         false
                                     );
                                 }
+                                this._ctx.globalCompositeOperation = "xor";
+                                this._drawShape(
+                                    cmds,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled,
+                                    false
+                                );
+
                             }
                         } else {
                             if (outline_gt_zero) {
@@ -800,6 +816,13 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                     offsetYUnscaled,
                                     false
                                 );
+                                this._ctx.globalCompositeOperation = "xor";
+                                this._drawShape(
+                                    cmds,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled,
+                                    false
+                                );
                             } else {
                                 for (let i = -outline_y; i <= outline_y; i++) {
                                     this._drawShape(
@@ -809,6 +832,13 @@ const shape_renderer_prototype = global.Object.create(Object, {
                                         false
                                     );
                                 }
+                                this._ctx.globalCompositeOperation = "xor";
+                                this._drawShape(
+                                    cmds,
+                                    offsetXUnscaled,
+                                    offsetYUnscaled,
+                                    false
+                                );
                             }
                         }
                     } else {

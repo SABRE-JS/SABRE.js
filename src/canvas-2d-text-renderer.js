@@ -388,7 +388,9 @@ const text_renderer_prototype = global.Object.create(Object, {
             this._fontInfo = {};
             this._fontInfo.name = fontName;
             this._fontInfo.font = font;
+            this._fontInfo.requestedItalic = fontItalicized;
             this._fontInfo.foundItalic = foundItalic;
+            this._fontInfo.requestedWeight = fontWeight;
             this._fontInfo.foundWeight = foundWeight;
             this._fontInfo.size = fontSize;
             this._fontInfo.weight = fontWeight;
@@ -628,7 +630,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                 pixelScaleRatio: this._pixelScaleRatio,
                 fontName: this._fontInfo.name,
                 fontSize: this._fontInfo.size,
+                rFontWeight: this._fontInfo.requestedWeight,
                 fontWeight: this._fontInfo.weight,
+                rFontItalic: this._fontInfo.requestedItalic,
                 fontItalic: this._fontInfo.italic
             };
             return sabre.hashObject(state);
@@ -670,26 +674,35 @@ const text_renderer_prototype = global.Object.create(Object, {
          * @param {boolean} underline if true, underline text, if false do nothing.
          */
         value: function _drawGlyph (glyph, offsetX, offsetY, stroke, strikethrough, underline) {
-            const glyphbb = glyph.getBoundingBox();
             const fontSize = this._fontInfo.size;
             const fontUnitsScale = this._fontInfo.font.unitsPerEm || 1000;
             const fontSizeMultiplier = fontSize / fontUnitsScale;
             const yoffset =
                 this._fontInfo.font.ascender * fontSizeMultiplier;
+            const options = {}
+            options["variation"] = {};
+            options["variation"]["wght"] = this._fontInfo.requestedWeight;
+            options["variation"]["ital"] = this._fontInfo.requestedItalic?1:0;
+            options["fill"] = this._ctx.fillStyle;
+            options["stroke"] = this._ctx.strokeStyle;
+            options["strokeWidth"] = this._ctx.lineWidth;
             const path = glyph.getPath(
                 offsetX,
                 offsetY + yoffset,
-                fontSize
+                fontSize,
+                options,
+                this._fontInfo.font
             );
-            path.fill = null;
-            path.stroke = null;
-            path.draw(this._ctx);
-            if (stroke) {
-                this._ctx.stroke();
-                //this._ctx.fill();
-            } else {
-                this._ctx.fill();
+            const glyphbb = path.getBoundingBox();
+            if(!stroke){
+                path.fill = this._ctx.fillStyle;
+                path.stroke = null;
+            }else{
+                path.stroke = this._ctx.strokeStyle;
+                path.strokeWidth = this._ctx.lineWidth;
+                path.fill = this._ctx.strokeStyle;
             }
+            path.draw(this._ctx);
             if (strikethrough) {
                 this._ctx.beginPath();
                 const size =  this._fontInfo.strikethroughSize * fontSizeMultiplier;
@@ -697,9 +710,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._ctx.rect(offsetX + Math.min(glyphbb.x1, 0) * fontSizeMultiplier, offsetY + yoffset - position, glyph.advanceWidth * fontSizeMultiplier, size);
                 if (stroke) {
                     this._ctx.stroke();
-                } else {
-                    this._ctx.fill();
+                    this._ctx.fillStyle = this._ctx.strokeStyle;
                 }
+                this._ctx.fill();
             }
             if (underline) {
                 this._ctx.beginPath();
@@ -708,9 +721,9 @@ const text_renderer_prototype = global.Object.create(Object, {
                 this._ctx.rect(offsetX + Math.min(glyphbb.x1, 0)  * fontSizeMultiplier, offsetY + yoffset - position, glyph.advanceWidth * fontSizeMultiplier, size);
                 if (stroke) {
                     this._ctx.stroke();
-                } else {
-                    this._ctx.fill();
+                    this._ctx.fillStyle = this._ctx.strokeStyle;
                 }
+                this._ctx.fill();
             }
         },
         writable: false

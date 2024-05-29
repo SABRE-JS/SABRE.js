@@ -106,6 +106,7 @@ const font_server_prototype = Object.create(Object, {
             if (this._fontMapping[name]) return this._fontMapping[name];
             let results = [];
             for (let i = 0; i < this._fonts.length; i++) {
+                if(!this._fonts[i]) continue;
                 let addFont = false;
                 const nameTable = this._fonts[i].tables.name;
                 const fontFamily =
@@ -136,6 +137,9 @@ const font_server_prototype = Object.create(Object, {
                         if((fontFamily+" "+fontSubfamily).toLowerCase().trim() === name){
                             addFont = true;
                         }
+                    }else if(this._fonts[i].variation){
+                        if(name.startsWith(fontFamily.toLowerCase().trim()))
+                            addFont = true;
                     }
                 }
                 if (preferredFamily) {
@@ -145,11 +149,18 @@ const font_server_prototype = Object.create(Object, {
                         if((preferredFamily+" "+preferredSubfamily).toLowerCase().trim() === name){
                             addFont = true;
                         }
+                    }else if(this._fonts[i].variation){
+                        if(name.startsWith(preferredFamily.toLowerCase().trim()))
+                            addFont = true;
                     }
                 }
                 if (fullName) {
                     if (fullName.toLowerCase().trim() === nameTypes)
                         addFont = true;
+                    else if(this._fonts[i].variation){
+                        if(name.startsWith(fullName.toLowerCase().trim()))
+                            addFont = true;
+                    }
                 }
                 if (addFont) {
                     const font = this._fonts[i];
