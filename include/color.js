@@ -21,9 +21,9 @@ sabre.cleanRawColor = function(raw){return "";};
 let SSAColor;
 
 /**
- * @type {function(new:SSAColor,number=,number=,number=,number=)}
+ * @type {function(new:SSAColor,number=,number=,number=,number=,number=)}
  */
-sabre.SSAColor = function (r, g, b, a) {};
+sabre.SSAColor = function (r, g, b, a, bitDepth) {};
 
 /**
  * @typedef {!{
