@@ -7,6 +7,41 @@
  */
 
 /**
+ * Convert n-bit arbitrarily-ordered color to a Object containing floating point representations of it's components.
+ * @param {number} color the n-bit color.
+ * @param {number=} bitDepth the bit depth of the color components (defaults to 8).
+ * @param {Array<string>=} componentOrder the order of the color components (defaults to ABGR).
+ * @param {Array<boolean>=} invertChannel whether to invert the coresponding channel (defaults to [true,false,false,false]).
+ * @return {Object<string,number>} the resulting color data.
+ * @private
+ */
+function colorToArray (color, bitDepth, componentOrder, invertChannel) {
+    let components = ["r", "g", "b", "a"];
+    if(typeof componentOrder === "object" && Array.isArray(componentOrder)) {
+        components = componentOrder.slice().reverse();
+    }
+    invertChannel = invertChannel ?? [true, false, false, false];
+    if(invertChannel.length !== components.length)
+        throw new Error("invertChannel must be the same length as componentOrder.");
+    bitDepth = bitDepth ?? 8;
+    if(bitDepth < 1 || bitDepth > 32)
+        throw new Error("bitDepth must be between 1 and 32 (inclusive).");
+    if(components.length * bitDepth > 32)
+        throw new Error("Unable to represent color with more than 32 bits.");
+    const result = {};
+    let i;
+    const mask = (1 << bitDepth) - 1;
+    for (i = 0; i < components.length; i++) {
+        result[components[i]] = (color & mask) / mask;
+        color = color >>> bitDepth;
+    }
+    for (i = 0; i < invertChannel.length; i++){
+        result[components[i]] = 1 - result[components[i]];
+    }
+    return result;
+}
+
+/**
  * Cleanup a raw color string.
  * @param {string} raw the raw string.
  * @return {string} the cleaned string.
@@ -19,35 +54,30 @@ sabre["cleanRawColor"] = function cleanRawColor (raw) {
     );
 };
     
-sabre["SSAColor"] = function SSAColor (r, g, b, a) {
-    let obj = {
+sabre["SSAColor"] = function SSAColor (r, g, b, a, bitDepth) {
+    const obj = {
         r: 0,
         g: 0,
         b: 0,
         a: 0
     };
+    
     if (typeof r === "number") {
-        if (r > 1.0 || r < 0) {
-            if (typeof g === "undefined") {
-                let n = r;
-                r = (n & 0xff) / 255;
-                n = n >>> 8;
-                g = (n & 0xff) / 255;
-                n = n >>> 8;
-                b = (n & 0xff) / 255;
-                n = n >>> 8;
-                a = (255 - (n & 0xff)) / 255;
-            } else {
-                r = (r & 0xff) / 255;
-                g = (g & 0xff) / 255;
-                b = (b & 0xff) / 255;
-                a = (a & 0xff) / 255;
+        if(typeof g !== "number") {
+            Object.assign(obj, colorToArray(r, bitDepth ?? 8));
+        } else {
+            if(typeof bitDepth !== "number") {
+                obj.r = r;
+                obj.g = g;
+                obj.b = b;
+                obj.a = a;
+            }else{
+                obj.r = r / ((1 << bitDepth) - 1);
+                obj.g = g / ((1 << bitDepth) - 1);
+                obj.b = b / ((1 << bitDepth) - 1);
+                obj.a = a / ((1 << bitDepth) - 1);
             }
         }
-        obj.r = r;
-        obj.g = g;
-        obj.b = b;
-        obj.a = a;
     }
 
     return Object.create(Object, {
@@ -110,20 +140,16 @@ sabre["SSAOverrideColor"] = function SSAOverrideColor (r, g, b, a) {
         a: null
     };
     if (typeof r === "number") {
-        if (r <= 1.0) obj.r = r;
-        else obj.r = (r & 0xff) / 255;
+        obj.r = r;
     }
     if (typeof g === "number") {
-        if (r <= 1.0) obj.g = g;
-        else obj.g = (g & 0xff) / 255;
+        obj.g = g;
     }
     if (typeof b === "number") {
-        if (r <= 1.0) obj.b = b;
-        else obj.b = (b & 0xff) / 255;
+        obj.b = b;
     }
     if (typeof a === "number") {
-        if (r <= 1.0) obj.a = a;
-        else obj.a = (a & 0xff) / 255;
+        obj.a = a;
     }
 
     return Object.create(Object, {
