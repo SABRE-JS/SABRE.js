@@ -109,7 +109,7 @@ const ShaderPrototype = Object.create(Object, {
             this._textures = {};
             this._attributes = {};
             let xmlhttp = null;
-            if (typeof module !== 'undefined' && module.exports) {
+            if (typeof module !== 'undefined' && typeof require === 'function') {
                 const fs = require('fs');
                 let response = fs.readFileSync(vertexUrl, "utf8");
                 shaderlog[vertexUrl] = response;
