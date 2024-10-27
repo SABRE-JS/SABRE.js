@@ -95,13 +95,20 @@ global.Math.trunc =
 })(global);
 
 (function (global) {
-    let shownTimeAlert = false;
-    let repaintTimes = [0, 0, 0];
-    let animationFrameId = null;
-    let callbacksCount = 0;
-    let callbacks = [];
+    const frameIdCount = 1024;
 
-    let lastVideoMetrics = {};
+    let shownTimeAlert = false;
+    let animationFrameId = null;
+    let currentFrameId = 0;
+
+    const repaintTimes = [0, 0, 0];
+
+    const callbackRanges = [];
+    const callbacks = [];
+
+    const videoList = [];
+    const lastVideoMetrics = {};
+
 
     function getMetricForVideo (video) {
         let metric = video.mozPresentedFrames ?? null;
@@ -112,10 +119,16 @@ global.Math.trunc =
             return metric;
         } else {
             let quality = video.getVideoPlaybackQuality();
-            return quality.totalVideoFrames - quality.droppedVideoFrames;
+            if(quality) return quality.totalVideoFrames - quality.droppedVideoFrames;
+            else return video.currentTime;
         }
     }
 
+    /**
+     * Checks if the video has updated.
+     * @modifies callbackRanges
+     * @param {number} currentTime high res time.
+     */
     function checkForNewVideoFrame (currentTime) {
         if (currentTime >= Number.MAX_SAFE_INTEGER && !shownTimeAlert) {
             shownTimeAlert = true;
@@ -132,46 +145,77 @@ global.Math.trunc =
             }
         }
 
-        let avgRepaintTime =
+        const avgRepaintTime =
             (repaintTimes[0] + repaintTimes[1] + repaintTimes[2]) / 3;
-        let videosChanged = {};
-        for (let i = 0; i < callbacks.length; i++) {
-            if (callbacks[i] === null) continue;
-            let isNewFrame = true;
-            let video = callbacks[i].video;
-            let callback = callbacks[i].callback;
-            let metric = getMetricForVideo(video);
-            if (!videosChanged[video]) {
-                let currentMetric = metric ?? NaN;
-                let lastMetric = lastVideoMetrics[video] ?? NaN;
-                lastVideoMetrics[video] = currentMetric;
-                isNewFrame = currentMetric !== lastMetric;
+        const videosChanged = {};
+        
+        let rangeIndex = -1;
+        let newFrameId = false;
+
+        while(++rangeIndex < callbackRanges.length){
+            if(callbackRanges[rangeIndex].frameId.value !== currentFrameId) continue;
+            const currentCallbackRange = callbackRanges[rangeIndex];
+            let shouldRemoveCurrentRange = false;
+            currentCallbackRange.frameId.noEdit = true;
+            const currentCallbacksEnd = currentCallbackRange.callbacksStart + currentCallbackRange.callbacksCount;
+            for (let i = currentCallbackRange.callbacksStart; i < currentCallbacksEnd; i++) {
+                if (callbacks[i] === null){
+                    if(currentCallbackRange.callbacksStart === i){
+                        currentCallbackRange.callbacksStart++;
+                    }    
+                    continue;
+                }
+                const videoid = callbacks[i].videoid;
+                const video = videoList[callbacks[i].videoid];
+                const callback = callbacks[i].callback;
+                const metric = getMetricForVideo(video);
+                let isNewFrame = videosChanged[videoid] ?? true;
+                if (!videosChanged[videoid]) {
+                    const currentMetric = metric ?? NaN;
+                    const lastMetric = lastVideoMetrics[videoid] ?? NaN;
+                    lastVideoMetrics[videoid] = currentMetric;
+                    isNewFrame = currentMetric !== lastMetric;
+                }
+                videosChanged[videoid] = isNewFrame;
+                if (isNewFrame) {
+                    newFrameId = true;
+                    if (--currentCallbackRange.callbacksCount === 0) {
+                        shouldRemoveCurrentRange = true;
+                    } else if(currentCallbackRange.callbacksStart === i)
+                        currentCallbackRange.callbacksStart++;
+                    else currentCallbackRange.callbacksCount++;
+                    callbacks[i] = null;
+                    let presentTime = currentTime + avgRepaintTime;
+                    callback.call(video, currentTime, {
+                        "presentationTime": currentTime,
+                        "expectedDisplayTime": presentTime,
+                        "width": video.videoWidth ?? video.width,
+                        "height": video.videoHeight ?? video.height,
+                        "mediaTime":
+                            video.currentTime +
+                            (performance.now() - presentTime) / 1000,
+                        "presentedFrames": metric ?? -1,
+                        "processingDuration": video.mozFrameDelay ?? 0
+                    });
+                }
             }
-            videosChanged[video] = isNewFrame;
-            if (isNewFrame) {
-                if (--callbacksCount === 0) {
-                    callbacks = [];
-                } else callbacks[i] = null;
-                let presentTime = currentTime + avgRepaintTime;
-                callback.call(video, currentTime, {
-                    "presentationTime": currentTime,
-                    "expectedDisplayTime": presentTime,
-                    "width": video.videoWidth ?? video.width,
-                    "height": video.videoHeight ?? video.height,
-                    "mediaTime":
-                        video.currentTime +
-                        (performance.now() - presentTime) / 1000,
-                    "presentedFrames": metric ?? -1,
-                    "processingDuration": video.mozFrameDelay ?? 0
-                });
+            if (shouldRemoveCurrentRange){
+                callbackRanges.shift();
+                rangeIndex--;
             }
         }
 
-        if (callbacksCount !== 0)
+        if (newFrameId && ++currentFrameId >= frameIdCount) {
+            currentFrameId = 0;
+        }
+
+        if (callbackRanges.length > 0) {
             animationFrameId = global.requestAnimationFrame(
                 checkForNewVideoFrame
             );
-        else animationFrameId = null;
+        } else {
+            animationFrameId = null;
+        }
         repaintTimes[0] = repaintTimes[1];
         repaintTimes[1] = repaintTimes[2];
         repaintTimes[2] = performance.now() - currentTime;
@@ -190,8 +234,86 @@ global.Math.trunc =
             global.HTMLVideoElement.prototype["oRequestVideoFrameCallback"] ??
             function (cb) {
                 let vid = this;
-                callbacksCount++;
-                let id = callbacks.push({ video: vid, callback: cb }) - 1;
+                const lastCallbackRangeIndex = callbackRanges.length - 1;
+                const earliestAvailableUnusedIndex = (function () {
+                    let earliest = 0;
+                    const processingNextFrame = callbackRanges.length > 0;
+                    let i = 0;
+                    if (processingNextFrame){
+                        do {
+                            const rangeEnd = callbackRanges[i].callbacksStart + callbackRanges[i].callbacksCount;
+                            if(callbackRanges[i].callbacksStart <= earliest && rangeEnd - 1 >= earliest){
+                                earliest = rangeEnd;
+                            }
+                        } while(callbackRanges[i].frameId.noEdit && ++i <= lastCallbackRangeIndex);
+                    }
+                    if(i <= lastCallbackRangeIndex){
+                        return callbacks.indexOf(null, earliest);
+                    }else return callbacks.length;
+                })();
+                const earliestAvailableNullCallbackIndexFromEnd = (function () {
+                    let earliestIndex = callbacks.length;
+                    let i;
+                    for (i = lastCallbackRangeIndex; i >= 0; i--) {
+                        const currentRange = callbackRanges[i];
+                        if(currentRange.frameId.noEdit || currentRange.frameId.value !== callbackRanges[0].frameId.value) break;
+                        if (currentRange.callbacksStart < earliestIndex) {
+                            earliestIndex = currentRange.callbacksStart;
+                            break;
+                        }
+                    }
+                    if(i >= 0) {
+                        return callbacks.indexOf(null,earliestIndex);
+                    } else return callbacks.length;
+                })();
+                let id = ((earliestAvailableUnusedIndex >= 0 && earliestAvailableUnusedIndex < earliestAvailableNullCallbackIndexFromEnd) ? earliestAvailableUnusedIndex : earliestAvailableNullCallbackIndexFromEnd);
+                let videoId = videoList.indexOf(vid);
+                if(videoId === -1){
+                    videoId = videoList.push(vid) - 1;
+                }
+                callbacks[id] = { video: vid, callback: cb, videoid: videoId};
+                let callbackRange = lastCallbackRangeIndex >= 0 ? callbackRanges[lastCallbackRangeIndex] : null;
+                const localLastFrameId = callbackRange ? callbackRange.frameId : { value: -1, noEdit: true };
+                {
+                    let newRange = !callbackRange;
+                    if (callbackRange && !callbackRange.frameId.noEdit) {
+                        if(id < callbackRange.callbacksStart){
+                            let clearBetween = true;
+                            for(let i = callbackRange.callbacksStart-1; i > id && i > 0; i--){
+                                if(callbacks[i] !== null){
+                                    clearBetween = false;
+                                    break;
+                                }
+                            }
+                            if(clearBetween){
+                                callbackRange.callbacksCount += callbackRange.callbacksStart - id;
+                                callbackRange.callbacksStart = id;
+
+                            } else newRange = true;
+                        }else if (id >= callbackRange.callbacksStart + callbackRange.callbacksCount) {
+                            let clearBetween = true;
+                            for(let i = callbackRange.callbacksStart + callbackRange.callbacksCount; i < id && i < callbacks.length; i++){
+                                if(callbacks[i] !== null){
+                                    clearBetween = false;
+                                    break;
+                                }
+                            }
+                            if(clearBetween){
+                                callbackRange.callbacksCount = id - callbackRange.callbacksStart + 1;
+                            } else newRange = true;
+                        }
+                        // we don't do anything if it's already in the range, as it's already scheduled.
+                    } else newRange = true;
+                    if(newRange){
+                        const potentialNewFrameId = ( !localLastFrameId.noEdit ? localLastFrameId : { value: (localLastFrameId.value < frameIdCount-1 ? localLastFrameId.value + 1 : 0), noEdit: false });
+                        callbackRange = {
+                            frameId: potentialNewFrameId,
+                            callbacksStart: id,
+                            callbacksCount: 1,
+                        }
+                        callbackRanges.push(callbackRange);
+                    }
+                }
                 if (animationFrameId === null) {
                     animationFrameId = global.requestAnimationFrame(
                         checkForNewVideoFrame
@@ -215,18 +337,58 @@ global.Math.trunc =
             global.HTMLVideoElement.prototype["oCancelVideoFrameCallback"] ??
             function (id) {
                 if (callbacks[id] && callbacks[id].video === this) {
-                    if (--callbacksCount === 0) {
-                        callbacks = [];
-                        if (animationFrameId !== null) {
-                            global.cancelAnimationFrame(animationFrameId);
-                            animationFrameId = null;
+                    const parentCallbackRangeIndex = (function(){
+                        for(let i = 0; i < callbackRanges.length; i++){
+                            const callbacksStart = callbackRanges[i].callbacksStart;
+                            const callbacksEnd = callbacksStart + callbackRanges[i].callbacksCount;
+                            if(callbacksStart <= id && id < callbacksEnd){
+                                return i;
+                            }
                         }
-                    } else callbacks[id] = null;
+                        return NaN;
+                    })();
+                    const parentCallbackRange = callbackRanges[parentCallbackRangeIndex];
+                    // We can edit in this case even if the noEdit flag is set, because we're removing a callback.
+                    if (parentCallbackRange.callbacksStart === id) {
+                        parentCallbackRange.callbacksStart++;
+                        parentCallbackRange.callbacksCount--;
+                    } else if(parentCallbackRange.callbacksStart + parentCallbackRange.callbacksCount === id - 1){
+                        parentCallbackRange.callbacksCount--;
+                    }
+                    // We can remove the range if it's empty and not a noEdit flagged frame.
+                    if (parentCallbackRange.callbacksCount <= 0 && !parentCallbackRange.frameId.noEdit) {
+                        callbackRanges.splice(parentCallbackRangeIndex, 1);
+                    }
+                    callbacks[id] = null;
                 }
             }
         );
     })(global);
 })(global);
+
+/**
+ * Sets groups of values in an Arrayish object with a stride and offset.
+ * @param {!Int8Array|!Uint8Array|!Uint8ClampedArray|!Int16Array|!Uint16Array|!Uint32Array|!BigInt64Array|!BigUint64Array|!Float32Array|!Float64Array|!Array<?>|!string} dest The target sequence.
+ * @param {!Int8Array|!Uint8Array|!Uint8ClampedArray|!Int16Array|!Uint16Array|!Uint32Array|!BigInt64Array|!BigUint64Array|!Float32Array|!Float64Array|!Array<?>|!string} src The source sequence.
+ * @param {number} stride The number of elements to skip between each group.
+ * @param {number} gsize The number of elements in each group.
+ * @param {number} offset The starting index in the target sequence.
+ */
+sabre["setArrayishWithStride"] = function setArrayishWithStride (
+    dest,
+    src,
+    stride,
+    gsize,
+    offset
+) {
+    for(let i = 0; i < (src.length/gsize)|0; i++) {
+        for (let j = 0; j < gsize; j++) {
+            const groupIndex = i*gsize;
+            const strideIndex = i*stride;
+            dest[offset+strideIndex+j] = src[groupIndex+j];
+        }
+    }
+};
 
 /**
  * Performs a transition between two numbers given current time, start, end, and acceleration.

@@ -18,6 +18,16 @@ sabre.Complaint.prototype.reset = function () {};
 sabre.Complaint.resetAll = function () {};
 
 /**
+ * Sets groups of values in an Arrayish object with a stride and offset.
+ * @param {!Int8Array|!Uint8Array|!Uint8ClampedArray|!Int16Array|!Uint16Array|!Uint32Array|!BigInt64Array|!BigUint64Array|!Float32Array|!Float64Array|!Array<?>|!string} dest The target sequence.
+ * @param {!Int8Array|!Uint8Array|!Uint8ClampedArray|!Int16Array|!Uint16Array|!Uint32Array|!BigInt64Array|!BigUint64Array|!Float32Array|!Float64Array|!Array<?>|!string} src The source sequence.
+ * @param {number} stride The number of elements to skip between each group.
+ * @param {number} gsize The number of elements in each group.
+ * @param {number} offset The starting index in the target sequence.
+ */
+sabre.setArrayishWithStride = function (dest, src, stride, gsize, offset) {};
+
+/**
  * Performs a transition between two numbers given current time, start, end, and acceleration.
  * @param {number} curtime current time relative to event start.
  * @param {number} originalValue the original value.
