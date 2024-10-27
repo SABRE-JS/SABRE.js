@@ -76,7 +76,7 @@ global.OffscreenCanvas.prototype.toBlobHD = function () {};
 let BoundingBox;
 
 /**
- * @typedef {{fill:?string,stroke:?string,draw:function(CanvasRenderingContext2D):void}}
+ * @typedef {{fill:?string,stroke:?string,draw:function(CanvasRenderingContext2D):void,getBoundingBox:function():BoundingBox}}
  */
 let Path;
 
