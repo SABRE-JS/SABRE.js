@@ -32,7 +32,7 @@ let Matrix4x4;
 
 /**
  * @private
- * @typedef {!{x:number,y:number,width:number,height:number,index:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number,alignmentOffsetX:number,alignmentOffsetY:number}}
+ * @typedef {!{x:number,y:number,width:number,height:number,marginLeft:number,marginRight:number,marginVertical:number,alignment:number,alignmentOffsetX:number,alignmentOffsetY:number}}
  */
 let CollisionInfo;
 
@@ -507,8 +507,13 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {Float32Array} the array.
          */
         value: function _getFloat32Array (name, size) {
-            if (!this._renderData[name]) {
+            const data = this._renderData[(name = "f32_"+name)];
+            if (!data) {
                 return (this._renderData[name] = new Float32Array(size));
+            }else if(data.length < size){
+                const newData = new Float32Array(size);
+                newData.set(data);
+                return this._renderData[name] = newData;
             }
             return this._renderData[name];
         },
@@ -870,7 +875,6 @@ const renderer_prototype = global.Object.create(Object, {
                 alignmentOffsetY: 0,
                 width: 0,
                 height: 0,
-                index: index,
                 marginLeft: 0,
                 marginRight: 0,
                 marginVertical: 0,
@@ -1374,15 +1378,19 @@ const renderer_prototype = global.Object.create(Object, {
         /**
          * Collides two events. This function ensures that events that are not supposed to overlap, if they are overlapping, get moved out of the way in a manner consistant with the standard.
          * @private
+         * @param {number} collisionOrder1 the order of the first event for collision calculation.
          * @param {CollisionInfo} positionInfo1 current event's position info.
          * @param {Array<CollisionInfo>} posInfosForMatchingId1 position infos for events who's id matches the current event's id.
+         * @param {number} collisionOrder2 the order of the event we're colliding with for collision calculation.
          * @param {CollisionInfo} positionInfo2 the position info of the event we're colliding with.
          * @param {Array<CollisionInfo>} posInfosForMatchingId2 position infos for events who's id matches the colliding event's id.
          * @return {boolean} did we move something?
          */
         value: function _collideEvent (
+            collisionOrder1,
             positionInfo1,
             posInfosForMatchingId1,
+            collisionOrder2,
             positionInfo2,
             posInfosForMatchingId2
         ) {
@@ -1397,98 +1405,193 @@ const renderer_prototype = global.Object.create(Object, {
                 positionInfo2.height
             );
             if (overlap !== null) {
-                if (
-                    this._config.renderer["default_collision_mode"] ===
-                    sabre.CollisionModes.NORMAL
-                ) {
-                    if (overlap[1] < 0) {
-                        if (positionInfo1.index > positionInfo2.index) {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId2.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId2[i].y +=
-                                    positionInfo1.height;
-                                posInfosForMatchingId2[i].y += overlap[1];
+                const movementprops = {
+                    dx: 0,
+                    dy: 0,
+                    xmoves: false,
+                    ymoves: false
+                };
+                let xfix = 0;
+                let yfix = 0;
+                if (overlap[1] < 0) {
+                    if (collisionOrder1 > collisionOrder2) {
+                        for (
+                            let i = 0;
+                            i < posInfosForMatchingId2.length;
+                            i++
+                        ) {
+                            posInfosForMatchingId2[i].y +=
+                                positionInfo1.height;
+                            posInfosForMatchingId2[i].y += overlap[1];
+                            this._calcEventViewportCollision(posInfosForMatchingId2[i], movementprops);
+                            if (movementprops.ymoves) {
+                                yfix += (movementprops.dy-yfix);
                             }
-                        } else {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId1.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId1[i].y -= overlap[1];
+                            if (movementprops.xmoves) {
+                                xfix += (movementprops.dx-xfix);
                             }
+                            movementprops.dx = 0;
+                            movementprops.dy = 0;
+                            movementprops.xmoves = false;
+                            movementprops.ymoves = false;
                         }
-                    } else if (overlap[1] > 0) {
-                        if (positionInfo1.index > positionInfo2.index) {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId2.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId2[i].y -= overlap[1];
+                    } else {
+                        for (
+                            let i = 0;
+                            i < posInfosForMatchingId1.length;
+                            i++
+                        ) {
+                            posInfosForMatchingId1[i].y -= overlap[1];
+                            this._calcEventViewportCollision(posInfosForMatchingId1[i], movementprops);
+                            if (movementprops.ymoves) {
+                                yfix += (movementprops.dy-yfix);
                             }
-                        } else {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId1.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId1[i].y +=
-                                    positionInfo2.height;
-                                posInfosForMatchingId1[i].y += overlap[1];
+                            if (movementprops.xmoves) {
+                                xfix += (movementprops.dx-xfix);
                             }
+                            movementprops.dx = 0;
+                            movementprops.dy = 0;
+                            movementprops.xmoves = false;
+                            movementprops.ymoves = false;
                         }
                     }
-                } else {
-                    if (overlap[1] > 0) {
-                        if (positionInfo1.index < positionInfo2.index) {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId2.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId2[i].y +=
-                                    positionInfo1.height;
-                                posInfosForMatchingId2[i].y += overlap[1];
+                } else if (overlap[1] >= 0) {
+                    if (collisionOrder1 > collisionOrder2) {
+                        for (
+                            let i = 0;
+                            i < posInfosForMatchingId2.length;
+                            i++
+                        ) {
+                            posInfosForMatchingId2[i].y -= overlap[1];
+                            this._calcEventViewportCollision(posInfosForMatchingId2[i], movementprops);
+                            if (movementprops.ymoves) {
+                                yfix += (movementprops.dy-yfix);
                             }
-                        } else {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId1.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId1[i].y -= overlap[1];
+                            if (movementprops.xmoves) {
+                                xfix += (movementprops.dx-xfix);
                             }
+                            movementprops.dx = 0;
+                            movementprops.dy = 0;
+                            movementprops.xmoves = false;
+                            movementprops.ymoves = false;
                         }
-                    } else if (overlap[1] < 0) {
-                        if (positionInfo1.index < positionInfo2.index) {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId2.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId2[i].y -= overlap[1];
+                    } else {
+                        for (
+                            let i = 0;
+                            i < posInfosForMatchingId1.length;
+                            i++
+                        ) {
+                            posInfosForMatchingId1[i].y +=
+                                positionInfo2.height;
+                            posInfosForMatchingId1[i].y += overlap[1];
+                            this._calcEventViewportCollision(posInfosForMatchingId1[i], movementprops);
+                            
+                            if (movementprops.ymoves) {
+                                yfix += (movementprops.dy-yfix);
                             }
-                        } else {
-                            for (
-                                let i = 0;
-                                i < posInfosForMatchingId1.length;
-                                i++
-                            ) {
-                                posInfosForMatchingId1[i].y +=
-                                    positionInfo2.height;
-                                posInfosForMatchingId1[i].y += overlap[1];
+                            if (movementprops.xmoves) {
+                                xfix += (movementprops.dx-xfix);
                             }
+                            movementprops.dx = 0;
+                            movementprops.dy = 0;
+                            movementprops.xmoves = false;
+                            movementprops.ymoves = false;
                         }
+                    }
+                }
+                if(yfix !== 0){
+                    for (
+                        let i = 0;
+                        i < posInfosForMatchingId1.length;
+                        i++
+                    ) {
+                        posInfosForMatchingId1[i].y += yfix;
+                    }
+                    for (
+                        let i = 0;
+                        i < posInfosForMatchingId2.length;
+                        i++
+                    ) {
+                        posInfosForMatchingId2[i].y += yfix;
+                    }
+                }
+                if(xfix !== 0){
+                    for (
+                        let i = 0;
+                        i < posInfosForMatchingId1.length;
+                        i++
+                    ) {
+                        posInfosForMatchingId1[i].x += xfix;
+                    }
+                    for (
+                        let i = 0;
+                        i < posInfosForMatchingId2.length;
+                        i++
+                    ) {
+                        posInfosForMatchingId2[i].x += xfix;
                     }
                 }
                 return true;
             }
             return false;
         }
+    },
+
+    _calcEventViewportCollision: {
+        /**
+         * Tests if an event is colliding with the viewport and calculates if it should move and by how much.
+         * @param {CollisionInfo} positionInfo event's position info.
+         * @param {{dx: number, dy: number, xmoves: boolean, ymoves: boolean}} movementprops the movement properties.
+         * @private
+         * @return {void}
+         */
+        value: function _calcEventViewportCollision (positionInfo,movementprops) {
+            const horizontalAlignment = Math.floor(positionInfo.alignment % 3);
+            const verticalAlignment = Math.floor(positionInfo.alignment / 3);
+            switch (horizontalAlignment) {
+                case 2:
+                    //RIGHT
+                    movementprops.dx =
+                        this._config.renderer["resolution_x"] -
+                        (positionInfo.x +
+                            positionInfo.width +
+                            positionInfo.marginRight);
+                    movementprops.xmoves = movementprops.dx < 0;
+                    break;
+                case 1:
+                    //CENTER
+                    //We aren't aligned to a a side so do nothing.
+                    //TODO: is this really right?
+                    break;
+                case 0:
+                    //LEFT
+                    movementprops.dx = -(positionInfo.x - positionInfo.marginLeft);
+                    movementprops.xmoves = movementprops.dx > 0;
+                    break;
+            }
+            switch (verticalAlignment) {
+                case 2:
+                    //TOP
+                    movementprops.dy = -(positionInfo.y - positionInfo.marginVertical);
+                    movementprops.ymoves = movementprops.dy > 0;
+                    break;
+                case 1:
+                    //CENTER
+                    //We aren't aligned to a side so do nothing.
+                    //TODO: is this really right?
+                    break;
+                case 0:
+                    //BOTTOM
+                    movementprops.dy =
+                        this._config.renderer["resolution_y"] -
+                        (positionInfo.y +
+                            positionInfo.height +
+                            positionInfo.marginVertical);
+                    movementprops.ymoves = movementprops.dy < 0;
+                    break;
+            }
+        },
+        writable: false
     },
 
     _collideEventWithViewport: {
@@ -1500,63 +1603,24 @@ const renderer_prototype = global.Object.create(Object, {
          * @return {boolean} did we move something?
          */
         value: function _collideEventWithViewport (positionInfo, posInfosForMatchingId) {
-            let horizontalAlignment = Math.floor(positionInfo.alignment % 3);
-            let verticalAlignment = Math.floor(positionInfo.alignment / 3);
-            let xshouldmove = false;
-            let xdistance = 0;
-            let yshouldmove = false;
-            let ydistance = 0;
-            switch (horizontalAlignment) {
-                case 2:
-                    //RIGHT
-                    xdistance =
-                        this._config.renderer["resolution_x"] -
-                        (positionInfo.x +
-                            positionInfo.width +
-                            positionInfo.marginRight);
-                    xshouldmove = xdistance < 0;
-                    break;
-                case 1:
-                    //CENTER
-                    //We aren't aligned to a a side so do nothing. //TODO: is this really right?
-                    break;
-                case 0:
-                    //LEFT
-                    xdistance = -(positionInfo.x - positionInfo.marginLeft);
-                    xshouldmove = xdistance > 0;
-                    break;
-            }
-            switch (verticalAlignment) {
-                case 2:
-                    //TOP
-                    ydistance = -(positionInfo.y - positionInfo.marginVertical);
-                    yshouldmove = ydistance > 0;
-                    break;
-                case 1:
-                    //CENTER
-                    //We aren't aligned to a side so do nothing. //TODO: is this really right?
-                    break;
-                case 0:
-                    //BOTTOM
-                    ydistance =
-                        this._config.renderer["resolution_y"] -
-                        (positionInfo.y +
-                            positionInfo.height +
-                            positionInfo.marginVertical);
-                    yshouldmove = ydistance < 0;
-                    break;
-            }
-            if (xshouldmove) {
+            const movementprops = {
+                dx: 0,
+                xmoves: false,
+                dy: 0,
+                ymoves: false
+            };
+            this._calcEventViewportCollision(positionInfo, movementprops);
+            if (movementprops.xmoves) {
                 for (let i = 0; i < posInfosForMatchingId.length; i++) {
-                    posInfosForMatchingId[i].x += xdistance;
+                    posInfosForMatchingId[i].x += movementprops.dx;
                 }
             }
-            if (yshouldmove) {
+            if (movementprops.ymoves) {
                 for (let i = 0; i < posInfosForMatchingId.length; i++) {
-                    posInfosForMatchingId[i].y += ydistance;
+                    posInfosForMatchingId[i].y += movementprops.dy;
                 }
             }
-            return xshouldmove || yshouldmove;
+            return movementprops.xmoves || movementprops.ymoves;
         },
         writable: false
     },
@@ -1793,45 +1857,74 @@ const renderer_prototype = global.Object.create(Object, {
                     resultsForId[id].push(result[i]);
                 }
             }
-            let moved;
-            let count = 0;
-            do {
-                moved = false;
-                for (let i = 0; i < events.length; i++) {
-                    if (result[i].width === 0 || result[i].height === 0)
+
+            const normal_collisions = this._config.renderer["default_collision_mode"] === sabre.CollisionModes.NORMAL;
+            const collisionMappings = new Array(result.length);
+            for(let i = 0; i < collisionMappings.length; i++){
+                collisionMappings[i] = i;
+            }
+            collisionMappings.sort(function (
+                /** number */ a,
+                /** number */ b
+            ) {
+                const aevent = events[a];
+                const bevent = events[b];
+                const ldiff = aevent.getLayer() - bevent.getLayer();
+                if (ldiff === 0) {
+                    const idiff = aevent.getId() - bevent.getId();
+                    if (idiff === 0){
+                        const odiff =  aevent.getOrder() - bevent.getOrder();
+                        return (normal_collisions?odiff:-odiff);
+                    }
+                    return (normal_collisions?idiff:-idiff);
+                } else return ldiff;
+            });
+
+            for (let i = 0; i < collisionMappings.length; i++) {
+                const index = collisionMappings[i];
+                if (result[index].width === 0 || result[index].height === 0)
+                    continue;
+                if (
+                    events[index].getLineOverrides().hasPosition() ||
+                    events[index].getLineOverrides().hasMovement()
+                )
+                    continue;
+                let id = events[index].getId();
+                this._collideEventWithViewport(
+                    result[index],
+                    resultsForId[id]
+                );
+                const loopcounts = [];
+                for (let j = 0; j < collisionMappings.length; j++) {
+                    const index2 = collisionMappings[j];
+                    if (events[index2].getLayer() !== events[index].getLayer())
+                        continue;
+                    let id2 = events[index2].getId();
+                    if (id2 === id) continue;
+                    if (result[index2].width === 0 || result[index2].height === 0)
                         continue;
                     if (
-                        events[i].getLineOverrides().hasPosition() ||
-                        events[i].getLineOverrides().hasMovement()
+                        events[index2].getLineOverrides().hasPosition() ||
+                        events[index2].getLineOverrides().hasMovement()
                     )
                         continue;
-                    let id = events[i].getId();
-                    moved |= this._collideEventWithViewport(
-                        result[i],
-                        resultsForId[id]
-                    );
-                    for (let j = 0; j < events.length; j++) {
-                        if (events[j].getLayer() !== events[i].getLayer())
-                            continue;
-                        let id2 = events[j].getId();
-                        if (id2 === id) continue;
-                        if (result[j].width === 0 || result[j].height === 0)
-                            continue;
-                        if (
-                            events[j].getLineOverrides().hasPosition() ||
-                            events[j].getLineOverrides().hasMovement()
-                        )
-                            continue;
-                        moved |= this._collideEvent(
-                            result[i],
-                            resultsForId[id],
-                            result[j],
-                            resultsForId[id2]
-                        );
+                    if(this._collideEvent(
+                        i,
+                        result[index],
+                        resultsForId[id],
+                        j,
+                        result[index2],
+                        resultsForId[id2]
+                    )){
+                        if(!loopcounts[index]) loopcounts[index] = [];
+                        const localloopcount = (loopcounts[index][index2]??0);
+                        if(localloopcount < 5){
+                            j = -1;
+                            loopcounts[index][index2] = localloopcount+1;
+                        }
                     }
                 }
-                count++;
-            } while (moved && count < 200);
+            }
             return result;
         },
         writable: false
@@ -1904,10 +1997,8 @@ const renderer_prototype = global.Object.create(Object, {
          */
         value: function _glSetup () {
             this._clearCache();
-            const default_tex_coords = this._getFloat32Array("tex_coords", 12);
-            default_tex_coords.set([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1], 0);
             const fullscreen_coordinates = this._getFloat32Array(
-                "coordinates",
+                "coordinates_only",
                 18
             );
             fullscreen_coordinates.set([
@@ -1931,36 +2022,12 @@ const renderer_prototype = global.Object.create(Object, {
                 this._gl.pixelStorei(this._gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, this._gl.NONE);
             }
 
-            this._textureCoordinatesBuffer = this._gl.createBuffer();
-            this._textureCoordinatesBuffer["__SPECTOR_Metadata"] = { "name": "textureCoordinatesBuffer", "tldr": "main texture coord buff" };
-            this._maskCoordinatesBuffer = this._gl.createBuffer();
-            this._maskCoordinatesBuffer["__SPECTOR_Metadata"] = { "name": "maskCoordinatesBuffer", "tldr": "mask texture coord buff" };
             this._subtitlePositioningBuffer = this._gl.createBuffer();
-            this._subtitlePositioningBuffer["__SPECTOR_Metadata"] = { "name": "subtitlePositioningBuffer", "tldr": "subtitle vertex buff" };
+            this._subtitlePositioningBuffer["__SPECTOR_Metadata"] = { "name": "subtitlePositioningBuffer", "tldr": "subtitle vertex buff, interleaved with texture and mask coordinates." };
             this._fullscreenPositioningBuffer = this._gl.createBuffer();
             this._fullscreenPositioningBuffer["__SPECTOR_Metadata"] = { "name": "fullscreenPositioningBuffer", "tldr": "fullscreen vertex buff for effects" };
             this._clipBuffer = this._gl.createBuffer();
             this._clipBuffer["__SPECTOR_Metadata"] = { "name": "clipBuffer", "tldr": "clip vertex buff" };
-
-            this._gl.bindBuffer(
-                this._gl.ARRAY_BUFFER,
-                this._textureCoordinatesBuffer
-            );
-            this._gl.bufferData(
-                this._gl.ARRAY_BUFFER,
-                default_tex_coords,
-                this._gl.DYNAMIC_DRAW
-            );
-
-            this._gl.bindBuffer(
-                this._gl.ARRAY_BUFFER,
-                this._maskCoordinatesBuffer
-            );
-            this._gl.bufferData(
-                this._gl.ARRAY_BUFFER,
-                default_tex_coords,
-                this._gl.DYNAMIC_DRAW
-            );
 
             this._gl.bindBuffer(
                 this._gl.ARRAY_BUFFER,
@@ -3173,20 +3240,22 @@ const renderer_prototype = global.Object.create(Object, {
             cacheInfo.width = allocationInfo[2];
             cacheInfo.height = allocationInfo[3];
             this._loadGlyphToVram(source, this._textureSubtitleBounds);
+            
             this._gl.bindBuffer(
                 this._gl.ARRAY_BUFFER,
                 this._subtitlePositioningBuffer
             );
+
             this._gl.enableVertexAttribArray(positionAttrib);
             this._gl.vertexAttribPointer(
                 positionAttrib,
                 3,
                 this._gl.FLOAT,
                 false,
-                0,
+                28,
                 0
             );
-            const coordinates = this._getFloat32Array("coordinates", 18);
+            const coordinates = this._getFloat32Array("coordinates", 42);
 
             let adjustedX = (cacheInfo.x * 2) - 1;
             let adjustedY = (cacheInfo.y * 2) - 1;
@@ -3194,47 +3263,39 @@ const renderer_prototype = global.Object.create(Object, {
             let adjustedXW = ((cacheInfo.x+cacheInfo.width) * 2) -1;
             let adjustedYH = ((cacheInfo.y+cacheInfo.height) * 2) -1;
             // prettier-ignore
-            coordinates.set([adjustedX,adjustedYH,0,
-                             adjustedXW,adjustedYH,0,
-                             adjustedX,adjustedY,0,
-                             adjustedX,adjustedY,0,
-                             adjustedXW,adjustedYH,0,
-                             adjustedXW,adjustedY,0]);
-            this._gl.bufferData(this._gl.ARRAY_BUFFER, coordinates, this._gl.DYNAMIC_DRAW);
+            sabre.setArrayishWithStride(coordinates,[
+                adjustedX, adjustedYH,0,
+                adjustedXW,adjustedYH,0,
+                adjustedX, adjustedY, 0,
+                adjustedX, adjustedY, 0,
+                adjustedXW,adjustedYH,0,
+                adjustedXW,adjustedY, 0
+            ], 7, 3, 0);
 
             const bounds = this._textureSubtitleBounds;
             let width = cacheInfo.textureDimensions[0] / bounds[0];
             let height = cacheInfo.textureDimensions[1] / bounds[1];
 
-            let tex_coords = this._getFloat32Array("tex_coords", 12);
             // prettier-ignore
-            tex_coords.set([
+            sabre.setArrayishWithStride(coordinates,[
                 0,      1,
                 width,  1,
                 0,      1 - height,
                 0,      1 - height,
                 width,  1,
                 width,  1 - height
-            ],0);
+            ],7,2,3);
             
-            this._gl.bindBuffer(
-                this._gl.ARRAY_BUFFER,
-                this._textureCoordinatesBuffer
-            );
             this._gl.enableVertexAttribArray(textureAttrib);
             this._gl.vertexAttribPointer(
                 textureAttrib,
                 2,
                 this._gl.FLOAT,
                 false,
-                0,
-                0
+                28,
+                12
             );
-            this._gl.bufferData(
-                this._gl.ARRAY_BUFFER,
-                tex_coords,
-                this._gl.DYNAMIC_DRAW
-            );
+            this._gl.bufferData(this._gl.ARRAY_BUFFER, coordinates, this._gl.DYNAMIC_DRAW);
             this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
             this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
             this._gl.viewport(
@@ -3408,7 +3469,7 @@ const renderer_prototype = global.Object.create(Object, {
                             this._gl.clear(
                     this._gl.DEPTH_BUFFER_BIT | this._gl.COLOR_BUFFER_BIT
                 );
-}
+            }
             //TODO: Render from cache.
             let cachedGlyphInfo = null;
             let cachedMaskGlyphInfo = null;
@@ -3529,46 +3590,47 @@ const renderer_prototype = global.Object.create(Object, {
                 lowerRight[1] -= 1;
             }
 
-            let coordinates = this._getFloat32Array("coordinates", 18);
+            let coordinates = this._getFloat32Array("coordinates", 42);
             coordinates.set(upperLeft.slice(0,3),0);
-            coordinates.set(upperRight.slice(0,3),3);
-            coordinates.set(lowerLeft.slice(0,3),6);
-            coordinates.set(lowerLeft.slice(0,3),9);
-            coordinates.set(upperRight.slice(0,3),12);
-            coordinates.set(lowerRight.slice(0,3),15);
+            coordinates.set(upperRight.slice(0,3),7);
+            coordinates.set(lowerLeft.slice(0,3),14);
+            coordinates.set(lowerLeft.slice(0,3),21);
+            coordinates.set(upperRight.slice(0,3),28);
+            coordinates.set(lowerRight.slice(0,3),35);
 
-            let tex_coords;
-            if (texHash === null || !this._checkGlyphCache(texHash,texIndex)) {
-                let dimensions = source.getTextureDimensions();
-                let extents = this._textureSubtitleBounds;
-                let width = dimensions[0] / extents[0];
-                let height = dimensions[1] / extents[1];
+            {
+                let texCoordsArray;
+                if (texHash === null || !this._checkGlyphCache(texHash,texIndex)) {
+                    let dimensions = source.getTextureDimensions();
+                    let extents = this._textureSubtitleBounds;
+                    let width = dimensions[0] / extents[0];
+                    let height = dimensions[1] / extents[1];
 
-                tex_coords = this._getFloat32Array("tex_coords", 12);
-                // prettier-ignore
-                tex_coords.set([
-                    0,      1,
-                    width,  1,
-                    0,      1 - height,
-                    0,      1 - height,
-                    width,  1,
-                    width,  1 - height
-                ],0);
-            } else {
-                tex_coords = this._getFloat32Array("tex_coords", 12);
-                // prettier-ignore
-                tex_coords.set([
-                    cachedGlyphInfo.x,                          cachedGlyphInfo.y + cachedGlyphInfo.height,
-                    cachedGlyphInfo.x + cachedGlyphInfo.width,  cachedGlyphInfo.y + cachedGlyphInfo.height,
-                    cachedGlyphInfo.x,                          cachedGlyphInfo.y,
-                    cachedGlyphInfo.x,                          cachedGlyphInfo.y,
-                    cachedGlyphInfo.x + cachedGlyphInfo.width,  cachedGlyphInfo.y + cachedGlyphInfo.height,
-                    cachedGlyphInfo.x + cachedGlyphInfo.width,  cachedGlyphInfo.y
-                ],0); 
+                    texCoordsArray = [
+                        0,      1,
+                        width,  1,
+                        0,      1 - height,
+                        0,      1 - height,
+                        width,  1,
+                        width,  1 - height
+                    ];
+                } else {
+                    // prettier-ignore
+                    texCoordsArray = [
+                        cachedGlyphInfo.x,                          cachedGlyphInfo.y + cachedGlyphInfo.height,
+                        cachedGlyphInfo.x + cachedGlyphInfo.width,  cachedGlyphInfo.y + cachedGlyphInfo.height,
+                        cachedGlyphInfo.x,                          cachedGlyphInfo.y,
+                        cachedGlyphInfo.x,                          cachedGlyphInfo.y,
+                        cachedGlyphInfo.x + cachedGlyphInfo.width,  cachedGlyphInfo.y + cachedGlyphInfo.height,
+                        cachedGlyphInfo.x + cachedGlyphInfo.width,  cachedGlyphInfo.y
+                    ];
+                }
+                
+                sabre.setArrayishWithStride(coordinates, texCoordsArray, 7, 2, 3);
             }
 
-            let mask_coords;
             if (!isShape) {
+                let maskCoordsArray;
                 if (texMaskHash === null || !this._checkGlyphCache(texMaskHash,texMaskIndex)) {
                     let maskDimensions =
                         this._textMaskRenderer.getTextureDimensions();
@@ -3576,28 +3638,28 @@ const renderer_prototype = global.Object.create(Object, {
                     let width = maskDimensions[0] / extents[0];
                     let height = maskDimensions[1] / extents[1];
 
-                    mask_coords = this._getFloat32Array("mask_coords", 12);
                     // prettier-ignore
-                    mask_coords.set([
+                    maskCoordsArray = [
                         0,      1,
                         width,  1,
                         0,      1 - height,
                         0,      1 - height,
                         width,  1,
                         width,  1 - height
-                    ],0);
+                    ];
                 } else {
-                    mask_coords = this._getFloat32Array("mask_coords", 12);
                     // prettier-ignore
-                    mask_coords.set([
+                    maskCoordsArray = [
                         cachedMaskGlyphInfo.x,                              cachedMaskGlyphInfo.y + cachedMaskGlyphInfo.height,
                         cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  cachedMaskGlyphInfo.y + cachedMaskGlyphInfo.height,
                         cachedMaskGlyphInfo.x,                              cachedMaskGlyphInfo.y,
                         cachedMaskGlyphInfo.x,                              cachedMaskGlyphInfo.y,
                         cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  cachedMaskGlyphInfo.y + cachedMaskGlyphInfo.height,
                         cachedMaskGlyphInfo.x + cachedMaskGlyphInfo.width,  cachedMaskGlyphInfo.y
-                    ],0);  
+                    ];  
                 }
+                
+                sabre.setArrayishWithStride(coordinates, maskCoordsArray, 7, 2, 5);
             }
             //Draw background or outline or text depending on pass to destination
             {
@@ -4029,7 +4091,7 @@ const renderer_prototype = global.Object.create(Object, {
 
                 this._gl.bindBuffer(
                     this._gl.ARRAY_BUFFER,
-                    this._textureCoordinatesBuffer
+                    this._subtitlePositioningBuffer
                 );
                 this._gl.enableVertexAttribArray(textureAttrib);
                 this._gl.vertexAttribPointer(
@@ -4037,53 +4099,35 @@ const renderer_prototype = global.Object.create(Object, {
                     2,
                     this._gl.FLOAT,
                     false,
-                    0,
-                    0
+                    28,
+                    12
                 );
                 this._gl.bufferData(
                     this._gl.ARRAY_BUFFER,
-                    tex_coords,
+                    coordinates,
                     this._gl.DYNAMIC_DRAW
                 );
 
                 if (!isShape) {
-                    this._gl.bindBuffer(
-                        this._gl.ARRAY_BUFFER,
-                        this._maskCoordinatesBuffer
-                    );
                     this._gl.enableVertexAttribArray(maskAttrib);
                     this._gl.vertexAttribPointer(
                         maskAttrib,
                         2,
                         this._gl.FLOAT,
                         false,
-                        0,
-                        0
+                        28,
+                        20
                     );
-                    this._gl.bufferData(
-                        this._gl.ARRAY_BUFFER,
-                        mask_coords,
-                        this._gl.DYNAMIC_DRAW
-                    );
-                }
+                } else this._gl.disableVertexAttribArray(maskAttrib);
 
-                this._gl.bindBuffer(
-                    this._gl.ARRAY_BUFFER,
-                    this._subtitlePositioningBuffer
-                );
                 this._gl.enableVertexAttribArray(positionAttrib);
                 this._gl.vertexAttribPointer(
                     positionAttrib,
                     3,
                     this._gl.FLOAT,
                     false,
-                    0,
+                    28,
                     0
-                );
-                this._gl.bufferData(
-                    this._gl.ARRAY_BUFFER,
-                    coordinates,
-                    this._gl.DYNAMIC_DRAW
                 );
                 this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
             }
@@ -4098,7 +4142,7 @@ const renderer_prototype = global.Object.create(Object, {
                     if (blurInfo.gaussBlur > 0) {
                         let gauss_width = ((blurInfo.gaussBlur * 3) + 0.5) | 1;
                         if(gauss_width < 3) gauss_width = 3;
-                        const gauss_coords = this._getFloat32Array("coordinates", 18);
+                        const gauss_coords = this._getFloat32Array("coordinates_only", 18);
                         {
                             const upperLeft = blurBoundsInfo.upperLeft;
                             const upperRight = blurBoundsInfo.upperRight;
@@ -4195,7 +4239,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 0,
                                 0
                             );
-                            this._gl.bufferData(this._gl.ARRAY_BUFFER, gauss_coords, this._gl.DYNAMIC_DRAW);
+                            this._gl.bufferSubData(this._gl.ARRAY_BUFFER, 0, gauss_coords);
                             this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
                         }
 
@@ -4263,7 +4307,7 @@ const renderer_prototype = global.Object.create(Object, {
                                 0,
                                 0
                             );
-                            this._gl.bufferData(this._gl.ARRAY_BUFFER, gauss_coords, this._gl.DYNAMIC_DRAW);
+                            this._gl.bufferSubData(this._gl.ARRAY_BUFFER, 0, gauss_coords);
                             this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
                         }
 
